@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
@@ -22,7 +23,11 @@ export default function AdminLoginPage() {
       password,
     });
     if (error) {
-      setError("Invalid email or password.");
+      setError(
+        error.message.toLowerCase().includes("confirm")
+          ? "This account has not been approved by the platform administrator yet."
+          : "Invalid email or password."
+      );
       setBusy(false);
       return;
     }
@@ -91,7 +96,10 @@ export default function AdminLoginPage() {
           </button>
         </form>
         <p className="text-center text-xs text-ivory/40">
-          Access is limited to authorised bank staff.
+          Access is limited to authorised staff.{" "}
+          <Link href="/admin/signup" className="font-semibold text-brass-300 hover:underline">
+            Request an account
+          </Link>
         </p>
       </div>
     </main>

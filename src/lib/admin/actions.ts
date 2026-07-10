@@ -203,3 +203,21 @@ export async function deleteBidder(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/bidders");
 }
+
+export async function approveStaff(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("approve_staff", {
+    target: formData.get("id") as string,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/staff");
+}
+
+export async function rejectStaff(formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reject_staff", {
+    target: formData.get("id") as string,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/staff");
+}
