@@ -8,6 +8,18 @@ export type AuctionStatus =
   | "cancelled";
 export type DepositStatus = "pending" | "verified" | "rejected" | "refunded";
 
+export interface Organization {
+  id: string;
+  slug: string;
+  name: string;
+  name_np: string;
+  logo_url: string | null;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
+  address_np: string;
+}
+
 export interface PropertyImage {
   id: string;
   property_id: string;
@@ -36,10 +48,12 @@ export interface Property {
   facing: string | null;
   description: string;
   loan_ref: string;
+  organization_id: string;
   is_published: boolean;
   created_at: string;
   updated_at: string;
   images?: PropertyImage[];
+  organization?: Organization;
 }
 
 export interface Auction {

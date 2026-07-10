@@ -1,4 +1,5 @@
 import { statusLabel } from "@/lib/format";
+import type { Lang } from "@/lib/i18n/dictionaries";
 import type { AuctionStatus } from "@/lib/types";
 
 const styles: Record<AuctionStatus, string> = {
@@ -10,7 +11,13 @@ const styles: Record<AuctionStatus, string> = {
   cancelled: "bg-danger-soft text-danger",
 };
 
-export function StatusBadge({ status }: { status: AuctionStatus }) {
+export function StatusBadge({
+  status,
+  lang = "en",
+}: {
+  status: AuctionStatus;
+  lang?: Lang;
+}) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${styles[status]}`}
@@ -21,7 +28,7 @@ export function StatusBadge({ status }: { status: AuctionStatus }) {
           <span className="relative inline-flex size-1.5 rounded-full bg-evergreen-600" />
         </span>
       )}
-      {statusLabel(status)}
+      {statusLabel(status, lang)}
     </span>
   );
 }

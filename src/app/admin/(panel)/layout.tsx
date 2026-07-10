@@ -22,6 +22,15 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization:organizations(name)")
+    .eq("id", user.id)
+    .single();
+  const orgLabel =
+    (profile?.organization as unknown as { name: string } | null)?.name ??
+    "Platform Admin";
+
   return (
     <div className="min-h-dvh bg-cream">
       <header className="sticky top-0 z-40 border-b border-ink/8 bg-ivory/90 backdrop-blur-md">
@@ -29,7 +38,7 @@ export default async function AdminLayout({
           <div className="flex items-center gap-6">
             <Logo />
             <span className="rounded-full bg-evergreen-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-evergreen-700">
-              Admin
+              {orgLabel}
             </span>
           </div>
           <nav className="flex items-center gap-1">

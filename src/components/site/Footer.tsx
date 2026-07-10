@@ -1,55 +1,48 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { getT } from "@/lib/i18n/server";
 
-export function Footer() {
+export async function Footer() {
+  const { t } = await getT();
   return (
     <footer className="bg-evergreen-950 text-ivory/70">
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm space-y-4">
             <Logo dark />
-            <p className="text-sm leading-relaxed">
-              The official portal for collateral properties offered for sale by
-              the bank under prevailing recovery laws. All sales are conducted
-              through published auction notices.
-            </p>
+            <p className="text-sm leading-relaxed">{t.footer.tagline}</p>
           </div>
           <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">
-                Browse
+                {t.footer.browse}
               </p>
               <ul className="space-y-2">
-                <li><Link className="hover:text-ivory" href="/auctions">All auctions</Link></li>
-                <li><Link className="hover:text-ivory" href="/auctions?status=open">Open for bids</Link></li>
-                <li><Link className="hover:text-ivory" href="/how-it-works">How it works</Link></li>
+                <li><Link className="hover:text-ivory" href="/auctions">{t.footer.allAuctions}</Link></li>
+                <li><Link className="hover:text-ivory" href="/auctions?status=open">{t.footer.openForBids}</Link></li>
+                <li><Link className="hover:text-ivory" href="/how-it-works">{t.footer.howItWorks}</Link></li>
               </ul>
             </div>
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">
-                Recovery Department
+                {t.footer.platform}
               </p>
               <ul className="space-y-2">
-                <li>Durbarmarg, Kathmandu</li>
-                <li>Sun–Fri, 10:00–17:00</li>
-                <li>+977 1 442 0000</li>
-                <li>recovery@nilami.app</li>
+                {t.footer.platformLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
               </ul>
             </div>
             <div className="space-y-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">
-                Notice
+                {t.footer.noticeTitle}
               </p>
-              <p className="leading-relaxed">
-                Properties are sold on an &ldquo;as is, where is&rdquo; basis.
-                Bidders must inspect properties and verify documents before
-                bidding.
-              </p>
+              <p className="leading-relaxed">{t.footer.noticeBody}</p>
             </div>
           </div>
         </div>
         <div className="mt-12 border-t border-ivory/10 pt-6 text-xs text-ivory/40">
-          © {new Date().getFullYear()} Nilami. A demonstration auction portal.
+          © {new Date().getFullYear()} Nilami. {t.footer.rights}
         </div>
       </div>
     </footer>

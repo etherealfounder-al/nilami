@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { dictionaries, type Lang } from "@/lib/i18n/dictionaries";
 
 function parts(deadline: string) {
   const diff = new Date(deadline).getTime() - Date.now();
@@ -15,10 +16,13 @@ function parts(deadline: string) {
 export function Countdown({
   deadline,
   large = false,
+  lang = "en",
 }: {
   deadline: string;
   large?: boolean;
+  lang?: Lang;
 }) {
+  const cd = dictionaries[lang].common.countdown;
   const [t, setT] = useState<ReturnType<typeof parts> | null | "loading">(
     "loading"
   );
@@ -36,23 +40,23 @@ export function Countdown({
       <span
         className={`font-medium text-danger ${large ? "text-lg" : "text-sm"}`}
       >
-        Deadline passed
+        {cd.passed}
       </span>
     );
 
   if (!large) {
     return (
       <span className="text-sm font-medium tabular-nums text-evergreen-700">
-        {t.d > 0 ? `${t.d}d ${t.h}h left` : `${t.h}h ${t.m}m left`}
+        {t.d > 0 ? cd.leftDH(t.d, t.h) : cd.leftHM(t.h, t.m)}
       </span>
     );
   }
 
   const cells = [
-    { v: t.d, l: "days" },
-    { v: t.h, l: "hrs" },
-    { v: t.m, l: "min" },
-    { v: t.s, l: "sec" },
+    { v: t.d, l: cd.days },
+    { v: t.h, l: cd.hrs },
+    { v: t.m, l: cd.min },
+    { v: t.s, l: cd.sec },
   ];
   return (
     <div className="flex gap-3">

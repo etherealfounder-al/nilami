@@ -11,7 +11,7 @@ export default async function AdminPropertiesPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("properties")
-    .select("*, images:property_images(url, sort_order)")
+    .select("*, images:property_images(url, sort_order), organization:organizations(name)")
     .order("created_at", { ascending: false });
   const properties = (data ?? []) as Property[];
 
@@ -39,6 +39,7 @@ export default async function AdminPropertiesPage() {
           <thead>
             <tr className="border-b border-ink/8 text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
               <th className="px-6 py-4">Property</th>
+              <th className="px-4 py-4">Institution</th>
               <th className="px-4 py-4">Type</th>
               <th className="px-4 py-4">District</th>
               <th className="px-4 py-4">Status</th>
@@ -74,6 +75,9 @@ export default async function AdminPropertiesPage() {
                         </p>
                       </div>
                     </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-ink-soft">
+                    {p.organization?.name ?? "—"}
                   </td>
                   <td className="px-4 py-3.5 text-ink-soft">
                     {typeLabel(p.type)}

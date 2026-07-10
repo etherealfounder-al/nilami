@@ -26,7 +26,15 @@ function Field({
   );
 }
 
-export function PropertyForm({ property }: { property?: Property }) {
+export function PropertyForm({
+  property,
+  organizations,
+  lockedOrg,
+}: {
+  property?: Property;
+  organizations: { id: string; name: string }[];
+  lockedOrg?: { id: string; name: string } | null;
+}) {
   const p = property;
   const initialUrls = (p?.images ?? [])
     .slice()
@@ -60,6 +68,33 @@ export function PropertyForm({ property }: { property?: Property }) {
           <Field label="Loan reference">
             <input name="loan_ref" defaultValue={p?.loan_ref} className={inputCls} />
           </Field>
+          {lockedOrg ? (
+            <div className="block space-y-1.5">
+              <span className={labelCls}>Institution</span>
+              <p className="flex h-11 items-center rounded-xl border border-ink/10 bg-cream px-3.5 text-sm text-ink">
+                {lockedOrg.name}
+              </p>
+              <input type="hidden" name="organization_id" value={lockedOrg.id} />
+            </div>
+          ) : (
+            <Field label="Institution">
+              <select
+                name="organization_id"
+                required
+                defaultValue={p?.organization_id ?? ""}
+                className={inputCls}
+              >
+                <option value="" disabled>
+                  Select institution…
+                </option>
+                {organizations.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           <label className="flex items-center gap-3 self-end pb-2">
             <input
               type="checkbox"

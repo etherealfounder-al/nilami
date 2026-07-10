@@ -32,7 +32,23 @@ export async function upsertProperty(formData: FormData) {
   const id = (formData.get("id") as string) || null;
   const title = (formData.get("title") as string).trim();
 
+  // Organization: platform admins pick one; org staff are pinned to their own
+  let organizationId = (formData.get("organization_id") as string) || null;
+  if (!organizationId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("id", user!.id)
+      .single();
+    organizationId = profile?.organization_id ?? null;
+  }
+  if (!organizationId) throw new Error("An organization is required.");
+
   const row = {
+    organization_id: organizationId,
     title,
     slug: (formData.get("slug") as string)?.trim() || slugify(title),
     type: formData.get("type") as string,

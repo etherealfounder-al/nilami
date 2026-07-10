@@ -4,7 +4,7 @@ import type { Auction, Property } from "@/lib/types";
 export type AuctionWithProperty = Auction & { property: Property };
 
 const AUCTION_SELECT =
-  "*, property:properties(*, images:property_images(*))";
+  "*, property:properties(*, images:property_images(*), organization:organizations(*))";
 
 function sortImages(a: AuctionWithProperty) {
   a.property.images?.sort((x, y) => x.sort_order - y.sort_order);
@@ -15,6 +15,7 @@ export async function getPublicAuctions(filters?: {
   status?: string;
   type?: string;
   district?: string;
+  org?: string;
   q?: string;
 }): Promise<AuctionWithProperty[]> {
   const supabase = await createClient();
@@ -37,6 +38,8 @@ export async function getPublicAuctions(filters?: {
     rows = rows.filter(
       (a) => a.property.district.toLowerCase() === filters.district!.toLowerCase()
     );
+  if (filters?.org)
+    rows = rows.filter((a) => a.property.organization?.slug === filters.org);
   if (filters?.q) {
     const q = filters.q.toLowerCase();
     rows = rows.filter(
@@ -72,4 +75,13 @@ export async function getDistricts(): Promise<string[]> {
     .select("district")
     .eq("is_published", true);
   return [...new Set((data ?? []).map((r) => r.district))].sort();
+}
+
+export async function getOrganizations() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("organizations")
+    .select("id, slug, name, name_np")
+    .order("name");
+  return data ?? [];
 }
