@@ -32,19 +32,20 @@ export async function upsertProperty(formData: FormData) {
   const id = (formData.get("id") as string) || null;
   const title = (formData.get("title") as string).trim();
 
-  // Organization: platform admins pick one; org staff are pinned to their own
-  let organizationId = (formData.get("organization_id") as string) || null;
-  if (!organizationId) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("organization_id")
-      .eq("id", user!.id)
-      .single();
-    organizationId = profile?.organization_id ?? null;
-  }
+  // Organization is derived from the signed-in staffer's profile — never from
+  // client input. Only platform admins (profile with no organization) may pick
+  // an institution via the form. RLS enforces the same rule at the database.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", user!.id)
+    .single();
+  const organizationId =
+    profile?.organization_id ??
+    ((formData.get("organization_id") as string) || null);
   if (!organizationId) throw new Error("An organization is required.");
 
   const row = {
