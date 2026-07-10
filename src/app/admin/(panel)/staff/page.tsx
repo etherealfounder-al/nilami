@@ -25,7 +25,7 @@ export default async function AdminStaffPage() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, approved, created_at, organization:organizations(name)")
+    .select("id, full_name, email, role, approved, created_at, organization:organizations(name, approved)")
     .order("approved", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -36,7 +36,7 @@ export default async function AdminStaffPage() {
     role: string;
     approved: boolean;
     created_at: string;
-    organization: { name: string } | null;
+    organization: { name: string; approved: boolean } | null;
   }[];
   const pending = rows.filter((r) => !r.approved).length;
 
@@ -73,6 +73,11 @@ export default async function AdminStaffPage() {
                 </td>
                 <td className="px-4 py-3.5 text-ink-soft">
                   {p.organization?.name ?? "Platform"}
+                  {p.organization && !p.organization.approved && (
+                    <span className="ml-2 rounded-full bg-brass-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brass-600">
+                      New
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-3.5 text-ink-soft">
                   {roleLabels[p.role] ?? p.role}
