@@ -2,27 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { deleteProperty } from "@/lib/admin/actions";
-import { getAdminScope } from "@/lib/admin/org";
+import { getAdminProperties } from "@/lib/admin/queries";
 import { typeLabel } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
-import type { Property } from "@/lib/types";
-import { formatViews, hydrateViewCount, VIEW_STATS_SELECT } from "@/lib/views";
+import { formatViews } from "@/lib/views";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPropertiesPage() {
-  const supabase = await createClient();
-  const { isPlatformAdmin, organizationId } = await getAdminScope();
-  let query = supabase
-    .from("properties")
-    .select(
-      `*, images:property_images(url, sort_order), organization:organizations(name), ${VIEW_STATS_SELECT}`
-    )
-    .order("created_at", { ascending: false });
-  if (!isPlatformAdmin) query = query.eq("organization_id", organizationId);
-  const { data } = await query;
-  const properties = (data ?? []) as Property[];
-  properties.forEach(hydrateViewCount);
+  // Scoped by the API from the caller's token; there is no filter to forget.
+  const properties = await getAdminProperties();
 
   return (
     <div className="space-y-8">
@@ -58,9 +46,7 @@ export default async function AdminPropertiesPage() {
           </thead>
           <tbody className="divide-y divide-ink/8">
             {properties.map((p) => {
-              const cover = p.images?.sort(
-                (a, b) => a.sort_order - b.sort_order
-              )[0];
+              const cover = p.cover_url;
               return (
                 <tr key={p.id} className="hover:bg-cream/50">
                   <td className="px-6 py-3.5">
@@ -68,7 +54,7 @@ export default async function AdminPropertiesPage() {
                       <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-parchment">
                         {cover && (
                           <Image
-                            src={cover.url}
+                            src={cover}
                             alt=""
                             fill
                             sizes="44px"
@@ -84,7 +70,7 @@ export default async function AdminPropertiesPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3.5 text-ink-soft">
-                    {p.organization?.name ?? "—"}
+                    {p.organization_name ?? "—"}
                   </td>
                   <td className="px-4 py-3.5 text-ink-soft">
                     {typeLabel(p.type)}

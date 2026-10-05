@@ -394,3 +394,66 @@ func TestRecordPropertyViewOnlyCountsPublished(t *testing.T) {
 		t.Fatalf("an unknown slug was counted: %v", err)
 	}
 }
+
+// The panel's chrome has to name the right account. While proxied it shows the
+// target's institution but must still attribute the session to the real
+// administrator, or an audit trail points at the wrong person.
+func TestViewerReportsBothAccountsWhileProxied(t *testing.T) {
+	d := testDB(t)
+	f := seed(t, d)
+	ctx := context.Background()
+
+	decode := func(doc []byte, err error) map[string]any {
+		t.Helper()
+		if err != nil {
+			t.Fatalf("viewer: %v", err)
+		}
+		var m map[string]any
+		if err := json.Unmarshal(doc, &m); err != nil {
+			t.Fatalf("decode %s: %v", doc, err)
+		}
+		return m
+	}
+
+	// Signed in as themselves.
+	own := decode(d.Viewer(ctx, platformScope(f.platform)))
+	if own["user_id"] != f.platform.String() {
+		t.Fatalf("wrong account reported: %v", own["user_id"])
+	}
+	if own["viewing_as"] != nil {
+		t.Fatalf("a plain session reported a proxy: %v", own["viewing_as"])
+	}
+	if own["is_platform_admin"] != true {
+		t.Fatalf("platform admin not reported: %v", own["is_platform_admin"])
+	}
+	if len(own["organizations"].([]any)) != 2 {
+		t.Fatalf("platform admin should see both institutions: %v", own["organizations"])
+	}
+
+	// Proxied into institution staff.
+	proxied, err := d.ScopeForViewAs(ctx, platformScope(f.platform), f.staffB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	as := decode(d.Viewer(ctx, proxied))
+	if as["user_id"] != f.platform.String() {
+		t.Fatalf("proxied session attributed to the borrowed account, not the real one: %v", as["user_id"])
+	}
+	target, ok := as["viewing_as"].(map[string]any)
+	if !ok {
+		t.Fatalf("no proxy target reported: %v", as["viewing_as"])
+	}
+	if target["id"] != f.staffB.String() || target["organization_name"] != "Beta Finance" {
+		t.Fatalf("wrong proxy target: %v", target)
+	}
+	// And the institution list narrows to the one being viewed.
+	if len(as["organizations"].([]any)) != 1 {
+		t.Fatalf("proxied institution list did not narrow: %v", as["organizations"])
+	}
+
+	// Institution staff see only their own.
+	staff := decode(d.Viewer(ctx, staffScope(f.staffA, f.orgA)))
+	if staff["is_platform_admin"] != false || staff["organization_id"] != f.orgA.String() {
+		t.Fatalf("staff viewer wrong: %v", staff)
+	}
+}

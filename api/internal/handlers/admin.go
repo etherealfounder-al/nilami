@@ -24,6 +24,7 @@ type Admin struct {
 }
 
 func (h Admin) Routes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /v1/admin/me", h.scoped(h.DB.Viewer))
 	mux.HandleFunc("GET /v1/admin/dashboard", h.scoped(h.DB.Dashboard))
 	mux.HandleFunc("GET /v1/admin/properties", h.scoped(h.DB.PropertiesList))
 	mux.HandleFunc("GET /v1/admin/auctions", h.scoped(h.DB.AuctionsList))

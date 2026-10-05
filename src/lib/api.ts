@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { VIEW_AS_COOKIE } from "@/lib/admin/view-as-cookie";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -35,6 +37,8 @@ type Options = {
   authenticated?: boolean;
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
+  /** Extra headers. Used for the view-as relay; see adminApi below. */
+  headers?: Record<string, string>;
 };
 
 /**
@@ -102,4 +106,31 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
     throw new ApiError(response.status, detail || response.statusText);
   }
   return (await response.json()) as T;
+}
+
+
+/**
+ * The client for the admin panel.
+ *
+ * Authority travels as the user's own token, and the API decides what it means.
+ * Next no longer resolves the scope itself: getAdminScope() computed which
+ * institution's rows to show and every query had to remember to apply it, which
+ * is one forgotten filter away from a cross-tenant leak. Now the scope is
+ * resolved once, server-side, from a token this process cannot forge.
+ *
+ * The view-as cookie is relayed as a header because it is httpOnly and the API
+ * never sees the cookie jar. It is a request, not a grant: the API honours it
+ * only for a real approved platform administrator, so relaying it here cannot
+ * widen anyone's access — exactly the property the cookie had.
+ */
+export async function adminApi<T>(
+  path: string,
+  options: Omit<Options, "authenticated" | "revalidate" | "tags"> = {}
+): Promise<T> {
+  const viewAs = (await cookies()).get(VIEW_AS_COOKIE)?.value;
+  return api<T>(path, {
+    ...options,
+    authenticated: true,
+    headers: viewAs ? { "X-View-As": viewAs } : undefined,
+  });
 }

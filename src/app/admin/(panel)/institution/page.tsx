@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { InstitutionForm } from "@/components/admin/InstitutionForm";
-import { getAdminScope } from "@/lib/admin/org";
-import { createClient } from "@/lib/supabase/server";
+import { getInstitution, getInstitutionOptions } from "@/lib/admin/queries";
+import { getViewer } from "@/lib/admin/view-as";
 import type { Organization } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +16,17 @@ export default async function InstitutionPage({
   searchParams: Promise<{ org?: string }>;
 }) {
   const { org: requested } = await searchParams;
-  const supabase = await createClient();
-  const { isPlatformAdmin, organizationId } = await getAdminScope();
+  const viewer = await getViewer();
+  if (!viewer) redirect("/admin/login");
 
-  const { data: all } = await supabase
-    .from("organizations")
-    .select("id, name")
-    .order("name");
-  const options = all ?? [];
+  const isPlatformAdmin = viewer.viewingAs
+    ? viewer.viewingAs.organizationId === null
+    : viewer.isPlatformAdmin;
+  const organizationId = viewer.viewingAs
+    ? viewer.viewingAs.organizationId
+    : viewer.organizationId;
+
+  const options = await getInstitutionOptions();
 
   // Only a platform admin may choose. For everyone else ?org= previously fell
   // through silently, so the address bar could name one institution while the
@@ -33,16 +36,12 @@ export default async function InstitutionPage({
     redirect("/admin/institution");
   }
 
-  const targetId = isPlatformAdmin
-    ? requested || options[0]?.id
-    : organizationId;
+  // The API resolves this too, and ignores a foreign id for staff; asking for
+  // the right one here only keeps the picker and the form in agreement.
+  const targetId = isPlatformAdmin ? requested || options[0]?.id : organizationId;
   if (!targetId) redirect("/admin");
 
-  const { data } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("id", targetId)
-    .single();
+  const data = await getInstitution(targetId);
   if (!data) redirect("/admin");
 
   return (

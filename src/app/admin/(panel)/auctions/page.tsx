@@ -2,11 +2,10 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { setAuctionStatus } from "@/lib/admin/actions";
-import { getAdminScope } from "@/lib/admin/org";
+import { getAdminAuctions } from "@/lib/admin/queries";
 import { formatDateTime, nprCompact } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
-import type { Auction, AuctionStatus, Property } from "@/lib/types";
-import { formatViews, hydrateViewCount, VIEW_STATS_SELECT } from "@/lib/views";
+import type { AuctionStatus } from "@/lib/types";
+import { formatViews } from "@/lib/views";
 
 export const dynamic = "force-dynamic";
 
@@ -18,23 +17,9 @@ const nextActions: Partial<Record<AuctionStatus, { to: AuctionStatus; label: str
 };
 
 export default async function AdminAuctionsPage() {
-  const supabase = await createClient();
-  const { isPlatformAdmin, organizationId } = await getAdminScope();
-  let query = supabase
-    .from("auctions")
-    .select(
-      `*, property:properties!inner(title, slug, organization_id, ${VIEW_STATS_SELECT})`
-    )
-    .order("submission_deadline", { ascending: true });
-  if (!isPlatformAdmin)
-    query = query.eq("property.organization_id", organizationId);
-  const { data } = await query;
-  const auctions = (data ?? []) as (Auction & {
-    property: Pick<Property, "title" | "slug" | "organization_id" | "view_count">;
-  })[];
-  // The counter belongs to the property, so every round of a re-auctioned
-  // listing shows the same total.
-  auctions.forEach((a) => hydrateViewCount(a.property));
+  // Scoped by the API; the view counter rides along on the property, so every
+  // round of a re-auctioned listing shows the same total.
+  const auctions = await getAdminAuctions();
 
   return (
     <div className="space-y-8">
@@ -83,7 +68,7 @@ export default async function AdminAuctionsPage() {
                   {formatDateTime(a.submission_deadline)}
                 </td>
                 <td className="px-4 py-3.5">
-                  <StatusBadge status={a.status} />
+                  <StatusBadge status={a.status as AuctionStatus} />
                 </td>
                 <td
                   className="px-4 py-3.5 text-right tabular-nums text-ink-soft"
@@ -93,7 +78,7 @@ export default async function AdminAuctionsPage() {
                 </td>
                 <td className="px-6 py-3.5">
                   <div className="flex flex-wrap items-center justify-end gap-2">
-                    {(nextActions[a.status] ?? []).map((act) => (
+                    {(nextActions[a.status as AuctionStatus] ?? []).map((act) => (
                       <form key={act.to} action={setAuctionStatus}>
                         <input type="hidden" name="id" value={a.id} />
                         <input type="hidden" name="status" value={act.to} />

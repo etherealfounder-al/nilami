@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/UjjwolKayastha/nilami/api/internal/auth"
+	"github.com/google/uuid"
 )
 
 // The admin reads. Every one is scoped by the caller's institution in SQL, so a
@@ -69,6 +70,11 @@ func (d *DB) PropertiesList(ctx context.Context, s auth.Scope) ([]byte, error) {
 				'organization_name', o.name,
 				'image_count', (select count(*) from property_images i
 				                 where i.property_id = p.id),
+				-- The table shows a thumbnail, so the first image comes with the
+				-- row rather than the page fetching every image to find it.
+				'cover_url', (select i.url from property_images i
+				               where i.property_id = p.id
+				               order by i.sort_order, i.created_at limit 1),
 				'auction_count', (select count(*) from auctions a
 				                   where a.property_id = p.id),
 				'view_count', coalesce(v.view_count, 0)
@@ -98,7 +104,10 @@ func (d *DB) AuctionsList(ctx context.Context, s auth.Scope) ([]byte, error) {
 				'updated_at', a.updated_at,
 				'property', jsonb_build_object(
 					'id', p.id, 'slug', p.slug, 'title', p.title,
-					'district', p.district, 'is_published', p.is_published
+					'district', p.district, 'is_published', p.is_published,
+					-- The counter belongs to the property, so every round of a
+					-- re-auctioned listing reports the same total.
+					'view_count', coalesce(v.view_count, 0)
 				),
 				'organization_name', o.name,
 				'bidder_count', (select count(*) from bidder_records b
@@ -107,6 +116,7 @@ func (d *DB) AuctionsList(ctx context.Context, s auth.Scope) ([]byte, error) {
 			  from auctions a
 			  join properties p on p.id = a.property_id
 			  join organizations o on o.id = p.organization_id
+			  left join property_view_stats v on v.property_id = p.id
 			 where ` + tenant + `
 		  ) t`
 	return d.JSON(ctx, q, org, all)
@@ -174,7 +184,11 @@ func (d *DB) Staff(ctx context.Context, s auth.Scope) ([]byte, error) {
 				'role', pr.role, 'approved', pr.approved,
 				'created_at', pr.created_at,
 				'organization_id', pr.organization_id,
-				'organization_name', o.name
+				'organization_name', o.name,
+				-- The queue marks an institution nobody has admitted yet, so
+				-- approving its first member is visibly a bigger decision than
+				-- adding someone to an institution already operating.
+				'organization_approved', o.approved
 			) as row
 			  from profiles pr
 			  left join organizations o on o.id = pr.organization_id
@@ -211,4 +225,52 @@ func (d *DB) InstitutionOptions(ctx context.Context, s auth.Scope) ([]byte, erro
 		  from organizations o
 		 where ($2 or o.id = $1)`
 	return d.JSON(ctx, q, org, all)
+}
+
+// Viewer is everything the panel's chrome needs: who is signed in, whose view
+// they are seeing, and the institutions they may switch between.
+//
+// It exists so the layout does not have to ask three questions over a link to
+// another continent, and so the answers cannot disagree with each other.
+func (d *DB) Viewer(ctx context.Context, s auth.Scope) ([]byte, error) {
+	org, all := s.Tenant()
+
+	// The proxied scope carries the target's id; the real administrator's is in
+	// ProxiedBy. Reporting both is what lets the panel say whose view this is
+	// while still naming the account responsible for anything done in it.
+	real := s.UserID
+	if s.Proxied() {
+		real = s.ProxiedBy
+	}
+
+	const q = `
+		select jsonb_build_object(
+			'user_id', $3::uuid,
+			'organization_id', nullif($1::uuid, '00000000-0000-0000-0000-000000000000'::uuid),
+			'is_platform_admin', $2::boolean,
+			'viewing_as', case when $4::uuid is null then null else (
+				select jsonb_build_object(
+					'id', p.id,
+					'full_name', coalesce(nullif(p.full_name, ''), p.email),
+					'email', p.email,
+					'organization_id', p.organization_id,
+					'organization_name', coalesce(o.name, 'Platform Admin')
+				)
+				  from profiles p
+				  left join organizations o on o.id = p.organization_id
+				 where p.id = $4::uuid
+			) end,
+			'organizations', coalesce((
+				select jsonb_agg(jsonb_build_object('id', o.id, 'name', o.name) order by o.name)
+				  from organizations o
+				 where ($2::boolean or o.id = $1::uuid)
+			), '[]'::jsonb)
+		)`
+
+	var proxied *uuid.UUID
+	if s.Proxied() {
+		id := s.UserID
+		proxied = &id
+	}
+	return d.JSON(ctx, q, org, all, real, proxied)
 }
