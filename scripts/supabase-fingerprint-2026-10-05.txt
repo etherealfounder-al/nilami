@@ -1,0 +1,13 @@
+Supabase, captured 2026-10-05 12:11 UTC. Newest write anywhere: 2026-08-20.
+
+organizations        5   02cc2d9d1f6b2ed43feeb72fbad0633e
+profiles             7   bfc81b7ab0a098d03719ad711849aa45
+properties          10   85c9614740d5af3dd21d41ac7e1a2be6
+property_images     30   0686eb68960bbac05165be8257abc830
+auctions            11   1eacaa1a3fa447052f7043cf699c490b
+bidder_records       4   18a280edfa65b85a007534cbdf8f1b40
+property_view_stats  9   885e54213f94c6b4af72acb9ddebb51e
+
+Media verified separately and complete: all 12 objects in the Supabase
+property-media bucket exist in R2 under identical keys, every byte size
+matching. That includes the 2 objects no database row references.
