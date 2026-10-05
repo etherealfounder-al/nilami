@@ -1,4 +1,4 @@
-# Checks every push, and deploys main in the order the two halves depend on:
+# Tests the API on every push, and deploys main in the order the two halves depend on:
 # the Go API (Coolify on the VPS) first, then the Next.js frontend (Vercel),
 # each only when its own files changed.
 #
@@ -85,19 +85,6 @@ jobs:
       - name: Docker image builds
         run: docker build -q -t nilami-api:ci .
 
-  web-check:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - run: npm install --no-audit --no-fund
-      - run: npx tsc --noEmit
-      - run: npx next build
-
   deploy-api:
     needs: [changes, api-test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
@@ -132,14 +119,14 @@ jobs:
           echo "::error::$API_URL/healthz did not come up"; exit 1
 
   deploy-web:
-    needs: [changes, web-check, deploy-api]
+    needs: [changes, deploy-api]
     # Runs after the API deploy when both changed, and on its own when only the
-    # frontend did; never if any required step failed.
+    # frontend did; never if the API deploy failed. The frontend is checked by
+    # Vercel's own build: if it fails, the previous deployment keeps serving.
     if: >-
       always() &&
       github.event_name == 'push' && github.ref == 'refs/heads/main' &&
       needs.changes.outputs.web == 'true' &&
-      needs.web-check.result == 'success' &&
       (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
     runs-on: ubuntu-latest
     environment: production
