@@ -18,6 +18,7 @@ import (
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/handlers"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
+	"github.com/UjjwolKayastha/nilami/api/internal/storage"
 	"github.com/UjjwolKayastha/nilami/api/internal/supabase"
 )
 
@@ -105,6 +106,13 @@ func run() error {
 		DB:   store,
 		Auth: supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey),
 	}.Routes(admin)
+	handlers.Uploads{Store: storage.New(storage.Config{
+		AccountID:     cfg.R2AccountID,
+		AccessKeyID:   cfg.R2AccessKeyID,
+		SecretKey:     cfg.R2AccessKeySecret,
+		Bucket:        cfg.R2Bucket,
+		PublicBaseURL: cfg.R2PublicBaseURL,
+	})}.Routes(admin)
 	mux.Handle("/v1/admin/", httpx.Chain(admin,
 		cors.Apply,
 		limiter.Limit,
