@@ -1,0 +1,4 @@
+# The Go API in api/ deploys to Coolify, not Vercel. Without this, Vercel
+# treats a top-level api/ directory as serverless functions and fails trying
+# to build api/cmd/server/main.go as a Go function.
+/api
