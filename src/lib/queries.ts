@@ -1,92 +1,111 @@
-import { displayStatus } from "@/lib/auction-status";
-import { createClient } from "@/lib/supabase/server";
+import { api, NotFoundError } from "@/lib/api";
 import type { Auction, Property } from "@/lib/types";
-import { hydrateViewCount, VIEW_STATS_SELECT } from "@/lib/views";
 
 export type AuctionWithProperty = Auction & { property: Property };
 
-const AUCTION_SELECT = `*, property:properties(*, images:property_images(*), organization:organizations(*), ${VIEW_STATS_SELECT})`;
+/**
+ * The public reads, now served by the Go API.
+ *
+ * Each function is one request returning one document the page can render.
+ * Before, every one of these fetched all non-draft auctions with their images,
+ * institutions and view counts, then filtered in JavaScript — a listing page
+ * paid for every row in the table, and the detail page did it to find a single
+ * slug. Over a link from Vercel to a VPS in Hyderabad, that cost is no longer
+ * something to ignore.
+ *
+ * The status a visitor sees is now decided in SQL. It used to be recomputed per
+ * page, which let a list and its own filter disagree about whether a notice
+ * whose deadline had passed was still open.
+ */
 
-/** Sort the gallery and flatten the view-counter join onto `property.view_count`. */
-function hydrate(a: AuctionWithProperty) {
-  a.property.images?.sort((x, y) => x.sort_order - y.sort_order);
-  hydrateViewCount(a.property);
-  return a;
+/** Seconds a public response may be reused. Auctions change on human timescales. */
+const PUBLIC_TTL = 30;
+
+export type HomeSummary = {
+  open_count: number;
+  open_value: number;
+  districts: { district: string; count: number }[];
+  featured: AuctionWithProperty[];
+};
+
+export async function getHomeSummary(): Promise<HomeSummary> {
+  return api<HomeSummary>("/v1/pages/home", {
+    revalidate: PUBLIC_TTL,
+    tags: ["auctions"],
+  });
 }
 
-export async function getPublicAuctions(filters?: {
+export type AuctionsPage = {
+  items: AuctionWithProperty[];
+  total: number;
+  /** Every district with a listing, not only those matching the current filter. */
+  districts: string[];
+  /** Likewise every institution, so the picker does not shrink as you use it. */
+  organizations: { slug: string; name: string; name_np: string }[];
+  status_counts: Record<string, number>;
+};
+
+export type AuctionFilters = {
   status?: string;
   type?: string;
   district?: string;
   org?: string;
   q?: string;
-}): Promise<AuctionWithProperty[]> {
-  const supabase = await createClient();
-  const query = supabase
-    .from("auctions")
-    .select(AUCTION_SELECT)
-    .neq("status", "draft")
-    .order("submission_deadline", { ascending: true });
+  page?: number;
+  size?: number;
+};
 
-  const { data, error } = await query;
-  if (error) throw error;
-
-  let rows = (data as unknown as AuctionWithProperty[]).filter(
-    (a) => a.property
-  );
-  // Filtered on the displayed status, so "open" never returns an auction
-  // whose deadline has already gone by.
-  if (filters?.status)
-    rows = rows.filter((a) => displayStatus(a) === filters.status);
-  if (filters?.type) rows = rows.filter((a) => a.property.type === filters.type);
-  if (filters?.district)
-    rows = rows.filter(
-      (a) => a.property.district.toLowerCase() === filters.district!.toLowerCase()
-    );
-  if (filters?.org)
-    rows = rows.filter((a) => a.property.organization?.slug === filters.org);
-  if (filters?.q) {
-    const q = filters.q.toLowerCase();
-    rows = rows.filter(
-      (a) =>
-        a.property.title.toLowerCase().includes(q) ||
-        a.property.district.toLowerCase().includes(q) ||
-        a.property.municipality.toLowerCase().includes(q)
-    );
+/**
+ * One request for the whole listing page: the cards, the total for paging, and
+ * the values behind the filter controls.
+ *
+ * The facets come from the unfiltered set, so choosing a district does not
+ * remove every other district from the control that chose it.
+ */
+export async function getAuctionsPage(
+  filters: AuctionFilters = {}
+): Promise<AuctionsPage> {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== "") query.set(key, String(value));
   }
-  return rows.map(hydrate);
+  const suffix = query.toString();
+  return api<AuctionsPage>(`/v1/pages/auctions${suffix ? `?${suffix}` : ""}`, {
+    revalidate: PUBLIC_TTL,
+    tags: ["auctions"],
+  });
 }
 
 export async function getAuctionBySlug(
   slug: string
 ): Promise<AuctionWithProperty | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("auctions")
-    .select(AUCTION_SELECT)
-    .neq("status", "draft")
-    .order("round", { ascending: false });
-  if (error) throw error;
-  const rows = (data as unknown as AuctionWithProperty[]).filter(
-    (a) => a.property?.slug === slug
-  );
-  return rows.length ? hydrate(rows[0]) : null;
+  try {
+    return await api<AuctionWithProperty>(
+      `/v1/pages/listing/${encodeURIComponent(slug)}`,
+      { revalidate: PUBLIC_TTL, tags: ["auctions", `listing:${slug}`] }
+    );
+  } catch (error) {
+    // A slug nobody published is a 404 for the visitor, not a server error.
+    if (error instanceof NotFoundError) return null;
+    throw error;
+  }
 }
 
-export async function getDistricts(): Promise<string[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("properties")
-    .select("district")
-    .eq("is_published", true);
-  return [...new Set((data ?? []).map((r) => r.district))].sort();
-}
-
-export async function getOrganizations() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("organizations")
-    .select("id, slug, name, name_np")
-    .order("name");
-  return data ?? [];
+/**
+ * Count one visit, returning the new total.
+ *
+ * Null means no published listing carries this slug — a stale link rather than
+ * a failure, so the caller renders the page without a count instead of an error.
+ */
+export async function recordPropertyView(slug: string): Promise<number | null> {
+  try {
+    const { view_count } = await api<{ view_count: number }>(
+      `/v1/pages/listing/${encodeURIComponent(slug)}/view`,
+      { method: "POST" }
+    );
+    return view_count;
+  } catch (error) {
+    if (error instanceof NotFoundError) return null;
+    throw error;
+  }
 }

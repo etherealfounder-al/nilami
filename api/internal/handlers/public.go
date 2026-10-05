@@ -23,6 +23,26 @@ func (h Public) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/pages/home", h.home)
 	mux.HandleFunc("GET /v1/pages/listing/{slug}", h.listing)
 	mux.HandleFunc("GET /v1/pages/auctions", h.auctions)
+	mux.HandleFunc("POST /v1/pages/listing/{slug}/view", h.recordView)
+}
+
+// recordView counts one visit.
+//
+// It stays behind the service token with the rest of the page routes, so the
+// counter can only be moved by our own server deciding a real page was
+// rendered. Exposed to browsers it would be a number anyone could type into.
+func (h Public) recordView(w http.ResponseWriter, r *http.Request) {
+	count, err := h.DB.RecordPropertyView(r.Context(), r.PathValue("slug"))
+	switch {
+	case errors.Is(err, db.ErrNotFound):
+		// No published listing carries this slug. Not an error worth logging:
+		// it is what a stale link looks like.
+		httpx.Error(w, http.StatusNotFound, "not found", nil)
+	case err != nil:
+		httpx.Error(w, http.StatusInternalServerError, "could not record the view", err)
+	default:
+		httpx.JSON(w, http.StatusOK, map[string]any{"view_count": count})
+	}
 }
 
 // Public reads are identical for every visitor, so they carry a short shared

@@ -16,7 +16,7 @@ import {
   parsePage,
   parsePageSize,
 } from "@/lib/pagination";
-import { getDistricts, getOrganizations, getPublicAuctions } from "@/lib/queries";
+import { getAuctionsPage } from "@/lib/queries";
 
 export const metadata: Metadata = { title: "Auctions" };
 
@@ -39,11 +39,22 @@ export default async function AuctionsPage({
   const defaultSize = (await isMobileRequest())
     ? DEFAULT_PAGE_SIZE_MOBILE
     : DEFAULT_PAGE_SIZE_DESKTOP;
-  const [auctions, districts, orgs] = await Promise.all([
-    getPublicAuctions(params),
-    getDistricts(),
-    getOrganizations(),
-  ]);
+  const size = parsePageSize(params.size, defaultSize);
+
+  // One request for the page: the cards, the total, and the values behind the
+  // filter controls. This was three calls, and the first of them fetched every
+  // non-draft auction in the table so the rest could be filtered out in
+  // JavaScript afterwards.
+  const {
+    items,
+    total,
+    districts,
+    organizations: orgs,
+  } = await getAuctionsPage({
+    ...params,
+    size,
+    page: parsePage(params.page, Infinity),
+  });
 
   const TYPES = [
     { v: "", l: t.listing.allTypes },
@@ -60,15 +71,11 @@ export default async function AuctionsPage({
     { v: "sold", l: t.common.statuses.sold },
   ];
 
-  // Paging is applied here rather than in the query: getPublicAuctions filters
-  // type/district/org/q in JS after the fetch, so the true total is only known
-  // once that is done.
-  const total = auctions.length;
-  const size = parsePageSize(params.size, defaultSize);
+  // Paging is the API's now; what is left is the arithmetic the controls need.
   const totalPages = Math.ceil(total / size);
   const page = parsePage(params.page, totalPages);
   const from = (page - 1) * size;
-  const pageItems = auctions.slice(from, from + size);
+  const pageItems = items;
 
   // Paging params must not make the "Clear" link appear.
   const active = Object.entries(params).filter(
@@ -154,7 +161,7 @@ export default async function AuctionsPage({
           )}
         </form>
 
-        {auctions.length === 0 ? (
+        {total === 0 ? (
           <div className="rounded-2xl border border-dashed border-ink/15 bg-cream/60 p-16 text-center">
             <p className="font-display text-2xl text-evergreen-900">
               {t.listing.emptyTitle}

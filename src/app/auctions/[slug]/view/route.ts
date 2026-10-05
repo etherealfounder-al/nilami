@@ -1,6 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { decodeSlug } from "@/lib/slug";
-import { createClient } from "@/lib/supabase/server";
+import { recordPropertyView } from "@/lib/queries";
 
 /**
  * Records one view of a listing. Called once per page load by <ViewCount />.
@@ -35,17 +35,15 @@ export async function POST(
   const jar = await cookies();
   if (jar.get(COOKIE)) return Response.json({ counted: false });
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("record_property_view", {
-    p_slug: slug,
-  });
-
-  if (error) {
-    console.error(`record_property_view(${slug}) failed:`, error.message);
+  let views: number | null;
+  try {
+    views = await recordPropertyView(slug);
+  } catch (cause) {
+    console.error(`recording a view of ${slug} failed:`, cause);
     return Response.json({ counted: false }, { status: 500 });
   }
   // null means no published property carries this slug.
-  if (data == null) return Response.json({ counted: false }, { status: 404 });
+  if (views == null) return Response.json({ counted: false }, { status: 404 });
 
   jar.set(COOKIE, "1", {
     path,
@@ -55,5 +53,5 @@ export async function POST(
     secure: process.env.NODE_ENV === "production",
   });
 
-  return Response.json({ counted: true, views: Number(data) });
+  return Response.json({ counted: true, views });
 }

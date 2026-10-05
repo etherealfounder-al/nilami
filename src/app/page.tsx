@@ -4,34 +4,28 @@ import { NepalPropertyMap, type DistrictPoint } from "@/components/NepalProperty
 import { DISTRICT_COORDINATES } from "@/lib/nepal/district-coordinates";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
-import { displayStatus } from "@/lib/auction-status";
 import { nprCompact } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
-import { getPublicAuctions } from "@/lib/queries";
+import { getHomeSummary } from "@/lib/queries";
 
 export default async function HomePage() {
   const { lang, t } = await getT();
-  const auctions = await getPublicAuctions();
-  const open = auctions.filter((a) => displayStatus(a) === "open");
-  const rest = auctions.slice(0, 6);
+  // The whole page in one request: the headline figures, the per-district
+  // counts behind the map, and the six cards. The counts are computed in SQL,
+  // so the page no longer pulls every auction in order to tally them.
+  const { open_count, open_value, districts, featured } = await getHomeSummary();
 
   // One map marker per district that has properties on offer. Districts with
   // no centroid on file are skipped rather than dropped on the equator.
-  const byDistrict = new Map<string, number>();
-  for (const a of auctions) {
-    const d = a.property?.district;
-    if (d) byDistrict.set(d, (byDistrict.get(d) ?? 0) + 1);
-  }
-  const mapPoints: DistrictPoint[] = [...byDistrict.entries()]
-    .filter(([d]) => DISTRICT_COORDINATES[d])
-    .map(([district, count]) => ({
+  const mapPoints: DistrictPoint[] = districts
+    .filter(({ district }) => DISTRICT_COORDINATES[district])
+    .map(({ district, count }) => ({
       district,
       count,
       lat: DISTRICT_COORDINATES[district][0],
       lng: DISTRICT_COORDINATES[district][1],
       label: t.home.mapCount(count),
     }));
-  const totalValue = open.reduce((s, a) => s + a.minimum_bid, 0);
   const nums = ["01", "02", "03", "04"];
 
   return (
@@ -77,8 +71,8 @@ export default async function HomePage() {
               </div>
               <div className="rise rise-3 flex flex-wrap gap-x-8 gap-y-5 pt-4 sm:gap-10">
                 {[
-                  { v: String(open.length), l: t.home.statOpen },
-                  { v: nprCompact(totalValue, lang), l: t.home.statValue },
+                  { v: String(open_count), l: t.home.statOpen },
+                  { v: nprCompact(open_value, lang), l: t.home.statValue },
                   { v: "10%", l: t.home.statSecurity },
                 ].map((s) => (
                   <div key={s.l}>
@@ -126,7 +120,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map((a, i) => (
+            {featured.map((a, i) => (
               <AuctionCard key={a.id} auction={a} property={a.property} index={i} lang={lang} />
             ))}
           </div>

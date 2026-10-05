@@ -68,6 +68,18 @@ func (d *DB) HomeSummary(ctx context.Context) ([]byte, error) {
 			'districts', coalesce((
 				select jsonb_agg(jsonb_build_object('district', district, 'count', n))
 				  from (select district, count(*) as n from live group by district) t
+			), '[]'::jsonb),
+			'featured', coalesce((
+				select jsonb_agg(c order by c->>'submission_deadline')
+				  from (
+					select ` + cardJSON + ` as c
+					  from auctions a
+					  join properties p on p.id = a.property_id
+					  join organizations o on o.id = p.organization_id
+					 where ` + publishedAuction + `
+					 order by a.submission_deadline
+					 limit 6
+				  ) f
 			), '[]'::jsonb)
 		)
 		  from live`
@@ -136,7 +148,7 @@ func (d *DB) AuctionsIndex(ctx context.Context, p AuctionsIndexParams) ([]byte, 
 			       a.submission_deadline,
 			       ` + displayStatus + ` as display_status,
 			       p.type::text as type, p.district, p.municipality, p.title,
-			       o.slug as org_slug, o.name as org_name,
+			       o.slug as org_slug, o.name as org_name, o.name_np as org_name_np,
 			       ` + cardJSON + ` as card
 			  from auctions a
 			  join properties p on p.id = a.property_id
@@ -166,7 +178,8 @@ func (d *DB) AuctionsIndex(ctx context.Context, p AuctionsIndexParams) ([]byte, 
 			), '[]'::jsonb),
 			'organizations', coalesce((
 				select jsonb_agg(org order by org->>'name')
-				  from (select distinct jsonb_build_object('slug', org_slug, 'name', org_name) as org
+				  from (select distinct jsonb_build_object(
+				          'slug', org_slug, 'name', org_name, 'name_np', org_name_np) as org
 				          from live) t
 			), '[]'::jsonb),
 			'status_counts', coalesce((
