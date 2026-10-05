@@ -68,3 +68,8 @@ export function areaLabel(
   if (sqm != null) parts.push(`${inr.format(Math.round(sqm))} m²`);
   return parts.join(" · ") || "—";
 }
+
+/** Grouped view total for a table cell, e.g. "1,204". */
+export function formatViews(n: number | undefined): string {
+  return (n ?? 0).toLocaleString("en-IN");
+}

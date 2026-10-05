@@ -3,8 +3,7 @@ import Link from "next/link";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { deleteProperty } from "@/lib/admin/actions";
 import { getAdminProperties } from "@/lib/admin/queries";
-import { typeLabel } from "@/lib/format";
-import { formatViews } from "@/lib/views";
+import { formatViews, typeLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 

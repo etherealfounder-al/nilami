@@ -3,9 +3,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { setAuctionStatus } from "@/lib/admin/actions";
 import { getAdminAuctions } from "@/lib/admin/queries";
-import { formatDateTime, nprCompact } from "@/lib/format";
+import { formatDateTime, formatViews, nprCompact } from "@/lib/format";
 import type { AuctionStatus } from "@/lib/types";
-import { formatViews } from "@/lib/views";
 
 export const dynamic = "force-dynamic";
 

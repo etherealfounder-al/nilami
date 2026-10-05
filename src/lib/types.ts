@@ -59,7 +59,7 @@ export interface Property {
   updated_at: string;
   images?: PropertyImage[];
   organization?: Organization;
-  /** Detail-page views, joined from property_view_stats. Absent on admin reads. */
+  /** Detail-page views, counted by the API. Absent where it is not selected. */
   view_count?: number;
 }
 
