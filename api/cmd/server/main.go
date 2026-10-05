@@ -18,6 +18,7 @@ import (
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/handlers"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
+	"github.com/UjjwolKayastha/nilami/api/internal/supabase"
 )
 
 func main() {
@@ -78,14 +79,38 @@ func run() error {
 		httpx.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	api := http.NewServeMux()
-	handlers.Public{DB: store}.Routes(api)
-
 	mw := httpx.Middleware{Verifier: verifier, Profiles: store, ServiceToken: cfg.ServiceToken}
-	mux.Handle("/v1/", httpx.Chain(api,
+	limiter := httpx.NewLimiter(cfg.RateLimitPerSecond, cfg.RateLimitBurst)
+	cors := httpx.NewCORS(cfg.CORSAllowedOrigins)
+
+	// The two surfaces are guarded differently, because they are reached
+	// differently.
+	//
+	// Public page reads have exactly one legitimate caller, our own server, so
+	// they keep the shared credential and never answer a browser.
+	public := http.NewServeMux()
+	handlers.Public{DB: store}.Routes(public)
+	mux.Handle("/v1/pages/", httpx.Chain(public,
+		limiter.Limit,
 		mw.ServiceGuard, // prove the request came from our frontend
 		mw.Identity,     // then, optionally, prove who the user is
 	))
+
+	// Admin routes are called by signed-in browsers as well as by our server, so
+	// they are gated by the user's token instead. Asking for the shared
+	// credential here would mean shipping it to the browser, where it would stop
+	// being shared and start being published.
+	admin := http.NewServeMux()
+	handlers.Admin{
+		DB:   store,
+		Auth: supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey),
+	}.Routes(admin)
+	mux.Handle("/v1/admin/", httpx.Chain(admin,
+		cors.Apply,
+		limiter.Limit,
+		mw.Identity,
+	))
+	mux.Handle("/v1/organizations/", httpx.Chain(admin, cors.Apply, limiter.Limit, mw.Identity))
 
 	srv := &http.Server{
 		Addr: cfg.Addr,

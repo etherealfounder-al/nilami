@@ -22,9 +22,30 @@ type Config struct {
 	JWTIssuer   string
 	JWTAudience string
 
-	// The Next.js server is the only client. It presents this credential so a
-	// stranger who finds the hostname cannot read the API.
+	// The Next.js server presents this credential on the public page reads and
+	// the view counter, so a stranger who finds the hostname cannot reach them.
+	// The admin routes do not use it: they are called from signed-in browsers
+	// too, where a shared secret would not stay secret.
 	ServiceToken string
+
+	// Approving or rejecting staff has to reach into Supabase, which still owns
+	// accounts: approval confirms the address, rejection deletes the account.
+	// This key bypasses every check Supabase has, so it stays on the server.
+	//
+	// Optional, because everything else runs without it. The two endpoints that
+	// need it say so when it is missing, rather than the process refusing to
+	// start and taking the public site down with it.
+	SupabaseServiceRoleKey string
+
+	// Origins allowed to call the admin routes from a browser. Empty means none,
+	// which is correct while every call is made by our own server.
+	CORSAllowedOrigins string
+
+	// Per-client request budget. The admin routes are reachable from the open
+	// internet, so an unauthenticated flood must cost the attacker more than it
+	// costs the box.
+	RateLimitPerSecond float64
+	RateLimitBurst     float64
 
 	// Cloudflare R2, S3-compatible. Uploads are presigned so file bytes never
 	// pass through this process or the VPS.
@@ -41,19 +62,23 @@ type Config struct {
 
 func Load() (Config, error) {
 	c := Config{
-		Addr:              env("ADDR", ":8080"),
-		DatabaseURL:       os.Getenv("DATABASE_URL"),
-		SupabaseURL:       strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"),
-		JWTAudience:       env("JWT_AUDIENCE", "authenticated"),
-		ServiceToken:      os.Getenv("SERVICE_TOKEN"),
-		R2AccountID:       os.Getenv("R2_ACCOUNT_ID"),
-		R2AccessKeyID:     os.Getenv("R2_ACCESS_KEY_ID"),
-		R2AccessKeySecret: os.Getenv("R2_SECRET_ACCESS_KEY"),
-		R2Bucket:          os.Getenv("R2_BUCKET"),
-		R2PublicBaseURL:   strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
-		MaxDBConns:        int32(envInt("DB_MAX_CONNS", 8)),
-		RequestTimeout:    time.Duration(envInt("REQUEST_TIMEOUT_MS", 10_000)) * time.Millisecond,
-		ShutdownTimeout:   time.Duration(envInt("SHUTDOWN_TIMEOUT_MS", 15_000)) * time.Millisecond,
+		Addr:                   env("ADDR", ":8080"),
+		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		SupabaseURL:            strings.TrimRight(os.Getenv("SUPABASE_URL"), "/"),
+		JWTAudience:            env("JWT_AUDIENCE", "authenticated"),
+		ServiceToken:           os.Getenv("SERVICE_TOKEN"),
+		SupabaseServiceRoleKey: os.Getenv("SUPABASE_SERVICE_ROLE_KEY"),
+		CORSAllowedOrigins:     os.Getenv("CORS_ALLOWED_ORIGINS"),
+		RateLimitPerSecond:     float64(envInt("RATE_LIMIT_PER_SECOND", 10)),
+		RateLimitBurst:         float64(envInt("RATE_LIMIT_BURST", 40)),
+		R2AccountID:            os.Getenv("R2_ACCOUNT_ID"),
+		R2AccessKeyID:          os.Getenv("R2_ACCESS_KEY_ID"),
+		R2AccessKeySecret:      os.Getenv("R2_SECRET_ACCESS_KEY"),
+		R2Bucket:               os.Getenv("R2_BUCKET"),
+		R2PublicBaseURL:        strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
+		MaxDBConns:             int32(envInt("DB_MAX_CONNS", 8)),
+		RequestTimeout:         time.Duration(envInt("REQUEST_TIMEOUT_MS", 10_000)) * time.Millisecond,
+		ShutdownTimeout:        time.Duration(envInt("SHUTDOWN_TIMEOUT_MS", 15_000)) * time.Millisecond,
 	}
 	c.JWTIssuer = c.SupabaseURL + "/auth/v1"
 
@@ -75,6 +100,9 @@ func Load() (Config, error) {
 	}
 	return c, nil
 }
+
+// AuthAdminConfigured reports whether staff approval and rejection can complete.
+func (c Config) AuthAdminConfigured() bool { return c.SupabaseServiceRoleKey != "" }
 
 // StorageConfigured reports whether uploads can be issued. The API still serves
 // everything else without R2, which keeps local development simple.

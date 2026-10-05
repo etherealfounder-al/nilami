@@ -17,6 +17,7 @@ import (
 // governs the request. The token says who you are; this says what you may see.
 type ProfileLookup interface {
 	ScopeForUser(ctx context.Context, userID uuid.UUID) (auth.Scope, error)
+	ScopeForViewAs(ctx context.Context, caller auth.Scope, targetID uuid.UUID) (auth.Scope, error)
 }
 
 type Middleware struct {
@@ -25,9 +26,14 @@ type Middleware struct {
 	ServiceToken string
 }
 
-// ServiceGuard keeps the API private. The Next.js server is the only caller, so
-// anything without the shared credential is refused before it reaches a handler
-// or touches the database.
+// ServiceGuard keeps a route private to our own server. It guards the public
+// page reads and the view counter, whose only legitimate caller is the Next.js
+// server, so anything without the shared credential is refused before it reaches
+// a handler or touches the database.
+//
+// It deliberately does not guard the admin routes: those are reachable from a
+// signed-in browser and are gated by the user's token instead. A credential that
+// has to ship to a browser is not a secret, so it is not asked for there.
 //
 // This is a channel credential, not an identity: it says "this request came
 // from our frontend", never "this request may read institution X".
@@ -78,6 +84,21 @@ func (m Middleware) Identity(next http.Handler) http.Handler {
 				return
 			}
 		}
+		if raw := r.Header.Get("X-View-As"); raw != "" {
+			target, err := uuid.Parse(raw)
+			if err == nil {
+				proxied, err := m.Profiles.ScopeForViewAs(r.Context(), scope, target)
+				switch {
+				case err != nil && err != pgx.ErrNoRows:
+					Error(w, http.StatusInternalServerError, "could not resolve view-as", err)
+					return
+				case err == nil && proxied.Proxied():
+					slog.Info("view-as", "admin", scope.UserID, "target", proxied.UserID, "path", r.URL.Path)
+					scope = proxied
+				}
+			}
+		}
+
 		next.ServeHTTP(w, r.WithContext(auth.WithScope(r.Context(), scope)))
 	})
 }

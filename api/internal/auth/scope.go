@@ -16,27 +16,39 @@ import (
 type Scope struct {
 	UserID uuid.UUID
 	// Empty for the platform administrator, who belongs to no institution.
-	OrganizationID uuid.UUID
+	OrganizationID  uuid.UUID
 	IsPlatformAdmin bool
 	Approved        bool
+	// Set when a platform administrator is viewing the panel as this staff
+	// member. It carries the real account's id so the action can be logged
+	// against the human who took it, never against the account they borrowed.
+	ProxiedBy uuid.UUID
 }
 
-// OrgFilter is the value to bind into a query's organisation predicate.
+// Proxied reports whether this scope came from a view-as, which handlers log and
+// which forbids the few actions that must stay with the real account.
+func (s Scope) Proxied() bool { return s.ProxiedBy != uuid.Nil }
+
+// Tenant returns the two values every scoped query binds: the institution whose
+// rows the caller may touch, and whether the caller is exempt from that check.
 //
-// It fails closed: an unresolved or unapproved profile yields the nil UUID,
-// which matches no row, rather than being allowed to fall through to "see
-// everything". That mirrors the sentinel the TypeScript scope used.
-func (s Scope) OrgFilter() uuid.UUID {
-	if s.IsPlatformAdmin {
-		return uuid.Nil
-	}
-	return s.OrganizationID
+// It is deliberately a pair rather than one magic uuid. A single sentinel has to
+// mean both "the platform administrator, who sees everything" and "nobody, who
+// sees nothing", and those are the same value — the nil uuid — so a query that
+// reads it the first way hands an unresolved profile the whole database. Making
+// the exemption its own boolean means the dangerous case cannot be reached by
+// writing a predicate the obvious way.
+//
+// Only an approved caller should ever get this far; RequireStaff is what
+// enforces that, and the pair keeps a mistake there from widening into a leak.
+func (s Scope) Tenant() (org uuid.UUID, all bool) {
+	return s.OrganizationID, s.IsPlatformAdmin
 }
 
 var (
-	ErrNoIdentity   = errors.New("no identity on request")
-	ErrNotApproved  = errors.New("account is awaiting approval")
-	ErrForbidden    = errors.New("not permitted")
+	ErrNoIdentity  = errors.New("no identity on request")
+	ErrNotApproved = errors.New("account is awaiting approval")
+	ErrForbidden   = errors.New("not permitted")
 )
 
 type ctxKey struct{}
@@ -64,12 +76,18 @@ func RequireStaff(ctx context.Context) (Scope, error) {
 	return s, nil
 }
 
+// RequirePlatformAdmin gates the actions only the platform may take.
+//
+// A proxied scope never satisfies it. While viewing as institution staff a
+// platform admin is deliberately holding reduced authority, and letting the
+// platform powers leak through would make view-as a way to act as somebody else
+// rather than a way to see what they see.
 func RequirePlatformAdmin(ctx context.Context) (Scope, error) {
 	s, err := RequireStaff(ctx)
 	if err != nil {
 		return Scope{}, err
 	}
-	if !s.IsPlatformAdmin {
+	if !s.IsPlatformAdmin || s.Proxied() {
 		return Scope{}, ErrForbidden
 	}
 	return s, nil
