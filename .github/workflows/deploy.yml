@@ -1,0 +1,151 @@
+# Checks every push, and deploys main in the order the two halves depend on:
+# the Go API (Coolify on the VPS) first, then the Next.js frontend (Vercel),
+# each only when its own files changed.
+#
+# Vercel's own production deploys are off (vercel.json, git.deploymentEnabled),
+# so a frontend that needs a new API field can never go live before the API that
+# serves it. Preview deployments of other branches still come from Vercel's Git
+# integration as before.
+#
+# Secrets:
+#   COOLIFY_TOKEN            Coolify API token with only the read + deploy abilities
+#   VERCEL_DEPLOY_HOOK_URL   Vercel deploy hook for the main branch
+
+name: CI / Deploy
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  # One deploy of main at a time, never cancelled half-way; other branches
+  # only run checks, so a newer push may cancel an older one.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  COOLIFY_URL: https://coolify.ujjwolkayastha.com.np
+  COOLIFY_APP_UUID: wsnpyyxf9dbsloac0g5opp8d
+  API_URL: https://api.ujjwolkayastha.com.np
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'api/**'
+            web:
+              - '**'
+              - '!api/**'
+              - '!.github/**'
+              - '!docs/**'
+              - '!**/*.md'
+
+  api-test:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: nilami
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nilami"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: api/go.mod
+          cache-dependency-path: api/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - name: go test (against a real Postgres, so the tenant isolation tests run)
+        run: go test ./... -count=1 -p 1
+        env:
+          TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/nilami?sslmode=disable
+      - name: Docker image builds
+        run: docker build -q -t nilami-api:ci .
+
+  web-check:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: npx next build
+
+  deploy-api:
+    needs: [changes, api-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy on Coolify and wait for it
+        env:
+          TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer $TOKEN")
+          deployment=$(curl -fsS -X POST "${auth[@]}" "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_APP_UUID&force=false" \
+            | jq -r '.deployments[0].deployment_uuid')
+          echo "Coolify deployment $deployment"
+          for i in $(seq 1 90); do
+            status=$(curl -fsS "${auth[@]}" "$COOLIFY_URL/api/v1/deployments/$deployment" | jq -r .status)
+            echo "status: $status"
+            case "$status" in
+              finished) break ;;
+              failed|cancelled*) echo "::error::Coolify deployment $status"; exit 1 ;;
+            esac
+            sleep 10
+          done
+          [ "$status" = finished ] || { echo "::error::timed out waiting for Coolify"; exit 1; }
+      - name: API is healthy
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "$API_URL/healthz" && exit 0
+            sleep 5
+          done
+          echo "::error::$API_URL/healthz did not come up"; exit 1
+
+  deploy-web:
+    needs: [changes, web-check, deploy-api]
+    # Runs after the API deploy when both changed, and on its own when only the
+    # frontend did; never if any required step failed.
+    if: >-
+      always() &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      needs.changes.outputs.web == 'true' &&
+      needs.web-check.result == 'success' &&
+      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger the Vercel production build
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          curl -fsS -X POST "$HOOK" | jq '{job: .job.id, state: .job.state}'
