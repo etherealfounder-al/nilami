@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { adminApi } from "@/lib/api";
+import { adminApi, ApiError } from "@/lib/api";
 
 export {
   VIEW_AS_COOKIE,
@@ -51,10 +51,12 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   let data: ViewerResponse;
   try {
     data = await adminApi<ViewerResponse>("/v1/admin/me");
-  } catch {
-    // Not signed in, not approved, or the API is unreachable. The panel's own
-    // guards decide what to show; there is no viewer either way.
-    return null;
+  } catch (e) {
+    // Not signed in (401) or not approved yet (403): there is no viewer, and
+    // the panel shows the sign-in or pending screen. Anything else is an outage
+    // and must surface as an error, not as "your account is pending".
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return null;
+    throw e;
   }
   return {
     userId: data.user_id,

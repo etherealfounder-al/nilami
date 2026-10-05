@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/StatusBadge";
-import { getAdminScope } from "@/lib/admin/org";
+import { getAdminAuctions, getAdminProperties } from "@/lib/admin/queries";
+import { getViewer } from "@/lib/admin/view-as";
+import { adminApi } from "@/lib/api";
 import { formatDateTime, nprCompact, typeLabel } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
 import type { Auction, AuctionStatus, BidderRecord, Property } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -74,35 +75,24 @@ const TYPE_COLOR: Record<string, string> = {
 const STATUS_ORDER = ["open", "upcoming", "closed", "sold", "draft", "cancelled"];
 
 export default async function AdminOverviewPage() {
-  const supabase = await createClient();
-  const { isPlatformAdmin, organizationId } = await getAdminScope();
-
-  // bidder_records is org-scoped by RLS; auctions and properties are not,
-  // because their SELECT policies stay open for the public site.
-  let auctionQuery = supabase
-    .from("auctions")
-    .select(
-      "status, minimum_bid, appraised_value, winning_amount, opening_datetime, notice_number, submission_deadline, property:properties!inner(title, slug, type, district, organization:organizations(name))"
-    );
-  let propertyQuery = supabase
-    .from("properties")
-    .select("id, is_published, type, district");
-  if (!isPlatformAdmin) {
-    auctionQuery = auctionQuery.eq("property.organization_id", organizationId);
-    propertyQuery = propertyQuery.eq("organization_id", organizationId);
-  }
-
-  const [{ data: auctions }, { data: properties }, { data: bidders }] =
-    await Promise.all([
-      auctionQuery,
-      propertyQuery,
-      supabase
-        .from("bidder_records")
-        .select(
-          "id, full_name, deposit_status, created_at, auction:auctions(notice_number, property:properties(title))"
-        )
-        .order("created_at", { ascending: false }),
-    ]);
+  // All three lists come from the API already scoped to the caller's
+  // institution (or everything, for the platform administrator).
+  const [viewer, auctionList, propertyList, bidderList] = await Promise.all([
+    getViewer(),
+    getAdminAuctions(),
+    getAdminProperties(),
+    adminApi<unknown[]>("/v1/admin/bidders"),
+  ]);
+  const auctions = auctionList.map((a) => ({
+    ...a,
+    property: { ...a.property, organization: { name: a.organization_name } },
+  }));
+  const properties = propertyList;
+  const bidders = bidderList;
+  // While proxying, the dashboard is the target's view, as before.
+  const isPlatformAdmin = viewer?.viewingAs
+    ? viewer.viewingAs.organizationId === null
+    : Boolean(viewer?.isPlatformAdmin);
 
   type ARow = Auction & {
     property: (Pick<Property, "title" | "slug" | "type" | "district"> & {

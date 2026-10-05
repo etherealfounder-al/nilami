@@ -30,6 +30,7 @@ func (h Admin) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/admin/auctions", h.scoped(h.DB.AuctionsList))
 	mux.HandleFunc("GET /v1/admin/staff", h.scoped(h.DB.Staff))
 	mux.HandleFunc("GET /v1/admin/institutions", h.scoped(h.DB.InstitutionOptions))
+	mux.HandleFunc("GET /v1/admin/bidders", h.scoped(h.DB.AllBidders))
 
 	mux.HandleFunc("GET /v1/admin/properties/{id}", h.byID(h.DB.PropertyDetail))
 	mux.HandleFunc("GET /v1/admin/auctions/{id}", h.byID(h.DB.AuctionDetail))
@@ -40,6 +41,8 @@ func (h Admin) Routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("POST /v1/admin/staff/{id}/approve", h.approveStaff)
 	mux.HandleFunc("POST /v1/admin/staff/{id}/reject", h.rejectStaff)
+
+	h.writeRoutes(mux)
 
 	// Unauthenticated by design: the signup form submits it before an account
 	// exists. Its limits live in the query.

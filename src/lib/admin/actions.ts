@@ -10,6 +10,8 @@ import {
 } from "@/lib/admin/view-as";
 import { parseLandArea } from "@/lib/nepal/land-area";
 import { joinRoadAccess } from "@/lib/nepal/road-access";
+import { getStaff } from "@/lib/admin/queries";
+import { adminApi, api } from "@/lib/api";
 import { slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,26 +32,12 @@ export async function signOut() {
 }
 
 export async function upsertProperty(formData: FormData) {
-  const supabase = await createClient();
   const id = (formData.get("id") as string) || null;
   const title = (formData.get("title") as string).trim();
 
-  // Organization is derived from the signed-in staffer's profile — never from
-  // client input. Only platform admins (profile with no organization) may pick
-  // an institution via the form. RLS enforces the same rule at the database.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("You must be signed in to save a property.");
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("id", user.id)
-    .single();
-  const organizationId =
-    profile?.organization_id ??
-    ((formData.get("organization_id") as string) || null);
-  if (!organizationId) throw new Error("An organization is required.");
+  // The institution is decided by the API from the caller's token. The form's
+  // organization_id is sent, but only a platform administrator's is honoured.
+  const organizationId = (formData.get("organization_id") as string) || null;
 
   // A slug typed into the form is normalised too — stored verbatim it could
   // carry spaces or capitals, which produce a URL the listing page cannot
@@ -61,7 +49,7 @@ export async function upsertProperty(formData: FormData) {
       "Could not build a slug from the title — please enter one in the Slug field."
     );
 
-  const row = {
+  const body = {
     organization_id: organizationId,
     title,
     slug: propertySlug,
@@ -90,59 +78,36 @@ export async function upsertProperty(formData: FormData) {
     longitude: num(formData.get("longitude")),
     video_url: ((formData.get("video_url") as string) ?? "").trim() || null,
     is_published: formData.get("is_published") === "on",
+    // The image set is replaced wholesale, in the same transaction as the row.
+    image_urls: ((formData.get("image_urls") as string) ?? "")
+      .split("\n")
+      .map((u) => u.trim())
+      .filter(Boolean),
   };
 
-  let propertyId = id;
-  if (id) {
-    const { error } = await supabase.from("properties").update(row).eq("id", id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { data, error } = await supabase
-      .from("properties")
-      .insert(row)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    propertyId = data.id;
-  }
-
-  // Replace image set from submitted URL list
-  const urls = ((formData.get("image_urls") as string) ?? "")
-    .split("\n")
-    .map((u) => u.trim())
-    .filter(Boolean);
-  await supabase.from("property_images").delete().eq("property_id", propertyId);
-  if (urls.length) {
-    const { error } = await supabase.from("property_images").insert(
-      urls.map((url, i) => ({
-        property_id: propertyId,
-        url,
-        alt: title,
-        sort_order: i,
-      }))
-    );
-    if (error) throw new Error(error.message);
-  }
+  await adminApi(
+    id ? `/v1/admin/properties/${encodeURIComponent(id)}` : "/v1/admin/properties",
+    { method: id ? "PUT" : "POST", body }
+  );
 
   revalidateAll();
   redirect("/admin/properties");
 }
 
 export async function deleteProperty(formData: FormData) {
-  const supabase = await createClient();
   const id = formData.get("id") as string;
-  const { error } = await supabase.from("properties").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApi(`/v1/admin/properties/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
   revalidateAll();
 }
 
 export async function upsertAuction(formData: FormData) {
-  const supabase = await createClient();
   const id = (formData.get("id") as string) || null;
   const minimum = num(formData.get("minimum_bid")) ?? 0;
   const pct = num(formData.get("bid_security_pct")) ?? 10;
 
-  const row = {
+  const body = {
     property_id: formData.get("property_id") as string,
     round: num(formData.get("round")) ?? 1,
     notice_number: ((formData.get("notice_number") as string) ?? "").trim(),
@@ -169,77 +134,72 @@ export async function upsertAuction(formData: FormData) {
     result_note: ((formData.get("result_note") as string) ?? "").trim() || null,
   };
 
-  if (id) {
-    const { error } = await supabase.from("auctions").update(row).eq("id", id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase.from("auctions").insert(row);
-    if (error) throw new Error(error.message);
-  }
+  await adminApi(
+    id ? `/v1/admin/auctions/${encodeURIComponent(id)}` : "/v1/admin/auctions",
+    { method: id ? "PUT" : "POST", body }
+  );
   revalidateAll();
   redirect("/admin/auctions");
 }
 
 export async function setAuctionStatus(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("auctions")
-    .update({ status: formData.get("status") as string })
-    .eq("id", formData.get("id") as string);
-  if (error) throw new Error(error.message);
+  const id = formData.get("id") as string;
+  await adminApi(`/v1/admin/auctions/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    body: { status: formData.get("status") as string },
+  });
   revalidateAll();
 }
 
 export async function addBidder(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("bidder_records").insert({
-    auction_id: formData.get("auction_id") as string,
-    full_name: (formData.get("full_name") as string).trim(),
-    phone: ((formData.get("phone") as string) ?? "").trim(),
-    email: ((formData.get("email") as string) ?? "").trim(),
-    citizenship_no: ((formData.get("citizenship_no") as string) ?? "").trim(),
-    deposit_amount: num(formData.get("deposit_amount")),
-    notes: ((formData.get("notes") as string) ?? "").trim(),
+  await adminApi("/v1/admin/bidders", {
+    method: "POST",
+    body: {
+      auction_id: formData.get("auction_id") as string,
+      full_name: (formData.get("full_name") as string).trim(),
+      phone: ((formData.get("phone") as string) ?? "").trim(),
+      email: ((formData.get("email") as string) ?? "").trim(),
+      citizenship_no: ((formData.get("citizenship_no") as string) ?? "").trim(),
+      deposit_amount: num(formData.get("deposit_amount")),
+      notes: ((formData.get("notes") as string) ?? "").trim(),
+    },
   });
-  if (error) throw new Error(error.message);
   revalidatePath("/admin/bidders");
 }
 
 export async function setBidderStatus(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("bidder_records")
-    .update({ deposit_status: formData.get("deposit_status") as string })
-    .eq("id", formData.get("id") as string);
-  if (error) throw new Error(error.message);
+  const id = formData.get("id") as string;
+  await adminApi(`/v1/admin/bidders/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    body: { status: formData.get("deposit_status") as string },
+  });
   revalidatePath("/admin/bidders");
 }
 
 export async function deleteBidder(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("bidder_records")
-    .delete()
-    .eq("id", formData.get("id") as string);
-  if (error) throw new Error(error.message);
+  const id = formData.get("id") as string;
+  await adminApi(`/v1/admin/bidders/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
   revalidatePath("/admin/bidders");
 }
 
 export async function approveStaff(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("approve_staff", {
-    target: formData.get("id") as string,
+  const id = formData.get("id") as string;
+  // The API approves the profile and confirms the account with Supabase, so
+  // the person can sign in.
+  await adminApi(`/v1/admin/staff/${encodeURIComponent(id)}/approve`, {
+    method: "POST",
   });
-  if (error) throw new Error(error.message);
   revalidatePath("/admin/staff");
 }
 
 export async function rejectStaff(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("reject_staff", {
-    target: formData.get("id") as string,
+  const id = formData.get("id") as string;
+  // The API deletes the Supabase account first, then the profile.
+  await adminApi(`/v1/admin/staff/${encodeURIComponent(id)}/reject`, {
+    method: "POST",
   });
-  if (error) throw new Error(error.message);
   revalidatePath("/admin/staff");
 }
 
@@ -260,12 +220,8 @@ export async function startViewAs(formData: FormData) {
   if (targetId === viewer.userId)
     throw new Error("You are already signed in as that account.");
 
-  const supabase = await createClient();
-  const { data: target } = await supabase
-    .from("profiles")
-    .select("id, email, approved")
-    .eq("id", targetId)
-    .single();
+  // The roster is the platform administrator's full view of every account.
+  const target = (await getStaff()).find((p) => p.id === targetId);
   if (!target?.approved)
     throw new Error("That staff account is not approved, so it cannot be proxied into.");
 
@@ -311,19 +267,73 @@ export async function stopViewAs() {
  * through this path.
  */
 export async function updateOrganizationBranding(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("update_organization_branding", {
-    p_org: formData.get("organization_id") as string,
-    p_logo_url: (formData.get("logo_url") as string) ?? "",
-    p_website: (formData.get("website") as string) ?? "",
-    p_contact_email: (formData.get("contact_email") as string) ?? "",
-    p_contact_phone: (formData.get("contact_phone") as string) ?? "",
-    p_address: (formData.get("address") as string) ?? "",
-    p_address_np: (formData.get("address_np") as string) ?? "",
+  await adminApi("/v1/admin/institution", {
+    method: "PATCH",
+    body: {
+      organization_id: (formData.get("organization_id") as string) ?? "",
+      logo_url: (formData.get("logo_url") as string) ?? "",
+      website: (formData.get("website") as string) ?? "",
+      contact_email: (formData.get("contact_email") as string) ?? "",
+      contact_phone: (formData.get("contact_phone") as string) ?? "",
+      address: (formData.get("address") as string) ?? "",
+      address_np: (formData.get("address_np") as string) ?? "",
+    },
   });
-  if (error) throw new Error(error.message);
 
   // The institution card is rendered on every listing page.
   revalidatePath("/auctions", "layout");
   revalidatePath("/admin/institution");
+}
+
+/**
+ * A presigned upload for an image the browser then PUTs straight to R2, so
+ * the bytes never pass through this server or the API.
+ */
+export async function createUpload(
+  kind: "property" | "organization",
+  contentType: string
+): Promise<{ upload_url: string; public_url: string }> {
+  return adminApi("/v1/admin/uploads", {
+    method: "POST",
+    body: { kind, content_type: contentType },
+  });
+}
+
+/**
+ * Register an institution from the public signup form. Unauthenticated by
+ * design; the API caps and validates it.
+ */
+export async function requestOrganization(input: {
+  name: string;
+  name_np: string;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
+}): Promise<{ id: string } | { error: string }> {
+  try {
+    return await api<{ id: string }>("/v1/organizations/requests", {
+      method: "POST",
+      body: input,
+    });
+  } catch (e) {
+    return { error: (e as Error).message || "Could not register the institution." };
+  }
+}
+
+/**
+ * Create the profile for an account the signup form has just created in
+ * Supabase. Only the id is sent: the API reads the account back from Supabase
+ * and takes the institution and role from there, so nothing here is trusted.
+ */
+export async function provisionSignup(userId: string): Promise<{ ok: boolean }> {
+  try {
+    await api("/v1/pages/signup/profile", {
+      method: "POST",
+      body: { user_id: userId },
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error("[signup] provisioning failed", userId, (e as Error).message);
+    return { ok: false };
+  }
 }

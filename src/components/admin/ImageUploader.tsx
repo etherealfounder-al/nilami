@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/admin/upload";
 
-const BUCKET = "property-media";
 const MAX_MB = 10;
 
 export function ImageUploader({ initialUrls }: { initialUrls: string[] }) {
@@ -17,7 +16,6 @@ export function ImageUploader({ initialUrls }: { initialUrls: string[] }) {
 
   async function uploadFiles(files: FileList | File[]) {
     setError(null);
-    const supabase = createClient();
     const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (list.length === 0) {
       setError("Only image files are supported.");
@@ -30,14 +28,8 @@ export function ImageUploader({ initialUrls }: { initialUrls: string[] }) {
       }
       setUploading((n) => n + 1);
       try {
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const path = `properties/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from(BUCKET)
-          .upload(path, file, { contentType: file.type, upsert: false });
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        setUrls((u) => [...u, data.publicUrl]);
+        const url = await uploadImage(file, "property");
+        setUrls((u) => [...u, url]);
       } catch (e) {
         setError(
           e instanceof Error
@@ -106,7 +98,7 @@ export function ImageUploader({ initialUrls }: { initialUrls: string[] }) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         multiple
         hidden
         onChange={(e) => {

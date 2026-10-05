@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { signOut, stopViewAs } from "@/lib/admin/actions";
-import { getViewAsTarget } from "@/lib/admin/view-as";
+import { getViewAsTarget, getViewer } from "@/lib/admin/view-as";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLayout({
@@ -17,14 +17,12 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("approved, organization_id, organization:organizations(name)")
-    .eq("id", user.id)
-    .single();
+  // The profile lives in the API's database. /v1/admin/me answers only for an
+  // approved account, so no viewer means the account is still pending.
+  const viewer = await getViewer();
 
   // Signed in but not yet approved: show the pending screen only
-  if (!profile?.approved) {
+  if (!viewer) {
     return (
       <main className="grid min-h-dvh place-items-center bg-evergreen-950 px-5">
         <div className="w-full max-w-md space-y-5 rounded-3xl border border-ivory/10 bg-ivory p-8 text-center shadow-lift">
@@ -57,10 +55,10 @@ export default async function AdminLayout({
   const viewAs = await getViewAsTarget();
   const isPlatformAdmin = viewAs
     ? viewAs.organizationId === null
-    : profile.organization_id === null;
+    : viewer.isPlatformAdmin;
   const orgLabel = viewAs
     ? viewAs.organizationName
-    : (profile.organization as unknown as { name: string } | null)?.name ??
+    : viewer.organizations.find((o) => o.id === viewer.organizationId)?.name ??
       "Platform Admin";
 
   const nav = [

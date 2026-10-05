@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/admin/upload";
 
-const BUCKET = "property-media";
 const MAX_MB = 2;
-const TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+const TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 /**
  * One logo per institution, stored in the same public bucket as property
@@ -40,14 +39,7 @@ export function LogoUploader({
 
     setBusy(true);
     try {
-      const supabase = createClient();
-      const ext = (file.name.split(".").pop() || "png").toLowerCase();
-      const path = `organizations/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (upErr) throw upErr;
-      setUrl(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+      setUrl(await uploadImage(file, "organization"));
     } catch (e) {
       setError(
         e instanceof Error

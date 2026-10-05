@@ -274,3 +274,22 @@ func (d *DB) Viewer(ctx context.Context, s auth.Scope) ([]byte, error) {
 	}
 	return d.JSON(ctx, q, org, all, real, proxied)
 }
+
+// AllBidders is the bidder-records page: every bidder in the caller's scope,
+// newest first, with the auction and property it belongs to. Personal data, so
+// it goes through the same tenant predicate as everything else.
+func (d *DB) AllBidders(ctx context.Context, s auth.Scope) ([]byte, error) {
+	org, all := s.Tenant()
+	const q = `
+		select coalesce(jsonb_agg(to_jsonb(b) || jsonb_build_object(
+			'auction', jsonb_build_object(
+				'notice_number', a.notice_number,
+				'property', jsonb_build_object('title', p.title)
+			)
+		) order by b.created_at desc), '[]'::jsonb)
+		  from bidder_records b
+		  join auctions a on a.id = b.auction_id
+		  join properties p on p.id = a.property_id
+		 where ` + tenant
+	return d.JSON(ctx, q, org, all)
+}

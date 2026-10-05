@@ -1,15 +1,14 @@
 import { SignupForm } from "@/components/admin/SignupForm";
 import { Logo } from "@/components/Logo";
-import { createClient } from "@/lib/supabase/server";
+import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export default async function SignupPage() {
-  const supabase = await createClient();
-  const { data: orgs } = await supabase
-    .from("organizations")
-    .select("id, name")
-    .order("name");
+  // Approved institutions only; a new one can be requested from the form.
+  const orgs = await api<{ id: string; name: string }[]>(
+    "/v1/pages/signup/organizations"
+  );
 
   return (
     <main className="grid min-h-dvh place-items-center bg-evergreen-950 px-5 py-12">

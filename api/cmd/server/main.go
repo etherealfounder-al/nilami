@@ -91,6 +91,8 @@ func run() error {
 	// they keep the shared credential and never answer a browser.
 	public := http.NewServeMux()
 	handlers.Public{DB: store}.Routes(public)
+	authAdmin := supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey)
+	handlers.Signup{DB: store, Auth: authAdmin}.Routes(public)
 	mux.Handle("/v1/pages/", httpx.Chain(public,
 		limiter.Limit,
 		mw.ServiceGuard, // prove the request came from our frontend
@@ -104,7 +106,7 @@ func run() error {
 	admin := http.NewServeMux()
 	handlers.Admin{
 		DB:   store,
-		Auth: supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey),
+		Auth: authAdmin,
 	}.Routes(admin)
 	handlers.Uploads{Store: storage.New(storage.Config{
 		AccountID:     cfg.R2AccountID,

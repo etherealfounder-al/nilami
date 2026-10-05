@@ -110,3 +110,12 @@ func (d *DB) ScopeForViewAs(ctx context.Context, caller auth.Scope, targetID uui
 	}
 	return target, nil
 }
+
+// SignupOrganizations is the institution picker on the public signup form:
+// approved institutions only, so an unreviewed request cannot be used to
+// advertise a name to every later visitor.
+func (d *DB) SignupOrganizations(ctx context.Context) ([]byte, error) {
+	return d.JSON(ctx, `
+		select coalesce(jsonb_agg(jsonb_build_object('id', id, 'name', name) order by name), '[]'::jsonb)
+		  from organizations where approved`)
+}

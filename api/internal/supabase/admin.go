@@ -4,6 +4,7 @@ package supabase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -89,4 +90,55 @@ func (a *Admin) ConfirmEmail(ctx context.Context, userID uuid.UUID) error {
 // a working login attached to no institution.
 func (a *Admin) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 	return a.do(ctx, http.MethodDelete, userID, "")
+}
+
+// User is the slice of a Supabase account that provisioning reads. Metadata is
+// whatever the signup form sent, so every field in it is untrusted input.
+type User struct {
+	ID               uuid.UUID  `json:"id"`
+	Email            string     `json:"email"`
+	EmailConfirmedAt *time.Time `json:"email_confirmed_at"`
+	CreatedAt        time.Time  `json:"created_at"`
+	Metadata         struct {
+		FullName       string `json:"full_name"`
+		OrganizationID string `json:"organization_id"`
+		SignupRole     string `json:"signup_role"`
+	} `json:"user_metadata"`
+}
+
+// ErrNoSuchUser is returned when Supabase has no account with that id.
+var ErrNoSuchUser = errors.New("no such supabase user")
+
+// GetUser reads one account through the admin API.
+func (a *Admin) GetUser(ctx context.Context, userID uuid.UUID) (User, error) {
+	var u User
+	if !a.Configured() {
+		return u, ErrNotConfigured
+	}
+	url := fmt.Sprintf("%s/auth/v1/admin/users/%s", a.baseURL, userID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return u, err
+	}
+	req.Header.Set("apikey", a.key)
+	req.Header.Set("Authorization", "Bearer "+a.key)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return u, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		return u, ErrNoSuchUser
+	}
+	if resp.StatusCode >= 300 {
+		detail, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		return u, fmt.Errorf("supabase admin GET returned %d: %s", resp.StatusCode, strings.TrimSpace(string(detail)))
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<16)).Decode(&u); err != nil {
+		return u, err
+	}
+	if u.ID != userID {
+		return User{}, ErrNoSuchUser
+	}
+	return u, nil
 }

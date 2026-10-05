@@ -1,8 +1,8 @@
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { addBidder, deleteBidder, setBidderStatus } from "@/lib/admin/actions";
-import { getAdminScope } from "@/lib/admin/org";
+import { getAdminAuctions } from "@/lib/admin/queries";
+import { adminApi } from "@/lib/api";
 import { npr } from "@/lib/format";
-import { createClient } from "@/lib/supabase/server";
 import type { Auction, BidderRecord, Property } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -18,33 +18,27 @@ const statusStyles: Record<string, string> = {
 };
 
 export default async function AdminBiddersPage() {
-  const supabase = await createClient();
-  const { isPlatformAdmin, organizationId } = await getAdminScope();
-
-  // bidder_records is already org-scoped by RLS; the auction picker is not.
-  let auctionQuery = supabase
-    .from("auctions")
-    .select("id, notice_number, status, property:properties!inner(title, organization_id)")
-    .in("status", ["upcoming", "open", "closed"])
-    .order("submission_deadline");
-  if (!isPlatformAdmin)
-    auctionQuery = auctionQuery.eq("property.organization_id", organizationId);
-
-  const [{ data: bidders }, { data: auctions }] = await Promise.all([
-    supabase
-      .from("bidder_records")
-      .select("*, auction:auctions(notice_number, property:properties(title))")
-      .order("created_at", { ascending: false }),
-    auctionQuery,
+  // Both lists come scoped from the API, so neither can show another
+  // institution's rows.
+  const [bidders, auctions] = await Promise.all([
+    adminApi<unknown[]>("/v1/admin/bidders"),
+    getAdminAuctions(),
   ]);
+  const activeAuctions = auctions
+    .filter((a) => ["upcoming", "open", "closed"].includes(a.status))
+    .sort((x, y) => x.submission_deadline.localeCompare(y.submission_deadline))
+    .map((a) => ({
+      id: a.id,
+      notice_number: a.notice_number,
+      status: a.status,
+      property: { title: a.property.title },
+    })) as unknown as (Pick<Auction, "id" | "notice_number" | "status"> & {
+    property: Pick<Property, "title">;
+  })[];
 
   const rows = (bidders ?? []) as (BidderRecord & {
     auction: { notice_number: string; property: { title: string } };
   })[];
-  const activeAuctions = (auctions ?? []) as unknown as (Pick<
-    Auction,
-    "id" | "notice_number" | "status"
-  > & { property: Pick<Property, "title"> })[];
 
   return (
     <div className="space-y-8">

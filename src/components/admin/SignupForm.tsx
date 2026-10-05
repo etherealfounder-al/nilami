@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { PasswordInput } from "@/components/admin/PasswordInput";
+import { provisionSignup, requestOrganization } from "@/lib/admin/actions";
 import { createClient } from "@/lib/supabase/client";
 
 const inputCls =
@@ -109,20 +110,19 @@ function AddInstitutionModal({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc("request_organization", {
-      p_name: name,
-      p_name_np: nameNp,
-      p_contact_email: email,
-      p_contact_phone: phone,
-      p_address: address,
+    const result = await requestOrganization({
+      name,
+      name_np: nameNp,
+      contact_email: email,
+      contact_phone: phone,
+      address,
     });
-    if (error || !data) {
-      setError(error?.message ?? "Could not register the institution.");
+    if ("error" in result) {
+      setError(result.error);
       setBusy(false);
       return;
     }
-    onCreated({ id: data as string, name, pending: true });
+    onCreated({ id: result.id, name, pending: true });
   }
 
   return (
@@ -258,7 +258,7 @@ export function SignupForm({
     setBusy(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -273,6 +273,19 @@ export function SignupForm({
       setError(error.message);
       setBusy(false);
       return;
+    }
+    // The account exists in Supabase; now create its (unapproved) profile in
+    // our database. The server reads the institution and role back from
+    // Supabase itself, so only the id is sent.
+    if (data.user) {
+      const { ok } = await provisionSignup(data.user.id);
+      if (!ok) {
+        setError(
+          "Your account was created, but the request could not be registered. Please contact the platform administrator."
+        );
+        setBusy(false);
+        return;
+      }
     }
     setDone(true);
   }

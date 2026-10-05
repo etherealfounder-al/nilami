@@ -35,7 +35,7 @@ type Options = {
   tags?: string[];
   /** Forward the signed-in user's token so the API can scope the response. */
   authenticated?: boolean;
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Extra headers. Used for the view-as relay; see adminApi below. */
   headers?: Record<string, string>;
@@ -65,6 +65,7 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   }
 
   const headers: Record<string, string> = {
+    ...options.headers,
     "X-Service-Token": SERVICE_TOKEN,
     Accept: "application/json",
   };
@@ -103,7 +104,14 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
     // The API returns { error } with a message safe to surface; anything else
     // is logged by the API itself rather than echoed to a visitor.
     const detail = await response.text().catch(() => "");
-    throw new ApiError(response.status, detail || response.statusText);
+    let message = detail || response.statusText;
+    try {
+      const parsed = JSON.parse(detail) as { error?: unknown };
+      if (typeof parsed.error === "string") message = parsed.error;
+    } catch {
+      // Not JSON; keep the raw text.
+    }
+    throw new ApiError(response.status, message);
   }
   return (await response.json()) as T;
 }
