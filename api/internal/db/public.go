@@ -73,3 +73,106 @@ func (d *DB) HomeSummary(ctx context.Context) ([]byte, error) {
 		  from live`
 	return d.JSON(ctx, q)
 }
+
+// displayStatus is the status a visitor should see.
+//
+// The stored status drifts: a notice stays 'open' in the table after its
+// deadline passes, because nothing closes it. Deriving the displayed value here
+// means the list, the filters and the counts all agree, instead of each page
+// correcting it on its own.
+const displayStatus = `
+	case when a.status = 'open' and a.submission_deadline < now()
+	     then 'closed' else a.status::text end`
+
+// cardJSON is what a card in the index renders. Lighter than the detail
+// payload, but it carries the images because the card has its own carousel.
+const cardJSON = `
+	jsonb_build_object(
+		'id', a.id, 'round', a.round, 'notice_number', a.notice_number,
+		'status', a.status, 'display_status', ` + displayStatus + `,
+		'submission_deadline', a.submission_deadline,
+		'opening_datetime', a.opening_datetime,
+		'minimum_bid', a.minimum_bid, 'winning_amount', a.winning_amount,
+		'property', jsonb_build_object(
+			'id', p.id, 'slug', p.slug, 'title', p.title, 'type', p.type,
+			'province', p.province, 'district', p.district,
+			'municipality', p.municipality, 'ward', p.ward,
+			'land_area_aana', p.land_area_aana, 'land_area_sqm', p.land_area_sqm,
+			'latitude', p.latitude, 'longitude', p.longitude,
+			'organization', jsonb_build_object(
+				'slug', o.slug, 'name', o.name, 'name_np', o.name_np,
+				'logo_url', o.logo_url
+			),
+			'images', coalesce((
+				select jsonb_agg(jsonb_build_object('id', i.id, 'url', i.url, 'alt', i.alt, 'sort_order', i.sort_order)
+				                 order by i.sort_order, i.created_at)
+				  from property_images i where i.property_id = p.id
+			), '[]'::jsonb)
+		)
+	)`
+
+// AuctionsIndexParams mirrors the listing page's query string. Every filter is
+// optional; an empty string means "not filtering on this".
+type AuctionsIndexParams struct {
+	Status   string
+	Type     string
+	District string
+	Org      string
+	Query    string
+	Limit    int
+	Offset   int
+}
+
+// AuctionsIndex returns one document holding the page of cards, the total for
+// paging, and the facets the filter controls are built from.
+//
+// The facets come from the unfiltered set on purpose: a district should stay
+// selectable after you have filtered it away, or the control becomes a trap you
+// cannot back out of.
+func (d *DB) AuctionsIndex(ctx context.Context, p AuctionsIndexParams) ([]byte, error) {
+	q := `
+		with live as (
+			select a.id as auction_id, p.id as property_id,
+			       a.submission_deadline,
+			       ` + displayStatus + ` as display_status,
+			       p.type::text as type, p.district, p.municipality, p.title,
+			       o.slug as org_slug, o.name as org_name,
+			       ` + cardJSON + ` as card
+			  from auctions a
+			  join properties p on p.id = a.property_id
+			  join organizations o on o.id = p.organization_id
+			 where ` + publishedAuction + `
+		),
+		filtered as (
+			select * from live
+			 where (nullif($1, '') is null or display_status = $1)
+			   and (nullif($2, '') is null or type = $2)
+			   and (nullif($3, '') is null or lower(district) = lower($3))
+			   and (nullif($4, '') is null or org_slug = $4)
+			   and (nullif($5, '') is null
+			        or title ilike '%' || $5 || '%'
+			        or district ilike '%' || $5 || '%'
+			        or municipality ilike '%' || $5 || '%')
+		)
+		select jsonb_build_object(
+			'total', (select count(*) from filtered),
+			'items', coalesce((
+				select jsonb_agg(card order by submission_deadline)
+				  from (select card, submission_deadline from filtered
+				         order by submission_deadline limit $6 offset $7) page
+			), '[]'::jsonb),
+			'districts', coalesce((
+				select jsonb_agg(distinct district order by district) from live
+			), '[]'::jsonb),
+			'organizations', coalesce((
+				select jsonb_agg(org order by org->>'name')
+				  from (select distinct jsonb_build_object('slug', org_slug, 'name', org_name) as org
+				          from live) t
+			), '[]'::jsonb),
+			'status_counts', coalesce((
+				select jsonb_object_agg(display_status, n)
+				  from (select display_status, count(*) as n from live group by 1) s
+			), '{}'::jsonb)
+		)`
+	return d.JSON(ctx, q, p.Status, p.Type, p.District, p.Org, p.Query, p.Limit, p.Offset)
+}

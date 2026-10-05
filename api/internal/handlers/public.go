@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
@@ -21,6 +22,7 @@ type Public struct{ DB *db.DB }
 func (h Public) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/pages/home", h.home)
 	mux.HandleFunc("GET /v1/pages/listing/{slug}", h.listing)
+	mux.HandleFunc("GET /v1/pages/auctions", h.auctions)
 }
 
 // Public reads are identical for every visitor, so they carry a short shared
@@ -56,6 +58,38 @@ func (h Public) listing(w http.ResponseWriter, r *http.Request) {
 	}
 	if bytes.Equal(doc, []byte("null")) {
 		httpx.Error(w, http.StatusNotFound, "no such listing", nil)
+		return
+	}
+	httpx.RawJSON(w, http.StatusOK, doc, publicCache)
+}
+
+// Page sizes the API will honour. An arbitrary size from the query string is
+// refused rather than clamped silently, so a caller cannot ask for every row.
+var pageSizes = map[int]bool{6: true, 12: true, 24: true, 48: true}
+
+func (h Public) auctions(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	size, _ := strconv.Atoi(q.Get("size"))
+	if !pageSizes[size] {
+		size = 12
+	}
+	page, _ := strconv.Atoi(q.Get("page"))
+	if page < 1 {
+		page = 1
+	}
+
+	doc, err := h.DB.AuctionsIndex(r.Context(), db.AuctionsIndexParams{
+		Status:   q.Get("status"),
+		Type:     q.Get("type"),
+		District: q.Get("district"),
+		Org:      q.Get("org"),
+		Query:    q.Get("q"),
+		Limit:    size,
+		Offset:   (page - 1) * size,
+	})
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "could not load auctions", err)
 		return
 	}
 	httpx.RawJSON(w, http.StatusOK, doc, publicCache)
