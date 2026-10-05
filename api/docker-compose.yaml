@@ -1,0 +1,54 @@
+# Deployed by Coolify's Docker Compose build pack.
+#
+# Coolify's Traefik already owns 80 and 443 and issues the certificate, so
+# nothing here publishes a port or terminates TLS. The API is reachable only
+# through Traefik; Postgres only from the API, over the private network.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Coolify assigns the domain and routes Traefik to this port.
+      - SERVICE_FQDN_API_8080
+      - ADDR=:8080
+      # Password is generated and held by Coolify, never written here.
+      - DATABASE_URL=postgres://nilami:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/nilami?sslmode=disable
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SERVICE_TOKEN=${SERVICE_TOKEN}
+      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID:-}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID:-}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY:-}
+      - R2_BUCKET=${R2_BUCKET:-}
+      - R2_PUBLIC_BASE_URL=${R2_PUBLIC_BASE_URL:-}
+      - DB_MAX_CONNS=${DB_MAX_CONNS:-8}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # The binary doubles as its own probe: distroless has no shell or curl.
+      test: ["CMD", "/server", "-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=nilami
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=nilami
+    volumes:
+      - nilami-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nilami -d nilami"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  nilami-pgdata:
