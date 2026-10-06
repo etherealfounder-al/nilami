@@ -29,7 +29,7 @@ permissions:
 env:
   COOLIFY_URL: https://coolify.ujjwolkayastha.com.np
   COOLIFY_APP_UUID: wsnpyyxf9dbsloac0g5opp8d
-  API_URL: https://api.ujjwolkayastha.com.np
+  API_URL: https://nilami.ujjwolkayastha.com.np
 
 jobs:
   changes:
