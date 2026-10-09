@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AuctionCard } from "@/components/AuctionCard";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { Pagination } from "@/components/Pagination";
+import { Select } from "@/components/ui/Select";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { orgName } from "@/lib/i18n/dictionaries";
@@ -88,8 +89,6 @@ export default async function AuctionsPage({
     {},
     { size: size === defaultSize ? undefined : String(size) }
   );
-  const selectCls =
-    "h-11 w-full rounded-xl border border-ink/12 bg-ivory px-3 text-sm outline-none focus:border-evergreen-600 sm:w-auto";
 
   return (
     <>
@@ -119,28 +118,40 @@ export default async function AuctionsPage({
             placeholder={t.listing.searchPlaceholder}
             className="h-11 w-full flex-1 rounded-xl border border-ink/12 bg-ivory px-4 text-sm outline-none transition-colors focus:border-evergreen-600 sm:w-auto sm:min-w-52"
           />
-          <select name="type" defaultValue={params.type ?? ""} className={selectCls}>
-            {TYPES.map((o) => (
-              <option key={o.v} value={o.v}>{o.l}</option>
-            ))}
-          </select>
-          <select name="district" defaultValue={params.district ?? ""} className={selectCls}>
-            <option value="">{t.listing.allDistricts}</option>
-            {districts.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-          <select name="org" defaultValue={params.org ?? ""} className={selectCls}>
-            <option value="">{t.listing.allOrgs}</option>
-            {orgs.map((o) => (
-              <option key={o.slug} value={o.slug}>{orgName(o, lang)}</option>
-            ))}
-          </select>
-          <select name="status" defaultValue={params.status ?? ""} className={selectCls}>
-            {STATUSES.map((o) => (
-              <option key={o.v} value={o.v}>{o.l}</option>
-            ))}
-          </select>
+          <Select
+            variant="filter"
+            name="type"
+            aria-label={t.listing.allTypes}
+            defaultValue={params.type ?? ""}
+            options={TYPES.map((o) => ({ value: o.v, label: o.l }))}
+          />
+          <Select
+            variant="filter"
+            name="district"
+            aria-label={t.listing.allDistricts}
+            defaultValue={params.district ?? ""}
+            options={[
+              { value: "", label: t.listing.allDistricts },
+              ...districts.map((d) => ({ value: d, label: d })),
+            ]}
+          />
+          <Select
+            variant="filter"
+            name="org"
+            aria-label={t.listing.allOrgs}
+            defaultValue={params.org ?? ""}
+            options={[
+              { value: "", label: t.listing.allOrgs },
+              ...orgs.map((o) => ({ value: o.slug, label: orgName(o, lang) })),
+            ]}
+          />
+          <Select
+            variant="filter"
+            name="status"
+            aria-label={t.listing.anyStatus}
+            defaultValue={params.status ?? ""}
+            options={STATUSES.map((o) => ({ value: o.v, label: o.l }))}
+          />
           {/* Applying filters starts over at page 1, but keeps the page size. */}
           {size !== defaultSize && (
             <input type="hidden" name="size" value={size} />

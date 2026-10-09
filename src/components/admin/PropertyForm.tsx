@@ -7,6 +7,7 @@ import { RoadAccessFields } from "@/components/admin/RoadAccessFields";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { upsertProperty } from "@/lib/admin/actions";
 import type { Property } from "@/lib/types";
+import { Select } from "@/components/ui/Select";
 
 const inputCls =
   "h-11 w-full rounded-xl border border-ink/15 bg-white px-3.5 text-sm outline-none transition-colors focus:border-evergreen-600";
@@ -28,16 +29,20 @@ function Field({
   label,
   children,
   className = "",
+  // Select fields wrap in a div: a <label> would bind to the hidden native
+  // element behind our trigger rather than the trigger itself.
+  as: Tag = "label",
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  as?: "label" | "div";
 }) {
   return (
-    <label className={`block space-y-1.5 ${className}`}>
+    <Tag className={`block space-y-1.5 ${className}`}>
       <span className={labelCls}>{label}</span>
       {children}
-    </label>
+    </Tag>
   );
 }
 
@@ -72,13 +77,18 @@ export function PropertyForm({
           <Field label="Slug (blank = auto)">
             <input name="slug" defaultValue={p?.slug} className={inputCls} />
           </Field>
-          <Field label="Type">
-            <select name="type" defaultValue={p?.type ?? "house"} className={inputCls}>
-              <option value="land">Land</option>
-              <option value="house">House</option>
-              <option value="apartment">Apartment</option>
-              <option value="commercial">Commercial</option>
-            </select>
+          <Field label="Type" as="div">
+            <Select
+              name="type"
+              aria-label="Type"
+              defaultValue={p?.type ?? "house"}
+              options={[
+                { value: "land", label: "Land" },
+                { value: "house", label: "House" },
+                { value: "apartment", label: "Apartment" },
+                { value: "commercial", label: "Commercial" },
+              ]}
+            />
           </Field>
           {lockedOrg ? (
             <div className="block space-y-1.5">
@@ -89,22 +99,18 @@ export function PropertyForm({
               <input type="hidden" name="organization_id" value={lockedOrg.id} />
             </div>
           ) : (
-            <Field label="Institution">
-              <select
+            <Field label="Institution" as="div">
+              <Select
                 name="organization_id"
                 required
+                aria-label="Institution"
                 defaultValue={p?.organization_id ?? ""}
-                className={inputCls}
-              >
-                <option value="" disabled>
-                  Select institution…
-                </option>
-                {organizations.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select institution…"
+                options={organizations.map((o) => ({
+                  value: o.id,
+                  label: o.name,
+                }))}
+              />
             </Field>
           )}
           <label className="flex items-center gap-3 self-end pb-2">
@@ -130,7 +136,6 @@ export function PropertyForm({
             municipality={p?.municipality}
             latitude={p?.latitude}
             longitude={p?.longitude}
-            inputCls={inputCls}
             labelCls={labelCls}
           />
           <Field label="Ward">
@@ -170,18 +175,19 @@ export function PropertyForm({
             inputCls={inputCls}
             labelCls={labelCls}
           />
-          <Field label="Facing">
-            <select name="facing" defaultValue={p?.facing ?? ""} className={inputCls}>
-              <option value="">Not specified</option>
-              {FACINGS.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-              {p?.facing && !FACINGS.includes(p.facing) && (
-                <option value={p.facing}>{p.facing} — not in list</option>
-              )}
-            </select>
+          <Field label="Facing" as="div">
+            <Select
+              name="facing"
+              aria-label="Facing"
+              defaultValue={p?.facing ?? ""}
+              options={[
+                { value: "", label: "Not specified" },
+                ...FACINGS.map((f) => ({ value: f, label: f })),
+                ...(p?.facing && !FACINGS.includes(p.facing)
+                  ? [{ value: p.facing, label: `${p.facing} — not in list` }]
+                  : []),
+              ]}
+            />
           </Field>
         </div>
       </section>

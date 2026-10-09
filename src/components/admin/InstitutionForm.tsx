@@ -6,6 +6,7 @@ import { LogoUploader } from "@/components/admin/LogoUploader";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { updateOrganizationBranding } from "@/lib/admin/actions";
 import type { Organization } from "@/lib/types";
+import { Select } from "@/components/ui/Select";
 
 const inputCls =
   "h-11 w-full rounded-xl border border-ink/15 bg-white px-3.5 text-sm outline-none transition-colors focus:border-evergreen-600";
@@ -59,29 +60,26 @@ export function InstitutionForm({
       <input type="hidden" name="organization_id" value={org.id} />
 
       {organizations.length > 0 && (
-        <label className="block space-y-1.5">
+        <div className="space-y-1.5">
           <span className={labelCls}>
             Editing{pending && " · loading…"}
           </span>
-          <select
+          <Select
+            aria-label="Institution being edited"
             value={choice}
             disabled={pending}
-            onChange={(e) => {
-              const next = e.target.value;
+            onValueChange={(next) => {
               setTarget(next);
               startTransition(() =>
                 router.push(`/admin/institution?org=${next}`)
               );
             }}
-            className={`${inputCls} disabled:opacity-60`}
-          >
-            {organizations.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={organizations.map((o) => ({
+              value: o.id,
+              label: o.name,
+            }))}
+          />
+        </div>
       )}
 
       {/* Keyed on the institution so switching rebuilds every field from the

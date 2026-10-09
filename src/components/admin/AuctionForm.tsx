@@ -1,6 +1,7 @@
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { upsertAuction } from "@/lib/admin/actions";
 import type { Auction } from "@/lib/types";
+import { Select } from "@/components/ui/Select";
 
 const inputCls =
   "h-11 w-full rounded-xl border border-ink/15 bg-white px-3.5 text-sm outline-none transition-colors focus:border-evergreen-600";
@@ -18,18 +19,23 @@ function Field({
   label,
   children,
   className = "",
+  // A <label> around our Select would bind to the hidden native element
+  // rather than the visible trigger, so select fields wrap in a plain div
+  // and name themselves with aria-label instead.
+  as: Tag = "label",
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  as?: "label" | "div";
 }) {
   return (
-    <label className={`block space-y-1.5 ${className}`}>
+    <Tag className={`block space-y-1.5 ${className}`}>
       <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
         {label}
       </span>
       {children}
-    </label>
+    </Tag>
   );
 }
 
@@ -49,22 +55,15 @@ export function AuctionForm({
       {a && <input type="hidden" name="id" value={a.id} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Property" className="sm:col-span-2">
-          <select
+        <Field label="Property" className="sm:col-span-2" as="div">
+          <Select
             name="property_id"
             required
+            aria-label="Property"
             defaultValue={a?.property_id ?? ""}
-            className={inputCls}
-          >
-            <option value="" disabled>
-              Select property…
-            </option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
+            placeholder="Select property…"
+            options={properties.map((p) => ({ value: p.id, label: p.title }))}
+          />
         </Field>
         <Field label="Notice number">
           <input name="notice_number" defaultValue={a?.notice_number} className={inputCls} />
@@ -75,14 +74,15 @@ export function AuctionForm({
         <Field label="Notice published date">
           <input name="published_date" type="date" defaultValue={a?.published_date ?? ""} className={inputCls} />
         </Field>
-        <Field label="Status">
-          <select name="status" defaultValue={a?.status ?? "draft"} className={inputCls}>
-            {["draft", "upcoming", "open", "closed", "sold", "cancelled"].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+        <Field label="Status" as="div">
+          <Select
+            name="status"
+            aria-label="Status"
+            defaultValue={a?.status ?? "draft"}
+            options={["draft", "upcoming", "open", "closed", "sold", "cancelled"].map(
+              (s) => ({ value: s, label: s })
+            )}
+          />
         </Field>
         <Field label="Submission deadline">
           <input

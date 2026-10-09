@@ -3,13 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { PasswordInput } from "@/components/admin/PasswordInput";
+import { Select } from "@/components/ui/Select";
+import { inputCls, labelCls } from "@/components/ui/field";
 import { provisionSignup, requestOrganization } from "@/lib/admin/actions";
 import { createClient } from "@/lib/supabase/client";
-
-const inputCls =
-  "h-12 w-full rounded-xl border border-ink/15 bg-white px-4 text-sm outline-none transition-colors focus:border-evergreen-600";
-const labelCls =
-  "text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft";
 
 type Org = { id: string; name: string; pending?: boolean };
 
@@ -336,17 +333,17 @@ export function SignupForm({
         </label>
         <div className="space-y-1.5">
           <span className={labelCls}>Institution</span>
-          <select required value={orgId} onChange={(e) => setOrgId(e.target.value)} className={inputCls}>
-            <option value="" disabled>
-              Select your institution…
-            </option>
-            {orgs.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-                {o.pending ? " (new — pending review)" : ""}
-              </option>
-            ))}
-          </select>
+          <Select
+            required
+            aria-label="Institution"
+            value={orgId}
+            onValueChange={setOrgId}
+            placeholder="Select your institution…"
+            options={orgs.map((o) => ({
+              value: o.id,
+              label: `${o.name}${o.pending ? " (new — pending review)" : ""}`,
+            }))}
+          />
           <button
             type="button"
             onClick={() => setShowModal(true)}
@@ -355,14 +352,21 @@ export function SignupForm({
             + Institution not listed? Add it
           </button>
         </div>
-        <label className="block space-y-1.5">
+        {/* A div, not a label: a label wrapping the custom trigger would
+            associate itself with the hidden native select instead. */}
+        <div className="space-y-1.5">
           <span className={labelCls}>Role</span>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className={inputCls}>
-            <option value="officer">Recovery Officer</option>
-            <option value="manager">Recovery Manager</option>
-            <option value="valuer">Panel Valuer</option>
-          </select>
-        </label>
+          <Select
+            aria-label="Role"
+            value={role}
+            onValueChange={setRole}
+            options={[
+              { value: "officer", label: "Recovery Officer" },
+              { value: "manager", label: "Recovery Manager" },
+              { value: "valuer", label: "Panel Valuer" },
+            ]}
+          />
+        </div>
         <label className="block space-y-1.5">
           <span className={labelCls}>Work email</span>
           <input type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />

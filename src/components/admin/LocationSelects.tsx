@@ -8,20 +8,20 @@ import {
   PROVINCES,
 } from "@/lib/nepal/administrative-divisions";
 import { DISTRICT_COORDINATES } from "@/lib/nepal/district-coordinates";
+import { Select } from "@/components/ui/Select";
 
 /** Roughly the middle of Nepal, used until a district is chosen. */
 const NEPAL_CENTRE: [number, number] = [28.3949, 84.124];
 
 type Option = { value: string; label: string };
 
-function Select({
+function LabelledSelect({
   name,
   label,
   value,
   onChange,
   options,
   placeholder,
-  inputCls,
   labelCls,
 }: {
   name: string;
@@ -30,7 +30,6 @@ function Select({
   onChange: (v: string) => void;
   options: Option[];
   placeholder: string;
-  inputCls: string;
   labelCls: string;
 }) {
   // A value saved before these fields became dropdowns — or one the dataset
@@ -39,26 +38,21 @@ function Select({
   const unlisted = value !== "" && !options.some((o) => o.value === value);
 
   return (
-    <label className="block space-y-1.5">
+    <div className="space-y-1.5">
       <span className={labelCls}>{label}</span>
-      <select
+      <Select
         name={name}
         required
+        aria-label={label}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputCls}
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-        {unlisted && <option value={value}>{value} — not in list</option>}
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </label>
+        onValueChange={onChange}
+        placeholder={placeholder}
+        options={[
+          ...(unlisted ? [{ value, label: `${value} — not in list` }] : []),
+          ...options,
+        ]}
+      />
+    </div>
   );
 }
 
@@ -72,7 +66,6 @@ export function LocationSelects({
   municipality: initialMunicipality = "",
   latitude = null,
   longitude = null,
-  inputCls,
   labelCls,
 }: {
   province?: string;
@@ -80,7 +73,6 @@ export function LocationSelects({
   municipality?: string;
   latitude?: number | null;
   longitude?: number | null;
-  inputCls: string;
   labelCls: string;
 }) {
   const [province, setProvince] = useState(initialProvince);
@@ -95,11 +87,11 @@ export function LocationSelects({
   const centre = DISTRICT_COORDINATES[district] ?? NEPAL_CENTRE;
 
   const opts = (names: string[]) => names.map((n) => ({ value: n, label: n }));
-  const shared = { inputCls, labelCls };
+  const shared = { labelCls };
 
   return (
     <>
-      <Select
+      <LabelledSelect
         {...shared}
         name="province"
         label="Province"
@@ -112,7 +104,7 @@ export function LocationSelects({
         options={opts(PROVINCES.map((p) => p.name))}
         placeholder="Select province…"
       />
-      <Select
+      <LabelledSelect
         {...shared}
         name="district"
         label="District"
@@ -124,7 +116,7 @@ export function LocationSelects({
         options={opts(districtsOf(province).map((d) => d.name))}
         placeholder={province ? "Select district…" : "Select a province first"}
       />
-      <Select
+      <LabelledSelect
         {...shared}
         name="municipality"
         label="Local level"

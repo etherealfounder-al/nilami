@@ -4,6 +4,7 @@ import { getAdminAuctions } from "@/lib/admin/queries";
 import { adminApi } from "@/lib/api";
 import { npr } from "@/lib/format";
 import type { Auction, BidderRecord, Property } from "@/lib/types";
+import { Select } from "@/components/ui/Select";
 
 export const dynamic = "force-dynamic";
 
@@ -56,19 +57,21 @@ export default async function AdminBiddersPage() {
         action={addBidder}
         className="grid gap-4 rounded-2xl border border-ink/8 bg-ivory p-6 shadow-card sm:grid-cols-2 lg:grid-cols-4"
       >
-        <label className="block space-y-1.5 sm:col-span-2">
+        <div className="block space-y-1.5 sm:col-span-2">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
             Auction
           </span>
-          <select name="auction_id" required className={inputCls}>
-            <option value="">Select auction…</option>
-            {activeAuctions.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.property?.title} — {a.notice_number} ({a.status})
-              </option>
-            ))}
-          </select>
-        </label>
+          <Select
+            name="auction_id"
+            required
+            aria-label="Auction"
+            placeholder="Select auction…"
+            options={activeAuctions.map((a) => ({
+              value: a.id,
+              label: `${a.property?.title} — ${a.notice_number} (${a.status})`,
+            }))}
+          />
+        </div>
         <label className="block space-y-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
             Full name
