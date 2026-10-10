@@ -17,6 +17,8 @@ const imageHosts = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Serve images as-is: the Vercel Hobby plan allows only 5K image transformations a month.
+    unoptimized: true,
     remotePatterns: imageHosts.map((hostname) => ({
       protocol: "https" as const,
       hostname,
