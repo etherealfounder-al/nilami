@@ -177,3 +177,23 @@ func (d *DB) SetPassword(ctx context.Context, email, passwordHash string) (uuid.
 	}
 	return id, nil
 }
+
+// CreatePlatformAdmin makes an approved profile that belongs to no
+// institution, which is this system's definition of a platform administrator.
+//
+// Nothing reachable over HTTP may do this. Signup deliberately cannot: it
+// binds every new profile to an institution that exists, precisely so that a
+// null organisation — total authority — is unreachable from a request. This
+// function is the deliberate exception, called only from the command line on
+// the server itself, because the alternative is a system with no way back in
+// once its last administrator is gone.
+func (d *DB) CreatePlatformAdmin(ctx context.Context, email, fullName, passwordHash string) (uuid.UUID, error) {
+	const q = `
+		insert into profiles (id, full_name, email, role, organization_id, approved, password_hash)
+		values (gen_random_uuid(), $1, $2, 'admin', null, true, $3)
+		returning id`
+
+	var id uuid.UUID
+	err := d.Pool.QueryRow(ctx, q, fullName, email, passwordHash).Scan(&id)
+	return id, err
+}

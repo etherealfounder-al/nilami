@@ -26,9 +26,24 @@ func main() {
 	// The image is distroless: no shell, no curl. The binary is therefore its
 	// own container health probe, invoked as `server -healthcheck`.
 	probe := flag.Bool("healthcheck", false, "probe the local server and exit")
+	// Recovery, run on the server itself: the only way to set a password
+	// without already holding one. See password.go.
+	setPw := flag.Bool("set-password", false, "set an account's password, read from stdin, and exit")
+	email := flag.String("email", "", "with -set-password: the account to set a password for")
+	fullName := flag.String("name", "", "with -create-admin: the display name for the new account")
+	createAdmin := flag.Bool("create-admin", false, "with -set-password: create a platform administrator when the email is unknown")
 	flag.Parse()
 	if *probe {
 		if err := healthcheck(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if *setPw {
+		ctx, cancel := passwordContext()
+		defer cancel()
+		if err := setPassword(ctx, *email, *fullName, *createAdmin); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
