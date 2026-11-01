@@ -1,0 +1,109 @@
+package web
+
+import (
+	"encoding/json"
+	"html/template"
+	"strconv"
+	"strings"
+)
+
+// Fact is one row of the property details table.
+type Fact struct {
+	Label string
+	Value string
+}
+
+// Facts builds that table, leaving out anything the row does not carry.
+//
+// A column with no value is omitted rather than rendered as a dash: a table of
+// dashes reads as missing data about the property, when it usually means the
+// field does not apply to that kind of property at all.
+func (p Page) Facts() []Fact {
+	l, ok := p.Data.(*Listing)
+	if !ok {
+		return nil
+	}
+	prop := l.Property
+	facts := []Fact{
+		{p.S("detail.facts.type"), p.TypeLabel(prop.Type)},
+		{p.S("detail.facts.offeredBy"), prop.Organization.Display(p.Lang)},
+		{p.S("detail.facts.location"), prop.Where()},
+	}
+	if prop.Address != "" {
+		facts = append(facts, Fact{p.S("detail.facts.address"), prop.Address})
+	}
+	if area := p.area(prop); area != "" {
+		facts = append(facts, Fact{p.S("detail.facts.landArea"), area})
+	}
+	return facts
+}
+
+// area reads as the notices write it: aana first, since that is the unit the
+// paperwork uses, with the metric figure beside it when both are recorded.
+func (p Page) area(prop Property) string {
+	var parts []string
+	if prop.LandAreaAana != nil && *prop.LandAreaAana > 0 {
+		parts = append(parts, trimFloat(*prop.LandAreaAana, 2)+" "+p.S("common.aana"))
+	}
+	if prop.LandAreaSqm != nil && *prop.LandAreaSqm > 0 {
+		parts = append(parts, trimFloat(*prop.LandAreaSqm, 2)+" m²")
+	}
+	return strings.Join(parts, " · ")
+}
+
+// JSONLD describes the listing to a search engine in the vocabulary it reads.
+//
+// Marshalled rather than written as a string: a title with a quote in it would
+// otherwise produce a document that fails to parse, and the one thing worse
+// than no structured data is structured data a crawler rejects.
+func (p Page) JSONLD() template.JS {
+	l, ok := p.Data.(*Listing)
+	if !ok {
+		return ""
+	}
+	prop := l.Property
+
+	offer := map[string]any{
+		"@type":         "Offer",
+		"price":         strconv.FormatFloat(l.MinimumBid, 'f', -1, 64),
+		"priceCurrency": "NPR",
+		"availability":  "https://schema.org/InStock",
+	}
+	if !l.Open() {
+		offer["availability"] = "https://schema.org/SoldOut"
+	}
+	if p.Canonical != "" {
+		offer["url"] = p.Canonical
+	}
+
+	doc := map[string]any{
+		"@context": "https://schema.org",
+		"@type":    "Product",
+		"name":     prop.Title,
+		"offers":   offer,
+		"seller": map[string]any{
+			"@type": "Organization",
+			"name":  prop.Organization.Display(p.Lang),
+		},
+	}
+	if prop.Description != "" {
+		doc["description"] = prop.Description
+	}
+	if images := imageURLs(prop); len(images) > 0 {
+		doc["image"] = images
+	}
+
+	raw, err := json.Marshal(doc)
+	if err != nil {
+		return ""
+	}
+	return template.JS(raw)
+}
+
+func imageURLs(prop Property) []string {
+	out := make([]string, 0, len(prop.Images))
+	for _, img := range prop.Images {
+		out = append(out, img.URL)
+	}
+	return out
+}

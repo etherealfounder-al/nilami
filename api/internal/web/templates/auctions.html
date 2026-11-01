@@ -1,0 +1,77 @@
+{{define "head"}}<meta property="og:type" content="website">{{end}}
+
+{{define "content"}}
+{{$p := .}}{{$d := .Data}}{{$q := $d.Params}}
+<main class="mx-auto max-w-6xl px-5 pb-24">
+  <div class="py-10">
+    <h1 class="font-display text-4xl font-semibold tracking-tight text-evergreen-900">{{.S "listing.title"}}</h1>
+    <p class="mt-2 text-ink-soft">{{.S "listing.sub"}}</p>
+  </div>
+
+  {{/* A plain GET form: the filters work before any JavaScript runs, every
+       result is a real address a reader can share, and the back button
+       behaves. */}}
+  <form method="get" action="/auctions" class="mb-8 rounded-2xl border border-ink/8 bg-white p-5 shadow-card">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+      <label class="block flex-1 space-y-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.searchPlaceholder"}}</span>
+        <input type="search" name="q" value="{{$q.Query}}" placeholder="{{.S "listing.searchPlaceholder"}}"
+               class="h-11 w-full rounded-xl border border-ink/12 bg-ivory px-3 text-sm outline-none transition-colors focus:border-evergreen-600">
+      </label>
+
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.anyStatus"}}</span>
+        <select name="status" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+          <option value="">{{.S "listing.anyStatus"}}</option>
+          {{range $k, $v := $d.StatusCounts}}<option value="{{$k}}" {{if eq $q.Status $k}}selected{{end}}>{{$p.StatusLabel $k}} ({{$v}})</option>{{end}}
+        </select>
+      </label>
+
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.allTypes"}}</span>
+        <select name="type" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+          <option value="">{{.S "listing.allTypes"}}</option>
+          {{range $t := list "land" "house" "apartment" "commercial"}}<option value="{{$t}}" {{if eq $q.Type $t}}selected{{end}}>{{$p.TypeLabel $t}}</option>{{end}}
+        </select>
+      </label>
+
+      <label class="block space-y-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.allDistricts"}}</span>
+        <select name="district" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+          <option value="">{{.S "listing.allDistricts"}}</option>
+          {{range $d.Districts}}<option value="{{.}}" {{if eq $q.District .}}selected{{end}}>{{.}}</option>{{end}}
+        </select>
+      </label>
+
+      <div class="flex gap-2">
+        <button type="submit" class="h-11 rounded-full bg-evergreen-800 px-6 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700">{{.S "listing.apply"}}</button>
+        <a href="/auctions" class="flex h-11 items-center rounded-full border border-ink/15 px-5 text-sm font-medium text-ink-soft transition-colors hover:text-ink">{{.S "listing.clear"}}</a>
+      </div>
+    </div>
+  </form>
+
+  {{if gt $d.Total 0}}<p class="mb-5 text-sm text-ink-soft">{{.T "listing.showing" "from" $q.From "to" ($q.To $d.Total) "total" $d.Total}}</p>{{end}}
+
+  {{if $d.Items}}
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {{range $d.Items}}{{template "card" (card $p .)}}{{end}}
+    </div>
+
+    {{$pages := $q.Pages $d.Total}}
+    {{if gt $pages 1}}
+    <nav class="mt-10 flex flex-wrap items-center justify-center gap-1.5" aria-label="{{$p.S "listing.pagination"}}">
+      {{range $n := seq 1 $pages}}
+        <a href="{{$q.Href "page" (itoa $n)}}" aria-label="{{$p.T "listing.gotoPage" "n" $n}}"
+           {{if eq $n $q.Page}}aria-current="page"{{end}}
+           class="grid size-9 place-items-center rounded-full text-sm font-medium transition-colors {{if eq $n $q.Page}}bg-evergreen-800 text-ivory{{else}}border border-ink/12 text-ink-soft hover:border-ink/25 hover:text-ink{{end}}">{{$n}}</a>
+      {{end}}
+    </nav>
+    {{end}}
+  {{else}}
+    <div class="rounded-2xl border border-ink/8 bg-white p-12 text-center shadow-card">
+      <p class="font-display text-xl font-semibold text-evergreen-900">{{.S "listing.emptyTitle"}}</p>
+      <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{{.S "listing.emptySub"}}</p>
+    </div>
+  {{end}}
+</main>
+{{end}}

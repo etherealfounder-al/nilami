@@ -1,0 +1,90 @@
+{{define "head"}}<meta property="og:type" content="website">{{end}}
+
+{{define "content"}}
+{{$p := .}}{{$d := .Data}}
+<main>
+  <section class="relative overflow-hidden bg-evergreen-950 text-ivory">
+    <div aria-hidden class="absolute inset-0 opacity-[0.35]"
+         style="background: radial-gradient(80rem 40rem at 80% -10%, #1b6a52 0%, transparent 55%), radial-gradient(50rem 30rem at 0% 110%, #14503e 0%, transparent 50%)"></div>
+    <div class="relative mx-auto grid max-w-6xl gap-12 px-5 py-20 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-28">
+      <div class="space-y-7">
+        <p class="inline-flex items-center gap-2 rounded-full border border-brass-300/30 bg-brass-300/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-brass-300">{{.S "home.badge"}}</p>
+        <h1 class="font-display text-5xl font-semibold leading-[1.1] tracking-tight sm:text-6xl">{{.S "home.title1"}}<br><span class="text-brass-300">{{.S "home.title2"}}</span></h1>
+        <p class="max-w-xl text-lg leading-relaxed text-ivory/70">{{.S "home.sub"}}</p>
+        <div class="flex flex-wrap items-center gap-4">
+          <a href="/auctions" class="rounded-full bg-brass-500 px-7 py-3.5 text-sm font-semibold text-evergreen-950 shadow-lift transition-all hover:bg-brass-300">{{.S "home.ctaBrowse"}}</a>
+          <a href="/how-it-works" class="rounded-full border border-ivory/25 px-7 py-3.5 text-sm font-medium text-ivory transition-colors hover:bg-ivory/10">{{.S "home.ctaHow"}}</a>
+        </div>
+      </div>
+
+      <dl class="grid gap-5 sm:grid-cols-2 lg:gap-6">
+        <div class="rounded-2xl border border-ivory/10 bg-ivory/5 p-6 backdrop-blur-sm">
+          <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-brass-300">{{.S "home.statOpen"}}</dt>
+          <dd class="mt-2 font-display text-4xl font-semibold tabular-nums">{{group $d.OpenCount}}</dd>
+        </div>
+        <div class="rounded-2xl border border-ivory/10 bg-ivory/5 p-6 backdrop-blur-sm">
+          <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-brass-300">{{.S "home.statValue"}}</dt>
+          <dd class="mt-2 font-display text-4xl font-semibold tabular-nums">{{.NPRCompact $d.OpenValue}}</dd>
+        </div>
+        <div class="rounded-2xl border border-ivory/10 bg-ivory/5 p-6 backdrop-blur-sm sm:col-span-2">
+          <dt class="text-xs font-semibold uppercase tracking-[0.14em] text-brass-300">{{.S "home.statSecurity"}}</dt>
+          <dd class="mt-2 text-sm leading-relaxed text-ivory/70">{{.S "home.assuranceSub"}}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 py-20">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brass-600">{{.S "home.kicker"}}</p>
+        <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-evergreen-900 sm:text-4xl">{{.S "home.featured"}}</h2>
+      </div>
+      <a href="/auctions" class="shrink-0 text-sm font-semibold text-evergreen-700 underline-offset-4 hover:underline">{{.S "home.viewAll"}}</a>
+    </div>
+
+    {{if $d.Featured}}
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {{range $d.Featured}}{{template "card" (card $p .)}}{{end}}
+      </div>
+    {{else}}
+      <p class="mt-10 rounded-2xl border border-ink/8 bg-white p-12 text-center text-sm text-ink-soft shadow-card">{{.S "home.mapEmpty"}}</p>
+    {{end}}
+  </section>
+
+  {{if $d.Districts}}
+  <section class="border-t border-ink/8 bg-cream">
+    <div class="mx-auto max-w-6xl px-5 py-16">
+      <h2 class="font-display text-2xl font-semibold text-evergreen-900">{{.S "home.underAuction"}}</h2>
+      <p class="mt-1 text-sm text-ink-soft">{{.S "home.mapCaption"}}</p>
+      {{/* The map itself was the one piece of this page that needed a
+           JavaScript runtime. The districts it marked are links now, which
+           is what a reader actually does with it: filter to one. */}}
+      <ul class="mt-6 flex flex-wrap gap-2">
+        {{range $d.Districts}}
+        <li><a href="/auctions?district={{.District}}" class="inline-flex items-center gap-2 rounded-full border border-ink/12 bg-white px-4 py-2 text-sm text-ink transition-colors hover:border-evergreen-600 hover:text-evergreen-800">
+          {{.District}}<span class="rounded-full bg-evergreen-50 px-2 py-0.5 text-xs font-semibold text-evergreen-800">{{.Count}}</span>
+        </a></li>
+        {{end}}
+      </ul>
+    </div>
+  </section>
+  {{end}}
+
+  <section class="mx-auto max-w-6xl px-5 py-20">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brass-600">{{.S "home.processKicker"}}</p>
+    <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-evergreen-900 sm:text-4xl">{{.S "home.processTitle"}}</h2>
+    <p class="mt-3 max-w-2xl leading-relaxed text-ink-soft">{{.S "home.processSub"}}</p>
+    <ol class="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      {{range $i, $s := .Items "home.steps"}}
+      <li>
+        <p class="font-display text-3xl font-semibold text-brass-500">{{pad2 (add $i 1)}}</p>
+        <h3 class="mt-3 font-semibold text-evergreen-900">{{index $s "title"}}</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink-soft">{{index $s "body"}}</p>
+      </li>
+      {{end}}
+    </ol>
+    <a href="/how-it-works" class="mt-10 inline-block rounded-full border border-evergreen-800/25 px-6 py-3 text-sm font-medium text-evergreen-800 transition-colors hover:bg-evergreen-800 hover:text-ivory">{{.S "home.assuranceCta"}}</a>
+  </section>
+</main>
+{{end}}

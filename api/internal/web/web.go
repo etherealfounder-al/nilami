@@ -10,10 +10,13 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/UjjwolKayastha/nilami/api/internal/db"
 )
 
 // dist is filled by copying web/dist here before `go build`. The committed
@@ -32,6 +35,7 @@ type Assets struct {
 }
 
 type Server struct {
+	db        *db.DB
 	files     fs.FS
 	assets    Assets
 	templates map[string]*template.Template
@@ -46,12 +50,12 @@ type Server struct {
 }
 
 // New reads the embedded bundle and the asset names out of its manifest.
-func New() (*Server, error) {
+func New(store *db.DB) (*Server, error) {
 	files, err := fs.Sub(distFS, "dist")
 	if err != nil {
 		return nil, err
 	}
-	s := &Server{files: files}
+	s := &Server{db: store, files: files}
 	if err := s.parseTemplates(); err != nil {
 		return nil, err
 	}
@@ -186,6 +190,10 @@ func (s *Server) Routes(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /lang/{lang}", SetLanguage)
 
+	mux.HandleFunc("GET /{$}", s.handleHome)
+	mux.HandleFunc("GET /auctions", s.handleAuctions)
+	mux.HandleFunc("GET /auctions/{slug}", s.handleListing)
+
 	mux.HandleFunc("GET /how-it-works", func(w http.ResponseWriter, r *http.Request) {
 		page := s.newPage(r, "How it works · Nilami",
 			"How a bank asset auction works on Nilami: finding a notice, the bid security deposit, submitting a sealed bid, and what happens on opening day.")
@@ -246,4 +254,87 @@ func contentType(name string) string {
 		return "application/json"
 	}
 	return "application/octet-stream"
+}
+
+// indexView is what the listing page's template ranges over: the page of
+// results and the filters that produced it, so every link it writes keeps the
+// filters that are set.
+type indexView struct {
+	IndexData
+	Params IndexParams
+}
+
+func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
+	data, err := s.home(r.Context())
+	if err != nil {
+		slog.Error("home", "err", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	page := s.newPage(r, "Nilami — Asset Auctions",
+		"Collateral properties offered for sale by participating banks and financial institutions in Nepal. Browse current auction notices, minimum bids and submission deadlines.")
+	page.Data = data
+	s.render(w, r, "home", page)
+}
+
+func (s *Server) handleAuctions(w http.ResponseWriter, r *http.Request) {
+	params := ReadParams(r)
+	data, err := s.index(r.Context(), params)
+	if err != nil {
+		slog.Error("auctions", "err", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	page := s.newPage(r, "All properties · Nilami",
+		"Every collateral property currently offered for sale by participating institutions. Filter by type, district, institution or auction status.")
+	page.Data = indexView{IndexData: data, Params: params}
+	s.render(w, r, "auctions", page)
+}
+
+func (s *Server) handleListing(w http.ResponseWriter, r *http.Request) {
+	listing, err := s.listing(r.Context(), r.PathValue("slug"))
+	if err != nil {
+		slog.Error("listing", "slug", r.PathValue("slug"), "err", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if listing == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// The description is what a search result and a forwarded link show
+	// underneath the title, so it is the listing's own words where it has
+	// them rather than the same sentence on every page.
+	description := listing.Property.Description
+	if description == "" {
+		description = listing.Property.Title + " — " + listing.Property.Where() +
+			". Auction notice " + listing.NoticeNumber + "."
+	}
+	page := s.newPage(r, listing.Property.Title+" · Nilami", truncate(description, 300))
+	page.Canonical = s.canonical(r)
+	page.Data = listing
+	s.render(w, r, "listing", page)
+}
+
+// canonical is the address this page should be known by. Built from the host
+// the request arrived on so the same binary is correct behind either hostname
+// during the move.
+func (s *Server) canonical(r *http.Request) string {
+	scheme := "https"
+	if r.TLS == nil && r.Header.Get("X-Forwarded-Proto") == "" {
+		scheme = "http"
+	}
+	return scheme + "://" + r.Host + r.URL.Path
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	cut := strings.LastIndex(s[:n], " ")
+	if cut < n/2 {
+		cut = n
+	}
+	return strings.TrimSpace(s[:cut]) + "…"
 }

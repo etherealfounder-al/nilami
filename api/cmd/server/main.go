@@ -142,7 +142,7 @@ func run() error {
 	// Everything that is not the API: the public pages this process renders,
 	// and the admin app it serves as a built bundle. Registered last so the
 	// /v1 and /healthz patterns above are matched first.
-	site, err := web.New()
+	site, err := web.New(store)
 	if err != nil {
 		return err
 	}

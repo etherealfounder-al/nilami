@@ -17,13 +17,14 @@ var tmplFS embed.FS
 // Parsing per request would reread the same bytes on every page view, and a
 // template that fails to parse should stop the process rather than surface as
 // a 500 to the first reader who finds it.
-var pageNames = []string{"how"}
+var pageNames = []string{"home", "auctions", "listing", "how"}
 
 func (s *Server) parseTemplates() error {
 	s.templates = map[string]*template.Template{}
 	for _, name := range pageNames {
 		t, err := template.New("layout").Funcs(tmplFuncs).ParseFS(
-			tmplFS, "templates/layout.html", "templates/"+name+".html")
+			tmplFS, "templates/layout.html", "templates/card.html",
+			"templates/"+name+".html")
 		if err != nil {
 			return fmt.Errorf("web: template %s: %w", name, err)
 		}

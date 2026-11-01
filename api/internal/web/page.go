@@ -3,6 +3,7 @@ package web
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/UjjwolKayastha/nilami/api/locales"
@@ -109,8 +110,51 @@ func safePath(p string) string {
 
 // tmplFuncs are the few helpers the templates need that Go does not provide.
 var tmplFuncs = template.FuncMap{
-	"group": locales.Group,
+	// Templates pass whatever the struct field happens to be, so this takes
+	// the numeric kinds rather than one of them.
+	"group": func(v any) string {
+		switch n := v.(type) {
+		case int:
+			return locales.Group(int64(n))
+		case int64:
+			return locales.Group(n)
+		case float64:
+			return locales.Group(int64(n))
+		}
+		return ""
+	},
 	// Numbering a list that the template ranges over, since Go's range gives
 	// a zero-based index and a reader counts from one.
 	"add": func(a, b int) int { return a + b },
+	// Templates cannot follow a pointer, and several money fields are
+	// nullable because a notice has no winning amount until it is sold.
+	"deref": func(f *float64) float64 {
+		if f == nil {
+			return 0
+		}
+		return *f
+	},
+	"itoa": strconv.Itoa,
+	"pad2": func(n int) string {
+		if n < 10 {
+			return "0" + strconv.Itoa(n)
+		}
+		return strconv.Itoa(n)
+	},
+	"list": func(items ...string) []string { return items },
+	// The card partial needs both the page's chrome and one auction, and a
+	// template can pass only one value.
+	"card": func(p Page, c Card) map[string]any {
+		return map[string]any{"Page": p, "Card": c}
+	},
+	"seq": func(from, to int) []int {
+		if to < from {
+			return nil
+		}
+		out := make([]int, 0, to-from+1)
+		for i := from; i <= to; i++ {
+			out = append(out, i)
+		}
+		return out
+	},
 }

@@ -1,0 +1,141 @@
+{{define "head"}}
+{{$l := .Data}}{{$prop := $l.Property}}
+{{/* The tags that decide what a shared link looks like. Facebook, WhatsApp
+     and Viber do not run JavaScript, so a page that filled these in the
+     browser shared as a blank card — which, on a portal whose reach is
+     people forwarding notices, is most of the point of rendering here. */}}
+{{with $prop.Cover}}<meta property="og:image" content="{{.}}">
+<meta name="twitter:card" content="summary_large_image">{{end}}
+<meta property="og:type" content="article">
+<script type="application/ld+json">{{.JSONLD}}</script>
+{{end}}
+
+{{define "content"}}
+{{$p := .}}{{$l := .Data}}{{$prop := $l.Property}}
+<main class="mx-auto max-w-6xl px-5 pb-24">
+  <nav class="flex items-center gap-2 py-6 text-sm text-ink-soft">
+    <a href="/auctions" class="hover:text-evergreen-800">{{.S "detail.breadcrumb"}}</a>
+    <span aria-hidden>/</span>
+    <span class="truncate text-ink">{{$prop.Title}}</span>
+  </nav>
+
+  <div class="grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+    <div class="space-y-8">
+      {{if $prop.Images}}
+      <div class="overflow-hidden rounded-2xl border border-ink/8 bg-parchment shadow-card">
+        <img src="{{(index $prop.Images 0).URL}}" alt="{{$prop.Title}}" width="1200" height="800"
+             class="aspect-[3/2] w-full object-cover">
+      </div>
+      {{if gt (len $prop.Images) 1}}
+      <div class="grid grid-cols-4 gap-3">
+        {{range $i, $img := $prop.Images}}{{if $i}}{{if lt $i 5}}
+          <img src="{{$img.URL}}" alt="" width="300" height="225" loading="lazy" decoding="async"
+               class="aspect-[4/3] w-full rounded-xl border border-ink/8 object-cover">
+        {{end}}{{end}}{{end}}
+      </div>
+      {{end}}
+      {{else}}
+      <div class="grid aspect-[3/2] place-items-center rounded-2xl border border-ink/8 bg-parchment text-sm text-ink-soft">{{.S "common.photosPending"}}</div>
+      {{end}}
+
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] {{.StatusTone $l.Status}}">{{.StatusLabel $l.Status}}</span>
+          <span class="rounded-full bg-cream px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-soft">{{.TypeLabel $prop.Type}}</span>
+          <span class="text-xs text-ink-soft">{{.T "detail.roundN" "n" $l.Round}} · {{.S "detail.noticeNo"}} {{$l.NoticeNumber}}</span>
+        </div>
+        <h1 class="font-display mt-3 text-4xl font-semibold leading-tight tracking-tight text-evergreen-900">{{$prop.Title}}</h1>
+        <p class="mt-2 text-ink-soft">{{$prop.Where}}{{with $prop.Address}} · {{.}}{{end}}</p>
+      </div>
+
+      {{with $prop.Description}}
+      <section>
+        <h2 class="font-display text-xl font-semibold text-evergreen-900">{{$p.S "detail.about"}}</h2>
+        <p class="mt-3 whitespace-pre-line leading-relaxed text-ink-soft">{{.}}</p>
+      </section>
+      {{end}}
+
+      <section>
+        <h2 class="font-display text-xl font-semibold text-evergreen-900">{{.S "detail.details"}}</h2>
+        <dl class="mt-4 divide-y divide-ink/8 rounded-2xl border border-ink/8 bg-white shadow-card">
+          {{range .Facts}}
+          <div class="flex items-baseline justify-between gap-6 px-5 py-3.5">
+            <dt class="text-sm text-ink-soft">{{.Label}}</dt>
+            <dd class="text-right text-sm font-medium text-ink">{{.Value}}</dd>
+          </div>
+          {{end}}
+        </dl>
+      </section>
+
+      {{with $l.RequiredDocuments}}
+      <section>
+        <h2 class="font-display text-xl font-semibold text-evergreen-900">{{$p.S "detail.docs"}}</h2>
+        <p class="mt-3 whitespace-pre-line leading-relaxed text-ink-soft">{{.}}</p>
+      </section>
+      {{end}}
+
+      {{with $l.Terms}}
+      <section>
+        <h2 class="font-display text-xl font-semibold text-evergreen-900">{{$p.S "detail.terms"}}</h2>
+        <p class="mt-3 whitespace-pre-line leading-relaxed text-ink-soft">{{.}}</p>
+      </section>
+      {{end}}
+
+      <section>
+        <h2 class="font-display text-xl font-semibold text-evergreen-900">{{.S "detail.howToBid"}}</h2>
+        <p class="mt-3 leading-relaxed text-ink-soft">{{.S "detail.howToBidBody"}}</p>
+      </section>
+    </div>
+
+    <aside class="space-y-5 lg:sticky lg:top-24">
+      <div class="rounded-2xl border border-ink/8 bg-white p-6 shadow-card">
+        <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft">{{.S "common.minimumBid"}}</p>
+        <p class="font-display mt-1 text-3xl font-semibold text-evergreen-800">{{.NPR $l.MinimumBid}}</p>
+        <p class="mt-1 text-xs text-ink-soft">{{.T "detail.security" "pct" $l.SecurityPercent}} · {{.NPR $l.BidSecurityAmount}}</p>
+
+        <div class="mt-5 space-y-3 border-t border-ink/8 pt-5 text-sm">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="text-ink-soft">{{.S "detail.deadline"}}</span>
+            <span class="text-right font-medium text-ink">{{.DateTime $l.SubmissionDeadline}}</span>
+          </div>
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="text-ink-soft">{{.S "detail.opening"}}</span>
+            <span class="text-right font-medium text-ink">{{.DateTime $l.OpeningDatetime}}</span>
+          </div>
+          {{with $l.OpeningVenue}}
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="text-ink-soft">{{$p.S "detail.venue"}}</span>
+            <span class="text-right font-medium text-ink">{{.}}</span>
+          </div>
+          {{end}}
+        </div>
+
+        {{if $l.Open}}{{with .Countdown $l.SubmissionDeadline}}
+        <p class="mt-5 rounded-xl bg-evergreen-50 px-4 py-3 text-center text-sm font-semibold text-evergreen-800">{{$p.S "detail.closesIn"}} · {{.}}</p>
+        {{end}}{{end}}
+      </div>
+
+      <div class="rounded-2xl border border-ink/8 bg-white p-6 shadow-card">
+        <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft">{{.S "detail.contact"}}</p>
+        <p class="mt-2 font-semibold text-evergreen-900">{{$prop.Organization.Display .Lang}}</p>
+        {{with $prop.Organization.Address}}<p class="mt-1 text-sm text-ink-soft">{{.}}</p>{{end}}
+        {{with $prop.Organization.ContactPhone}}<a href="tel:{{.}}" class="mt-2 inline-block text-sm font-medium text-evergreen-700 hover:underline">{{.}}</a>{{end}}
+        {{with $prop.Organization.ContactEmail}}<a href="mailto:{{.}}" class="mt-1 block text-sm text-ink-soft hover:text-evergreen-700">{{.}}</a>{{end}}
+      </div>
+
+      {{if and $prop.Latitude $prop.Longitude}}
+      <div id="location" class="rounded-2xl border border-ink/8 bg-white p-6 shadow-card">
+        <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft">{{.S "detail.location"}}</p>
+        <p class="mt-2 text-sm text-ink">{{$prop.Where}}</p>
+        {{/* A link rather than an embedded map: the map was the only thing on
+             this page that required a JavaScript runtime, and a reader who
+             wants it gets a better one than we would draw. */}}
+        <a href="https://www.openstreetmap.org/?mlat={{deref $prop.Latitude}}&mlon={{deref $prop.Longitude}}#map=16/{{deref $prop.Latitude}}/{{deref $prop.Longitude}}"
+           target="_blank" rel="noreferrer"
+           class="mt-3 inline-block text-sm font-medium text-evergreen-700 hover:underline">{{.S "detail.openInOsm"}}</a>
+      </div>
+      {{end}}
+    </aside>
+  </div>
+</main>
+{{end}}
