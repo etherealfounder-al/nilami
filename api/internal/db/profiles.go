@@ -119,3 +119,61 @@ func (d *DB) SignupOrganizations(ctx context.Context) ([]byte, error) {
 		select coalesce(jsonb_agg(jsonb_build_object('id', id, 'name', name) order by name), '[]'::jsonb)
 		  from organizations where approved`)
 }
+
+// Credentials is what a login attempt needs: who the email belongs to, the
+// hash to verify against, and whether the account has been approved.
+type Credentials struct {
+	UserID       uuid.UUID
+	PasswordHash string
+	Approved     bool
+}
+
+// CredentialsByEmail looks an account up for sign-in.
+//
+// Matched on lower(email) against the unique index, so the same address in
+// different capitals is the same account rather than a second one. A missing
+// row and a blank password are both left for the caller to handle alike: the
+// difference between "no such account" and "never given a password" is useful
+// to an attacker enumerating addresses and to nobody else.
+func (d *DB) CredentialsByEmail(ctx context.Context, email string) (Credentials, error) {
+	const q = `
+		select p.id, p.password_hash, p.approved
+		  from profiles p
+		 where lower(p.email) = lower($1) and p.email <> ''`
+
+	var c Credentials
+	if err := d.Pool.QueryRow(ctx, q, email).Scan(&c.UserID, &c.PasswordHash, &c.Approved); err != nil {
+		return Credentials{}, err
+	}
+	return c, nil
+}
+
+// SetPassword replaces an account's password and reports which account it was.
+//
+// Every session of that account is deleted in the same transaction. A password
+// change that left sessions alive would not actually revoke anything, which is
+// the whole reason someone changes one.
+func (d *DB) SetPassword(ctx context.Context, email, passwordHash string) (uuid.UUID, error) {
+	tx, err := d.Pool.Begin(ctx)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	const q = `
+		update profiles set password_hash = $2
+		 where lower(email) = lower($1) and email <> ''
+		returning id`
+
+	var id uuid.UUID
+	if err := tx.QueryRow(ctx, q, email, passwordHash).Scan(&id); err != nil {
+		return uuid.Nil, err
+	}
+	if _, err := tx.Exec(ctx, `delete from sessions where user_id = $1`, id); err != nil {
+		return uuid.Nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return uuid.Nil, err
+	}
+	return id, nil
+}
