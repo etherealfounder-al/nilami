@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // The admin app is its own project with its own dependencies and its own
+    // tsconfig. This one's include is **/*.tsx, so without this the Next build
+    // type-checks web/ against dependencies the root install does not have —
+    // which passes locally, where web/node_modules exists, and fails on a
+    // clean checkout, which is what the deploy does.
+    "web"
+  ]
 }
