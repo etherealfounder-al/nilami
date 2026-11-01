@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Documents the environment surface; contains no secrets.
 !.env.example
+
+# admin SPA — installed and built on its own, then embedded in the Go binary
+/web/node_modules
+/web/dist

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "../../styles/theme.css";
+
+/* Tailwind v4 scans from this file's directory by default, which would miss
+   nothing here but would also wander into the Next app above. Pinned. */
+@source "./";
