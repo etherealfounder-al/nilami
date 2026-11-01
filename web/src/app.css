@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../../styles/theme.css";
+@import "./theme.css";
 
 /* The fonts the design system names. Bundled rather than fetched from a third
    party: one fewer connection on a slow link, and no request to anyone else

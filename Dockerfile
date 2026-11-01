@@ -2,9 +2,8 @@
 # the admin app, with Postgres beside it.
 #
 # The build context is the repository root rather than api/, because the image
-# needs three things that live outside the Go module: the admin app's source,
-# the design system both front ends share, and the page templates Tailwind has
-# to scan to know which classes to emit.
+# needs the admin app's source and the page templates Tailwind has to scan to
+# know which classes to emit, neither of which is inside the Go module.
 #
 # Each stage runs on the builder's own architecture and Go cross-compiles, so
 # building an arm64 image on an amd64 runner needs no emulation. Building on
@@ -24,7 +23,6 @@ COPY web/package.json web/pnpm-lock.yaml ./web/
 RUN cd web && pnpm install --frozen-lockfile --ignore-scripts
 
 COPY web/ ./web/
-COPY styles/ ./styles/
 # Tailwind emits only the classes it can see, and half of them are in the Go
 # templates. Without this the pages come out with the right words and no
 # layout at all.

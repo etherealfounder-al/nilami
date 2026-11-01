@@ -1,53 +1,22 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# The admin app: installed and built on its own, then embedded in the binary.
+/web/node_modules
+/web/dist
 
-# testing
-/coverage
+# Where that build lands inside the Go module before `go build`. The .gitkeep
+# keeps the embed valid on a fresh checkout, where the panel answers 503 until
+# the frontend has been built.
+/api/internal/web/dist/*
+!/api/internal/web/dist/.gitkeep
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# Environment files. .env.example is committed: it documents the surface and
+# holds no secrets.
+.env*
+!.env.example
 
 # misc
 .DS_Store
 *.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-!.env.production
-
-# vercel
-.vercel
-
-# typescript
 *.tsbuildinfo
-next-env.d.ts
-
-# Documents the environment surface; contains no secrets.
-!.env.example
-
-# admin SPA — installed and built on its own, then embedded in the Go binary
-/web/node_modules
-/web/dist
-
-# the built admin app, copied into the Go module before `go build`
-/api/internal/web/dist/*
-!/api/internal/web/dist/.gitkeep
+*-debug.log*

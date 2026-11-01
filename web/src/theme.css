@@ -1,10 +1,10 @@
 /*
- * The design system, shared by both front ends.
+ * The design system.
  *
- * Tailwind v4 is CSS-first, so the tokens below are the whole of it: the
- * admin app and the public pages import this file rather than each carrying
- * a copy that drifts. Tailwind itself is imported by each app's own entry
- * stylesheet, so its class scanning stays rooted in that app.
+ * Tailwind v4 is CSS-first, so the tokens below are the whole of it. One
+ * stylesheet is built from here and serves both halves of the site: this app,
+ * and the Go templates that render the public pages, which app.css names as a
+ * second source for Tailwind to scan.
  */
 @theme {
   /* Palette — private-bank calm */
