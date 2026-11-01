@@ -28,7 +28,11 @@ permissions:
 env:
   COOLIFY_URL: https://coolify.ujjwolkayastha.com.np
   COOLIFY_APP_UUID: wsnpyyxf9dbsloac0g5opp8d
-  SITE_URL: https://nilami.ujjwolkayastha.com.np
+  # The site's own hostname, which is what the post-deploy check requests. It
+  # was nilami.ujjwolkayastha.com.np until that domain was detached from the
+  # service on 2026-11-01; the deploy kept working and only the verification
+  # failed, which is the right way round but easy to misread as a bad deploy.
+  SITE_URL: https://nilami.sahayatri.app
 
 jobs:
   api:
