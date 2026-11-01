@@ -23,6 +23,11 @@ const (
 	// SessionRenewAfter limits the sliding renewal to one write a day rather
 	// than one per request.
 	SessionRenewAfter = 24 * time.Hour
+
+	// SessionCookie is the cookie the browser carries once the frontend and
+	// this API share an origin. Until then the frontend holds its own cookie
+	// and relays the token in an Authorization header, so both are accepted.
+	SessionCookie = "nilami_session"
 )
 
 // ErrNoSession means the cookie named no live session: absent, unknown,

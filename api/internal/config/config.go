@@ -55,6 +55,10 @@ type Config struct {
 	R2Bucket          string
 	R2PublicBaseURL   string
 
+	// Drops the Secure flag from the session cookie. Only a local development
+	// server over plain http has any business setting this.
+	CookieInsecure bool
+
 	MaxDBConns      int32
 	RequestTimeout  time.Duration
 	ShutdownTimeout time.Duration
@@ -76,6 +80,7 @@ func Load() (Config, error) {
 		R2AccessKeySecret:      os.Getenv("R2_SECRET_ACCESS_KEY"),
 		R2Bucket:               os.Getenv("R2_BUCKET"),
 		R2PublicBaseURL:        strings.TrimRight(os.Getenv("R2_PUBLIC_BASE_URL"), "/"),
+		CookieInsecure:         os.Getenv("COOKIE_INSECURE") == "1",
 		MaxDBConns:             int32(envInt("DB_MAX_CONNS", 8)),
 		RequestTimeout:         time.Duration(envInt("REQUEST_TIMEOUT_MS", 10_000)) * time.Millisecond,
 		ShutdownTimeout:        time.Duration(envInt("SHUTDOWN_TIMEOUT_MS", 15_000)) * time.Millisecond,

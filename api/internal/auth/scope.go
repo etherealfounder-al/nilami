@@ -19,6 +19,10 @@ type Scope struct {
 	OrganizationID  uuid.UUID
 	IsPlatformAdmin bool
 	Approved        bool
+	// The session this request authenticated with, as its stored hash. Logout
+	// revokes this one rather than every session the account has, so signing
+	// out of a shared machine does not sign the person out of their phone.
+	SessionID string
 	// Set when a platform administrator is viewing the panel as this staff
 	// member. It carries the real account's id so the action can be logged
 	// against the human who took it, never against the account they borrowed.

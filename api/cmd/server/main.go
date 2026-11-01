@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/UjjwolKayastha/nilami/api/internal/auth"
 	"github.com/UjjwolKayastha/nilami/api/internal/config"
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/handlers"
@@ -79,11 +78,6 @@ func run() error {
 		return err
 	}
 
-	verifier, err := auth.NewVerifier(ctx, cfg.SupabaseURL, cfg.JWTIssuer, cfg.JWTAudience)
-	if err != nil {
-		return err
-	}
-
 	mux := http.NewServeMux()
 	// Liveness sits outside the service guard so the container runtime and the
 	// reverse proxy can probe it without holding a credential.
@@ -95,7 +89,8 @@ func run() error {
 		httpx.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 
-	mw := httpx.Middleware{Verifier: verifier, Profiles: store, ServiceToken: cfg.ServiceToken}
+	cookies := httpx.Cookies{Insecure: cfg.CookieInsecure}
+	mw := httpx.Middleware{Sessions: store, Profiles: store, ServiceToken: cfg.ServiceToken, Cookies: cookies}
 	limiter := httpx.NewLimiter(cfg.RateLimitPerSecond, cfg.RateLimitBurst)
 	cors := httpx.NewCORS(cfg.CORSAllowedOrigins)
 
@@ -137,12 +132,28 @@ func run() error {
 	))
 	mux.Handle("/v1/organizations/", httpx.Chain(admin, cors.Apply, limiter.Limit, mw.Identity))
 
+	// Signing in is reachable without any credential — that is the point — so
+	// it carries its own budget, counted per account rather than per address
+	// and far tighter than the general one.
+	signin := http.NewServeMux()
+	handlers.Auth{
+		DB:       store,
+		Cookies:  cookies,
+		Attempts: httpx.NewLimiter(1.0/60.0, 5),
+	}.Routes(signin)
+	mux.Handle("/v1/auth/", httpx.Chain(signin, cors.Apply, limiter.Limit))
+
 	srv := &http.Server{
 		Addr: cfg.Addr,
 		Handler: httpx.Chain(mux,
 			httpx.Recover,
 			httpx.Log,
 			httpx.Timeout(cfg.RequestTimeout),
+			// Now that a cookie can authenticate a request, a page on another
+			// site could make a browser send it. This refuses unsafe
+			// cross-origin browser requests; calls carrying no Origin or
+			// Sec-Fetch-Site — our own server's, and curl's — still pass.
+			http.NewCrossOriginProtection().Handler,
 		),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       90 * time.Second,

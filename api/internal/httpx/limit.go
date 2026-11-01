@@ -98,6 +98,15 @@ func (l *Limiter) allow(key string, now time.Time) (bool, time.Duration) {
 	return true, 0
 }
 
+// Allow spends one request against an arbitrary key, for limits that are not
+// per-address. Login is the case that needs it: behind a proxy — or behind our
+// own frontend, which relays every sign-in from one machine — every attempt
+// shares a single client address, so an address bucket would throttle all
+// users together while leaving one account free to be guessed at.
+func (l *Limiter) Allow(key string) (bool, time.Duration) {
+	return l.allow(key, time.Now())
+}
+
 // Limit refuses a client that is spending faster than the bucket refills.
 func (l *Limiter) Limit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
