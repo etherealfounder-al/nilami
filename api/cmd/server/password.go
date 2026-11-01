@@ -15,10 +15,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// The shortest password this will set. Long enough that argon2id's cost is
-// the attacker's problem rather than the alphabet's.
-const minPasswordLength = 12
-
 // setPassword is the way an account's password is set or reset, and the way
 // back in when there is no account left to sign in with.
 //
@@ -98,8 +94,8 @@ func readPassword(r io.Reader) (string, error) {
 	switch {
 	case strings.TrimSpace(password) == "":
 		return "", errors.New("no password on stdin: pipe one in, e.g. printf %s 'secret' | docker exec -i … ")
-	case utf8.RuneCountInString(password) < minPasswordLength:
-		return "", fmt.Errorf("password is shorter than %d characters", minPasswordLength)
+	case utf8.RuneCountInString(password) < auth.MinPasswordLength:
+		return "", fmt.Errorf("password is shorter than %d characters", auth.MinPasswordLength)
 	}
 	return password, nil
 }

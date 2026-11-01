@@ -10,7 +10,6 @@ import (
 	"github.com/UjjwolKayastha/nilami/api/internal/auth"
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
-	"github.com/UjjwolKayastha/nilami/api/internal/supabase"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
@@ -19,8 +18,7 @@ import (
 // token before it touches anything, and the institution it may act on comes from
 // that scope rather than from the request.
 type Admin struct {
-	DB   *db.DB
-	Auth *supabase.Admin
+	DB *db.DB
 }
 
 func (h Admin) Routes(mux *http.ServeMux) {
@@ -180,17 +178,6 @@ func (h Admin) approveStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Approval is only real once Supabase lets them in. Reported as a partial
-	// success rather than a failure: the profile is approved, and retrying the
-	// same request finishes the job.
-	if err := h.Auth.ConfirmEmail(r.Context(), target); err != nil {
-		slog.Error("approved but not confirmed in supabase", "target", target, "error", err)
-		httpx.JSON(w, http.StatusAccepted, map[string]any{
-			"ok":      true,
-			"warning": "Approved here, but the account could not be confirmed with the identity provider. They cannot sign in until this is retried.",
-		})
-		return
-	}
 	slog.Info("staff approved", "by", s.UserID, "target", target)
 	httpx.JSON(w, http.StatusOK, map[string]any{"ok": true})
 }
@@ -201,13 +188,11 @@ func (h Admin) rejectStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// The account goes first. If the second step fails the leftover is a profile
-	// nobody can authenticate as, which the panel can clear; the other order
-	// would leave a working login instead.
-	if err := h.Auth.DeleteUser(r.Context(), target); err != nil {
-		httpx.Error(w, http.StatusBadGateway, "could not remove the account from the identity provider", err)
-		return
-	}
+	// One statement now. This used to delete the account in Supabase first and
+	// the profile here second, ordered so that a failure between them left a
+	// profile nobody could authenticate as rather than a working login with no
+	// profile. The account is a row in that same table, and its sessions go
+	// with it by foreign key, so there is no between.
 	if err := h.DB.RejectStaff(r.Context(), s, target); err != nil {
 		switch {
 		case errors.Is(err, db.ErrSelfReject):
@@ -234,11 +219,6 @@ func (h Admin) staffTarget(w http.ResponseWriter, r *http.Request) (auth.Scope, 
 		} else {
 			httpx.Error(w, http.StatusForbidden, "only the platform administrator can do that", nil)
 		}
-		return s, uuid.Nil, false
-	}
-	if !h.Auth.Configured() {
-		httpx.Error(w, http.StatusServiceUnavailable,
-			"the identity provider key is not configured on this server", nil)
 		return s, uuid.Nil, false
 	}
 	target, err := uuid.Parse(r.PathValue("id"))

@@ -18,7 +18,6 @@ import (
 	"github.com/UjjwolKayastha/nilami/api/internal/handlers"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
 	"github.com/UjjwolKayastha/nilami/api/internal/storage"
-	"github.com/UjjwolKayastha/nilami/api/internal/supabase"
 )
 
 func main() {
@@ -101,8 +100,7 @@ func run() error {
 	// they keep the shared credential and never answer a browser.
 	public := http.NewServeMux()
 	handlers.Public{DB: store}.Routes(public)
-	authAdmin := supabase.NewAdmin(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey)
-	handlers.Signup{DB: store, Auth: authAdmin}.Routes(public)
+	handlers.Signup{DB: store}.Routes(public)
 	mux.Handle("/v1/pages/", httpx.Chain(public,
 		limiter.Limit,
 		mw.ServiceGuard, // prove the request came from our frontend
@@ -114,10 +112,7 @@ func run() error {
 	// credential here would mean shipping it to the browser, where it would stop
 	// being shared and start being published.
 	admin := http.NewServeMux()
-	handlers.Admin{
-		DB:   store,
-		Auth: authAdmin,
-	}.Routes(admin)
+	handlers.Admin{DB: store}.Routes(admin)
 	handlers.Uploads{Store: storage.New(storage.Config{
 		AccountID:     cfg.R2AccountID,
 		AccessKeyID:   cfg.R2AccessKeyID,

@@ -39,9 +39,9 @@ var (
 // panel offers no manager-level approval, and inventing one here would quietly
 // widen who can admit people into an institution.
 //
-// The caller is responsible for confirming the account in Supabase afterwards;
-// this database no longer holds auth.users. ApproveStaff reports whether the
-// profile existed so the caller knows whether to make that second call.
+// Approval is the whole act now. It used to be half of one: this set the flag
+// and the caller then had to confirm the address with Supabase, so an account
+// could sit approved here and still be unable to sign in.
 func (d *DB) ApproveStaff(ctx context.Context, s auth.Scope, target uuid.UUID) error {
 	tx, err := d.Pool.Begin(ctx)
 	if err != nil {
@@ -75,8 +75,9 @@ func (d *DB) ApproveStaff(ctx context.Context, s auth.Scope, target uuid.UUID) e
 // administrator is the only account that can approve anyone, so deleting
 // yourself would leave the install with no way to admit a new administrator.
 //
-// Returns the organisation that was removed with the profile, if any, so the
-// caller can report it. The Supabase account is deleted by the caller.
+// Deleting the profile deletes the account, because they are the same row, and
+// its sessions go with it by foreign key. There is no second system to leave
+// behind a working login.
 func (d *DB) RejectStaff(ctx context.Context, s auth.Scope, target uuid.UUID) error {
 	if target == s.UserID {
 		return ErrSelfReject

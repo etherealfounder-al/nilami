@@ -27,6 +27,12 @@ const (
 	argonSaltLen = 16
 )
 
+// MinPasswordLength is the shortest password anything here will accept. Long
+// enough that argon2id's cost is the attacker's problem rather than the
+// alphabet's. One constant, so the sign-up form and the recovery command
+// cannot drift into disagreeing about what is acceptable.
+const MinPasswordLength = 12
+
 var b64 = base64.RawStdEncoding
 
 // HashPassword returns a PHC-format string:

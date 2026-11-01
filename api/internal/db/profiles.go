@@ -2,9 +2,12 @@ package db
 
 import (
 	"context"
+	"errors"
 
 	"github.com/UjjwolKayastha/nilami/api/internal/auth"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // ScopeForUser is the single place authority is decided.
@@ -32,38 +35,57 @@ func (d *DB) ScopeForUser(ctx context.Context, userID uuid.UUID) (auth.Scope, er
 	return s, nil
 }
 
-// ProvisionProfile creates the row for a Supabase account that has authenticated
-// but has no profile yet, always unapproved and always bound to a real
-// institution.
+// ErrEmailTaken means the address already has an account. It is distinct from
+// a validation error because the sign-up form can act on it: there is nothing
+// to correct except using the other address, or signing in.
+var ErrEmailTaken = errors.New("email already registered")
+
+// CreateSignup registers a staff account, always unapproved and always bound
+// to an institution that exists.
 //
-// This replaces the database trigger that used to copy organization_id and role
-// straight out of signup metadata. That trigger was the privilege escalation:
-// omitting the institution produced a profile with a null organisation, which
-// is precisely the definition of a platform administrator. Here the institution
-// is checked against the table, and the role can never be chosen by the caller.
-func (d *DB) ProvisionProfile(ctx context.Context, userID uuid.UUID, email, fullName, role string, orgID uuid.UUID) error {
+// Three guards, and the shape of the statement is one of them. The insert
+// selects from organizations rather than taking the id as a value, so an
+// institution that does not exist produces no row instead of a profile with a
+// null organisation — and a null organisation is precisely the definition of a
+// platform administrator. Writing this the obvious way reopens the escalation
+// that the Supabase trigger had. The role is confined here, and approved is
+// written false rather than taken from the caller.
+//
+// Under Supabase this was two calls: create the account there, then read it
+// back and copy its metadata here. The account lives in this table now, so it
+// is one statement that either happens or does not.
+func (d *DB) CreateSignup(ctx context.Context, email, fullName, role string, orgID uuid.UUID, passwordHash string) (uuid.UUID, error) {
 	switch role {
 	case "officer", "manager", "valuer":
 	default:
 		role = "officer"
 	}
 	const q = `
-		insert into profiles (id, full_name, email, role, organization_id, approved)
-		select $1, $2, $3, $4, o.id, false
+		insert into profiles (id, full_name, email, role, organization_id, approved, password_hash)
+		select gen_random_uuid(), $1, $2, $3, o.id, false, $4
 		  from organizations o
 		 where o.id = $5
-		on conflict (id) do nothing`
-	tag, err := d.Pool.Exec(ctx, q, userID, fullName, email, role, orgID)
-	if err != nil {
-		return err
+		returning id`
+
+	var id uuid.UUID
+	err := d.Pool.QueryRow(ctx, q, fullName, email, role, passwordHash, orgID).Scan(&id)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		// No such institution. The caller never learns which ids exist.
+		return uuid.Nil, ErrNotFound
+	case isUniqueViolation(err):
+		return uuid.Nil, ErrEmailTaken
+	case err != nil:
+		return uuid.Nil, err
 	}
-	if tag.RowsAffected() == 0 {
-		// Either the profile already existed, or the institution does not. The
-		// caller re-reads the scope either way, so this stays silent rather
-		// than guessing which.
-		return nil
-	}
-	return nil
+	return id, nil
+}
+
+// isUniqueViolation reports whether an error is Postgres refusing a duplicate,
+// which is how the email index reports an address that already has an account.
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
 
 // ScopeForViewAs resolves the scope a platform administrator sees while viewing

@@ -4,37 +4,32 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
+	"strconv"
+	"strings"
+	"unicode/utf8"
 
+	"github.com/UjjwolKayastha/nilami/api/internal/auth"
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
-	"github.com/UjjwolKayastha/nilami/api/internal/supabase"
 	"github.com/google/uuid"
 )
 
-// Signup creates the profile for a new staff account.
+// Signup registers a staff account and leaves it waiting for approval.
 //
-// Under Supabase a trigger on auth.users did this the moment the account was
-// created. That table is in another system now, and the new account cannot sign
-// in until it is approved, so it cannot create its own profile either. Instead
-// the Next server reports the new account's id right after signUp, and this
-// handler reads the account back from Supabase itself — the request supplies
-// only an id, never the institution or role, so nothing in it can be forged.
-//
-// Mounted under /v1/pages/, behind the service token: only our server calls it.
+// It used to be two systems: Supabase created the account, then this service
+// read it back through the admin API and copied the metadata into a profile.
+// Either half could fail on its own, so the states in between — an account
+// with no profile, a profile for an account that was never created — had to be
+// detected and swept. Both the account and the profile are one row here now,
+// so there is one statement that either happens or does not, and those states
+// cannot occur.
 type Signup struct {
-	DB   *db.DB
-	Auth *supabase.Admin
+	DB *db.DB
 }
-
-// A signup is provisioned within this long of the account being created. Older,
-// unconfirmed accounts are left alone so the endpoint cannot be used to revive
-// an abandoned signup.
-const signupWindow = time.Hour
 
 func (h Signup) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/pages/signup/organizations", h.organizations)
-	mux.HandleFunc("POST /v1/pages/signup/profile", h.provision)
+	mux.HandleFunc("POST /v1/pages/signup", h.register)
 }
 
 func (h Signup) organizations(w http.ResponseWriter, r *http.Request) {
@@ -46,51 +41,63 @@ func (h Signup) organizations(w http.ResponseWriter, r *http.Request) {
 	httpx.RawJSON(w, http.StatusOK, doc, "private, no-store")
 }
 
-type provisionBody struct {
-	UserID string `json:"user_id"`
+type signupBody struct {
+	Email          string `json:"email"`
+	Password       string `json:"password"`
+	FullName       string `json:"full_name"`
+	OrganizationID string `json:"organization_id"`
+	Role           string `json:"role"`
 }
 
-func (h Signup) provision(w http.ResponseWriter, r *http.Request) {
-	var body provisionBody
+func (h Signup) register(w http.ResponseWriter, r *http.Request) {
+	var body signupBody
 	if err := decode(w, r, &body); err != nil {
 		return
 	}
-	id, err := uuid.Parse(body.UserID)
-	if err != nil {
-		httpx.Error(w, http.StatusBadRequest, "user_id is not a uuid", err)
+
+	email := strings.TrimSpace(body.Email)
+	fullName := strings.TrimSpace(body.FullName)
+	switch {
+	case email == "" || !strings.Contains(email, "@"):
+		httpx.Error(w, http.StatusBadRequest, "a valid email address is required", nil)
 		return
-	}
-	if !h.Auth.Configured() {
-		httpx.Error(w, http.StatusServiceUnavailable,
-			"the identity provider key is not configured on this server", nil)
+	case fullName == "":
+		httpx.Error(w, http.StatusBadRequest, "your name is required", nil)
+		return
+	case utf8.RuneCountInString(body.Password) < auth.MinPasswordLength:
+		httpx.Error(w, http.StatusBadRequest,
+			"the password is too short; use at least "+strconv.Itoa(auth.MinPasswordLength)+" characters", nil)
 		return
 	}
 
-	u, err := h.Auth.GetUser(r.Context(), id)
+	org, err := uuid.Parse(strings.TrimSpace(body.OrganizationID))
+	if err != nil {
+		httpx.Error(w, http.StatusBadRequest, "choose an institution", nil)
+		return
+	}
+
+	hash, err := auth.HashPassword(body.Password)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "could not register the account", err)
+		return
+	}
+
+	// The role travels from the form and is confined by the database layer, as
+	// is the institution; approved is written false there rather than taken
+	// from here. Nothing in this body can widen what the account may do.
+	id, err := h.DB.CreateSignup(r.Context(), email, fullName, body.Role, org, hash)
 	switch {
-	case errors.Is(err, supabase.ErrNoSuchUser):
-		httpx.Error(w, http.StatusNotFound, "no such account", nil)
+	case errors.Is(err, db.ErrEmailTaken):
+		httpx.Error(w, http.StatusConflict, "that email address already has an account", nil)
+		return
+	case errors.Is(err, db.ErrNotFound):
+		httpx.Error(w, http.StatusBadRequest, "that institution does not exist", nil)
 		return
 	case err != nil:
-		httpx.Error(w, http.StatusBadGateway, "could not read the account", err)
-		return
-	}
-	if u.EmailConfirmedAt != nil || time.Since(u.CreatedAt) > signupWindow {
-		httpx.Error(w, http.StatusConflict, "that account is not a new signup", nil)
-		return
-	}
-	org, err := uuid.Parse(u.Metadata.OrganizationID)
-	if err != nil {
-		httpx.Error(w, http.StatusBadRequest, "the account names no institution", nil)
+		httpx.Error(w, http.StatusInternalServerError, "could not register the account", err)
 		return
 	}
 
-	// ProvisionProfile binds the row to an institution that exists, forces it
-	// unapproved and confines the role, so the metadata cannot escalate.
-	if err := h.DB.ProvisionProfile(r.Context(), u.ID, u.Email, u.Metadata.FullName, u.Metadata.SignupRole, org); err != nil {
-		httpx.Error(w, http.StatusInternalServerError, "could not create the profile", err)
-		return
-	}
-	slog.Info("signup provisioned", "user", u.ID, "org", org)
+	slog.Info("signup registered", "user", id, "org", org)
 	httpx.JSON(w, http.StatusOK, map[string]any{"ok": true})
 }
