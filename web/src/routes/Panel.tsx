@@ -1,8 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Route, Routes } from "react-router";
 import { signOut, type Viewer } from "../lib/session";
+import { Auctions } from "./Auctions";
+import { Bidders } from "./Bidders";
+import { Institution } from "./Institution";
 import { Overview } from "./Overview";
 import { Placeholder } from "./Placeholder";
+import { Properties } from "./Properties";
+import { Staff } from "./Staff";
 
 /**
  * The panel's frame: who is signed in, what they may reach, and the routes
@@ -78,13 +83,17 @@ export function Panel({ viewer }: { viewer: Viewer }) {
       <main class="mx-auto max-w-7xl px-5 py-8">
         <Routes>
           <Route index element={<Overview />} />
-          <Route path="properties/*" element={<Placeholder title="Properties" />} />
-          <Route path="auctions/*" element={<Placeholder title="Auctions" />} />
-          <Route path="bidders" element={<Placeholder title="Bidders" />} />
-          <Route path="institution" element={<Placeholder title="Institution" />} />
-          {isPlatformAdmin && (
-            <Route path="staff" element={<Placeholder title="Staff" />} />
-          )}
+          <Route path="properties" element={<Properties />} />
+          <Route path="properties/new" element={<Placeholder title="New property" />} />
+          <Route path="properties/:id" element={<Placeholder title="Edit property" />} />
+          <Route path="auctions" element={<Auctions />} />
+          <Route path="auctions/new" element={<Placeholder title="New auction" />} />
+          <Route path="auctions/:id" element={<Placeholder title="Edit auction" />} />
+          <Route path="bidders" element={<Bidders />} />
+          <Route path="institution" element={<Institution />} />
+          {/* Not merely hidden from the navigation: the API scopes every
+              answer to the session, so typing the address reaches nothing. */}
+          {isPlatformAdmin && <Route path="staff" element={<Staff />} />}
           <Route path="*" element={<Placeholder title="Not found" />} />
         </Routes>
       </main>
