@@ -11,9 +11,9 @@ import {
 import { parseLandArea } from "@/lib/nepal/land-area";
 import { joinRoadAccess } from "@/lib/nepal/road-access";
 import { getStaff } from "@/lib/admin/queries";
-import { adminApi, api } from "@/lib/api";
+import { adminApi, api, ApiError } from "@/lib/api";
 import { slugify } from "@/lib/slug";
-import { createClient } from "@/lib/supabase/server";
+import { signIn, signOutSession } from "@/lib/auth/session";
 
 function num(v: FormDataEntryValue | null): number | null {
   if (v == null || v === "") return null;
@@ -26,9 +26,29 @@ function revalidateAll() {
 }
 
 export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await signOutSession();
   redirect("/admin/login");
+}
+
+/**
+ * Signs in from the login form.
+ *
+ * A server action rather than a call from the browser, because the session
+ * cookie it sets is httpOnly: the page never holds the token, so a script that
+ * manages to run on it cannot read one out.
+ */
+export async function signInAction(
+  _prev: { error: string } | null,
+  formData: FormData
+): Promise<{ error: string } | null> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  if (!email || !password) {
+    return { error: "Enter your email and password." };
+  }
+  const failed = await signIn(email, password);
+  if (failed) return failed;
+  redirect("/admin");
 }
 
 export async function upsertProperty(formData: FormData) {
@@ -321,19 +341,43 @@ export async function requestOrganization(input: {
 }
 
 /**
- * Create the profile for an account the signup form has just created in
- * Supabase. Only the id is sent: the API reads the account back from Supabase
- * and takes the institution and role from there, so nothing here is trusted.
+ * Registers a staff account, unapproved, in one call.
+ *
+ * This used to be two: the browser created an account with Supabase, then sent
+ * its id here so the API could read the account back and copy the institution
+ * and role out of its metadata. The account is a row in the API's own database
+ * now, so the form posts once and either gets an account or does not.
+ *
+ * None of these fields can widen what the account may do — the API confines
+ * the role, writes approved false, and refuses an institution that does not
+ * exist — so they are sent as the person typed them.
  */
-export async function provisionSignup(userId: string): Promise<{ ok: boolean }> {
+export async function registerStaff(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  organizationId: string;
+  role: string;
+}): Promise<{ ok: true } | { error: string }> {
   try {
-    await api("/v1/pages/signup/profile", {
+    await api("/v1/pages/signup", {
       method: "POST",
-      body: { user_id: userId },
+      body: {
+        email: input.email,
+        password: input.password,
+        full_name: input.fullName,
+        organization_id: input.organizationId,
+        role: input.role,
+      },
     });
     return { ok: true };
   } catch (e) {
-    console.error("[signup] provisioning failed", userId, (e as Error).message);
-    return { ok: false };
+    // The API's refusals are already written for a person to read: the address
+    // is taken, the password is too short, that institution does not exist.
+    if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
+      return { error: e.message };
+    }
+    console.error("[signup] registration failed", (e as Error).message);
+    return { error: "Your request could not be registered. Please try again." };
   }
 }

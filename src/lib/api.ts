@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { VIEW_AS_COOKIE } from "@/lib/admin/view-as-cookie";
-import { createClient } from "@/lib/supabase/server";
+import { SESSION_COOKIE } from "@/lib/auth/session-cookie";
 
 /**
  * The client for the Nilami API.
@@ -42,19 +42,15 @@ type Options = {
 };
 
 /**
- * The signed-in user's Supabase access token, or null.
+ * The signed-in user's session token, or null.
  *
- * getSession is right here, where getUser would be wrong elsewhere: we are not
- * trusting this token, only relaying it. The API verifies the signature itself
- * against Supabase's public keys, so a bug in this process cannot promote
- * anyone — it can only fail to authenticate them.
+ * Read straight from the cookie and relayed without inspection: this process
+ * is not trusting the value, and could not verify it if it wanted to. The API
+ * looks the session up in its own table, so a bug here cannot promote anyone —
+ * it can only fail to authenticate them.
  */
 async function accessToken(): Promise<string | null> {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+  return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
 }
 
 export async function api<T>(path: string, options: Options = {}): Promise<T> {

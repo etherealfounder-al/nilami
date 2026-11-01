@@ -3,26 +3,21 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { SubmitButton } from "@/components/admin/SubmitButton";
 import { signOut, stopViewAs } from "@/lib/admin/actions";
-import { getViewAsTarget, getViewer } from "@/lib/admin/view-as";
-import { createClient } from "@/lib/supabase/server";
+import { getViewAsTarget, getViewerState } from "@/lib/admin/view-as";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/login");
+  // One call answers both questions: whether there is a live session at all,
+  // and whether the account behind it has been approved. A stale cookie is
+  // answered as anonymous, so it sends the person to sign in rather than to a
+  // pending screen they are not actually waiting on.
+  const state = await getViewerState();
+  if (state.status === "anonymous") redirect("/admin/login");
 
-  // The profile lives in the API's database. /v1/admin/me answers only for an
-  // approved account, so no viewer means the account is still pending.
-  const viewer = await getViewer();
-
-  // Signed in but not yet approved: show the pending screen only
-  if (!viewer) {
+  if (state.status === "pending") {
     return (
       <main className="grid min-h-dvh place-items-center bg-evergreen-950 px-5">
         <div className="w-full max-w-md space-y-5 rounded-3xl border border-ivory/10 bg-ivory p-8 text-center shadow-lift">
@@ -49,6 +44,8 @@ export default async function AdminLayout({
       </main>
     );
   }
+
+  const viewer = state.viewer;
 
   // A platform admin proxying into someone sees the panel as that person:
   // their institution, their nav, their scope. The real session is unchanged.

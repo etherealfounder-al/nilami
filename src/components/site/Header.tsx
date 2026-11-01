@@ -3,14 +3,14 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { MobileMenu } from "@/components/site/MobileMenu";
 import { getT } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
+import { sessionToken } from "@/lib/auth/session";
 
 export async function Header() {
   const { lang, t } = await getT();
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Only the label changes, so the cookie's presence is enough and costs no
+  // request. A stale cookie shows "dashboard" and the panel then sends them to
+  // sign in, which is a better trade than an API call on every public page.
+  const signedIn = (await sessionToken()) !== null;
   const nav = [
     { href: "/auctions", label: t.nav.auctions },
     { href: "/how-it-works", label: t.nav.howItWorks },
@@ -39,13 +39,13 @@ export async function Header() {
             href="/admin"
             className="ml-1 hidden rounded-full border border-evergreen-800/25 px-4 py-2 text-sm font-medium text-evergreen-800 transition-colors hover:bg-evergreen-800 hover:text-ivory sm:block"
           >
-            {user ? t.nav.dashboard : t.nav.staffSignIn}
+            {signedIn ? t.nav.dashboard : t.nav.staffSignIn}
           </Link>
           <MobileMenu
             links={nav}
             cta={{
               href: "/admin",
-              label: user ? t.nav.dashboard : t.nav.staffSignIn,
+              label: signedIn ? t.nav.dashboard : t.nav.staffSignIn,
             }}
             label={t.nav.menu}
           />

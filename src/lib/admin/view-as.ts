@@ -48,16 +48,38 @@ type ViewerResponse = {
  * Cached per request, so a layout and the page inside it cost one call.
  */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
+  const state = await getViewerState();
+  return state.status === "active" ? state.viewer : null;
+});
+
+/**
+ * The same call, keeping apart the two reasons there is no viewer.
+ *
+ * getViewer collapses them because most callers only need "can this person act
+ * or not". The panel's layout needs the difference: no session at all belongs
+ * at the sign-in screen, while a real session waiting on approval belongs at
+ * the pending screen, and showing the wrong one reads as a bug to the person.
+ */
+export const getViewerState = cache(async (): Promise<ViewerState> => {
   let data: ViewerResponse;
   try {
     data = await adminApi<ViewerResponse>("/v1/admin/me");
   } catch (e) {
-    // Not signed in (401) or not approved yet (403): there is no viewer, and
-    // the panel shows the sign-in or pending screen. Anything else is an outage
-    // and must surface as an error, not as "your account is pending".
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return null;
+    // Anything other than these two is an outage and must surface as an error,
+    // not as "your account is pending".
+    if (e instanceof ApiError && e.status === 401) return { status: "anonymous" };
+    if (e instanceof ApiError && e.status === 403) return { status: "pending" };
     throw e;
   }
+  return { status: "active", viewer: toViewer(data) };
+});
+
+export type ViewerState =
+  | { status: "anonymous" }
+  | { status: "pending" }
+  | { status: "active"; viewer: Viewer };
+
+function toViewer(data: ViewerResponse): Viewer {
   return {
     userId: data.user_id,
     organizationId: data.organization_id,
@@ -71,7 +93,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
       organizationName: data.viewing_as.organization_name,
     },
   };
-});
+}
 
 /**
  * The account actually signed in, ignoring any proxy.

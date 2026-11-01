@@ -10,7 +10,6 @@ import type { NextConfig } from "next";
  */
 const imageHosts = [
   "images.unsplash.com", // seed photographs
-  "ocpufyaehwungqqllrqx.supabase.co", // objects not yet moved to R2
   "cdn.ujjwolkayastha.com.np", // R2, behind its custom domain
   process.env.NEXT_PUBLIC_MEDIA_HOSTNAME, // an override, for another bucket
 ].filter((host): host is string => Boolean(host));

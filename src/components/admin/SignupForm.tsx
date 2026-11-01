@@ -5,8 +5,7 @@ import { useState } from "react";
 import { PasswordInput } from "@/components/admin/PasswordInput";
 import { Select } from "@/components/ui/Select";
 import { inputCls, labelCls } from "@/components/ui/field";
-import { provisionSignup, requestOrganization } from "@/lib/admin/actions";
-import { createClient } from "@/lib/supabase/client";
+import { registerStaff, requestOrganization } from "@/lib/admin/actions";
 
 type Org = { id: string; name: string; pending?: boolean };
 
@@ -254,35 +253,21 @@ export function SignupForm({
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
+    // One call. It used to be two — create the account with Supabase, then ask
+    // our server to build a profile for it — which could leave an account with
+    // no profile if the second half failed. The account and the profile are
+    // one row now, so this either registers the request or does not.
+    const result = await registerStaff({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          organization_id: orgId,
-          signup_role: role,
-        },
-      },
+      fullName,
+      organizationId: orgId,
+      role,
     });
-    if (error) {
-      setError(error.message);
+    if ("error" in result) {
+      setError(result.error);
       setBusy(false);
       return;
-    }
-    // The account exists in Supabase; now create its (unapproved) profile in
-    // our database. The server reads the institution and role back from
-    // Supabase itself, so only the id is sent.
-    if (data.user) {
-      const { ok } = await provisionSignup(data.user.id);
-      if (!ok) {
-        setError(
-          "Your account was created, but the request could not be registered. Please contact the platform administrator."
-        );
-        setBusy(false);
-        return;
-      }
     }
     setDone(true);
   }
@@ -373,7 +358,13 @@ export function SignupForm({
         </label>
         <label className="block space-y-1.5">
           <span className={labelCls}>Password</span>
-          <PasswordInput required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+          <PasswordInput required minLength={12} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} />
+          {/* Stated rather than left to the browser's terser message, and the
+              same number the API enforces, so the form cannot accept
+              something the server will refuse. */}
+          <span className="block text-xs text-ink-soft">
+            At least 12 characters.
+          </span>
         </label>
         {error && (
           <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">
