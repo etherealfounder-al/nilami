@@ -31,51 +31,66 @@ export function LoginPage() {
   }
 
   return (
-    <main class="grid min-h-dvh place-items-center bg-evergreen-950 px-5">
-      <div
-        aria-hidden
-        class="pointer-events-none fixed inset-0 opacity-30"
-        style="background: radial-gradient(60rem 30rem at 70% 0%, #1b6a52 0%, transparent 55%)"
-      />
-      <div class="relative w-full max-w-sm space-y-8">
-        <div class="flex flex-col items-center gap-3 text-center">
-          <p class="font-display text-3xl font-semibold text-ivory">Nilami</p>
-          <p class="text-sm text-ivory/60">Recovery Department · Staff access</p>
+    /*
+      Sign-in, set as the title page of the record it opens: the masthead,
+      a rule, and two ruled fields. Split on a wide screen so the dark half
+      carries the name and the light half carries the work.
+    */
+    <main class="min-h-dvh lg:grid lg:grid-cols-2">
+      <div class="flex flex-col justify-between bg-seal-950 px-8 py-12 lg:px-14 lg:py-16">
+        <div>
+          <span aria-hidden="true" class="font-display block text-5xl leading-none text-oat lg:text-6xl">
+            निलामी
+          </span>
+          <span class="mt-3 block text-[0.6875rem] font-semibold tracking-[0.42em] text-brass-500 uppercase">
+            Nilami
+          </span>
         </div>
-        <form
-          onSubmit={onSubmit}
-          class="space-y-4 rounded-3xl border border-ivory/10 bg-ivory p-7 shadow-lift"
-        >
-          <label class="block space-y-1.5">
-            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              Email
-            </span>
+        <p class="mt-10 max-w-sm text-sm leading-relaxed text-oat/55 lg:mt-0">
+          The recovery department's record of collateral offered for sale —
+          properties, auction rounds, and the bidders who have lodged a
+          security against them.
+        </p>
+      </div>
+
+      <div class="grid place-items-center px-6 py-14 lg:px-14">
+        <form onSubmit={onSubmit} class="w-full max-w-sm">
+          <p class="standing">Staff access</p>
+          <h1 class="font-display mt-2 border-b-2 border-ink pb-4 text-[2rem] leading-none text-ink">
+            Sign in
+          </h1>
+
+          <label class="mt-8 block">
+            <span class="standing">Email</span>
             <input
               type="email"
               name="email"
               required
               autoComplete="username"
-              class="h-12 w-full rounded-xl border border-ink/15 bg-white px-4 text-sm outline-none transition-colors focus:border-evergreen-600"
+              class="field mt-1.5"
             />
           </label>
-          <label class="block space-y-1.5">
-            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              Password
-            </span>
+
+          <label class="mt-6 block">
+            <span class="standing">Password</span>
             <PasswordInput
               name="password"
               required
               autoComplete="current-password"
-              class="h-12 w-full rounded-xl border border-ink/15 bg-white px-4 text-sm outline-none transition-colors focus:border-evergreen-600"
+              class="field mt-1.5"
             />
           </label>
+
           {error && (
-            <p class="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>
+            <p class="mt-6 border-l-2 border-vermilion bg-vermilion-soft px-4 py-3 text-sm text-vermilion">
+              {error}
+            </p>
           )}
+
           <button
             type="submit"
             disabled={busy}
-            class="h-12 w-full rounded-xl bg-evergreen-800 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700 disabled:opacity-60"
+            class="mt-9 w-full border-2 border-ink bg-ink py-3 font-display text-base text-oat transition-colors hover:border-seal-800 hover:bg-seal-800 disabled:opacity-50"
           >
             {busy ? "Signing in…" : "Sign in"}
           </button>

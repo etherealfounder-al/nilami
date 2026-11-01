@@ -13,9 +13,9 @@
 //   node scripts/screenshot.mjs http://localhost:5173/admin/properties "$TOKEN" out.png
 import { writeFileSync } from "node:fs";
 
-const [, , url, cookieValue, out] = process.argv;
+const [, , url, cookieValue, out, widthArg] = process.argv;
 if (!url || !out) {
-  console.error("usage: shot.mjs <url> <session-cookie-value|-> <out.png>");
+  console.error("usage: shot.mjs <url> <session-cookie-value|-> <out.png> [width]");
   process.exit(1);
 }
 
@@ -57,8 +57,15 @@ if (cookieValue && cookieValue !== "-") {
     httpOnly: true,
   });
 }
+// A width can be passed to check a layout at phone size; the viewport is
+// overridden here rather than by sizing the browser window, because headless
+// Chrome ignores --window-size once a page has its own metrics override.
+const width = Number(widthArg) || 1280;
 await send("Emulation.setDeviceMetricsOverride", {
-  width: 1280, height: 900, deviceScaleFactor: 1, mobile: false,
+  width,
+  height: 900,
+  deviceScaleFactor: 1,
+  mobile: width < 768,
 });
 await send("Page.navigate", { url });
 // Let the SPA mount and its queries resolve.

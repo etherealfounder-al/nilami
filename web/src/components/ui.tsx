@@ -3,7 +3,13 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { statusTone } from "../lib/format";
 
-/** The shapes every panel screen repeats, so they stay identical across them. */
+/**
+ * The shapes every panel screen repeats, so they stay identical across them.
+ *
+ * The panel is the back office of the gazette the public pages publish, so it
+ * is set on the same paper in the same ink — but arranged for work rather
+ * than for reading: rules instead of cards, and figures given room.
+ */
 
 export function PageHeader({
   title,
@@ -15,54 +21,76 @@ export function PageHeader({
   action?: ComponentChildren;
 }) {
   return (
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-4 border-b-2 border-ink pb-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="font-display text-3xl font-semibold tracking-tight text-evergreen-900">
-          {title}
-        </h1>
-        {subtitle && <p class="mt-1 text-sm text-ink-soft">{subtitle}</p>}
+        <h1 class="font-display text-[2rem] leading-none text-ink">{title}</h1>
+        {subtitle && <p class="mt-2 text-sm text-ink-soft">{subtitle}</p>}
       </div>
       {action}
     </div>
   );
 }
 
+/**
+ * A sheet: the surface a table or a form sits on.
+ *
+ * Barely raised, because paper does not float. The horizontal scroll lives
+ * here so a wide table does not push the whole page sideways on a phone.
+ */
 export function Card({ children }: { children: ComponentChildren }) {
   return (
-    <div class="overflow-x-auto rounded-2xl border border-ink/8 bg-ivory shadow-card">
+    <div class="overflow-x-auto border border-rule bg-vellum shadow-sheet">
       {children}
     </div>
   );
 }
 
+/** A status, stamped rather than pilled — the same mark the notices carry. */
 export function Pill({ label, tone }: { label: string; tone?: string }) {
   return (
-    <span
-      class={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(
-        tone ?? label.toLowerCase()
-      )}`}
-    >
-      {label}
-    </span>
+    <span class={`stamp ${statusTone(tone ?? label.toLowerCase())}`}>{label}</span>
   );
 }
 
 export function Empty({ children }: { children: ComponentChildren }) {
-  return <p class="px-6 py-10 text-center text-sm text-ink-soft">{children}</p>;
+  return <p class="px-6 py-14 text-center text-sm text-ink-faint">{children}</p>;
 }
 
 export function Loading() {
-  return <p class="px-6 py-10 text-center text-sm text-ink-soft">Loading…</p>;
+  return <p class="px-6 py-14 text-center text-sm text-ink-faint">Loading…</p>;
 }
 
 export function ErrorNote({ message }: { message: string }) {
   return (
-    <p class="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{message}</p>
+    <p class="border-l-2 border-vermilion bg-vermilion-soft px-4 py-3 text-sm text-vermilion">
+      {message}
+    </p>
+  );
+}
+
+/** The heading row of a ruled table. */
+export function THead({ cols }: { cols: (string | { label: string; right?: boolean })[] }) {
+  return (
+    <thead>
+      <tr class="border-b-2 border-ink">
+        {cols.map((c) => {
+          const col = typeof c === "string" ? { label: c, right: false } : c;
+          return (
+            <th
+              key={col.label}
+              class={`standing px-4 py-3 ${col.right ? "text-right" : "text-left"} first:pl-5 last:pr-5`}
+            >
+              {col.label}
+            </th>
+          );
+        })}
+      </tr>
+    </thead>
   );
 }
 
 /**
- * The primary action button, used for the "new" links on list screens.
+ * The primary action, used for the "new" links on list screens.
  *
  * A router Link rather than an anchor: an anchor reloads the whole app to
  * reach a route it already holds, which costs a blank screen and a fresh
@@ -78,7 +106,7 @@ export function PrimaryLink({
   return (
     <Link
       to={to}
-      class="shrink-0 self-start rounded-full bg-evergreen-800 px-5 py-2.5 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700 sm:self-auto"
+      class="shrink-0 self-start border-b-2 border-ink pb-1 font-display text-lg text-ink transition-colors hover:border-brass-500 hover:text-seal-800 sm:self-auto"
     >
       {children}
     </Link>
@@ -112,14 +140,14 @@ export function PasswordInput({
         name={name}
         required={required}
         autoComplete={autoComplete}
-        class={`${cls ?? ""} pr-12`}
+        class={`${cls ?? ""} pr-11`}
       />
       <button
         type="button"
         onClick={() => setShown((v) => !v)}
         aria-pressed={shown}
         aria-label={shown ? "Hide password" : "Show password"}
-        class="absolute inset-y-0 right-0 grid w-12 place-items-center text-ink-soft transition-colors hover:text-evergreen-700"
+        class="absolute inset-y-0 right-0 grid w-11 place-items-center text-ink-faint transition-colors hover:text-seal-700"
       >
         {shown ? (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-5" aria-hidden="true">

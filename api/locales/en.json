@@ -232,5 +232,9 @@
     "noticeTitle": "Notice",
     "noticeBody": "Properties are sold on an “as is, where is” basis. Bidders must inspect properties and verify documents with the offering institution before bidding.",
     "rights": "A multi-institution auction platform (demo)."
+  },
+  "masthead": {
+    "strap": "Official auction notices · Banks and financial institutions of Nepal",
+    "register": "The register"
   }
 }

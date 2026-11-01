@@ -6,8 +6,8 @@
  */
 export function Placeholder({ title }: { title: string }) {
   return (
-    <div class="rounded-2xl border border-ink/8 bg-ivory p-8 shadow-card">
-      <h1 class="font-display text-2xl font-semibold text-evergreen-900">{title}</h1>
+    <div class="rounded-2xl border border-rule-faint bg-oat p-8 shadow-sheet">
+      <h1 class="font-display text-2xl font-semibold text-seal-900">{title}</h1>
       <p class="mt-2 text-sm text-ink-soft">Not ported yet.</p>
     </div>
   );

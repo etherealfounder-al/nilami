@@ -2,75 +2,86 @@
 
 {{define "content"}}
 {{$p := .}}{{$d := .Data}}{{$q := $d.Params}}
-<main class="mx-auto max-w-6xl px-5 pb-24">
-  <div class="py-10">
-    <h1 class="font-display text-4xl font-semibold tracking-tight text-evergreen-900">{{.S "listing.title"}}</h1>
-    <p class="mt-2 text-ink-soft">{{.S "listing.sub"}}</p>
+<main class="mx-auto max-w-[76rem] px-5 pb-20">
+
+  <div class="set d1 py-12">
+    <p class="standing">{{.S "masthead.register"}}</p>
+    <h1 class="font-display mt-3 text-[2.75rem] leading-[0.98] text-ink sm:text-[3.5rem]">{{.S "listing.title"}}</h1>
+    <p class="mt-4 max-w-2xl leading-relaxed text-ink-soft">{{.S "listing.sub"}}</p>
   </div>
 
-  {{/* A plain GET form: the filters work before any JavaScript runs, every
-       result is a real address a reader can share, and the back button
-       behaves. */}}
-  <form method="get" action="/auctions" class="mb-8 rounded-2xl border border-ink/8 bg-white p-5 shadow-card">
-    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-      <label class="block flex-1 space-y-1.5">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.searchPlaceholder"}}</span>
-        <input type="search" name="q" value="{{$q.Query}}" placeholder="{{.S "listing.searchPlaceholder"}}"
-               class="h-11 w-full rounded-xl border border-ink/12 bg-ivory px-3 text-sm outline-none transition-colors focus:border-evergreen-600">
+  {{/*
+    The finding aid.
+
+    A plain GET form: the filters work before any JavaScript runs, every
+    result is a real address a reader can share, and the back button behaves.
+    Set as ruled fields rather than boxes — a form on paper names where to
+    write with a line, not a container.
+  */}}
+  <form method="get" action="/auctions" class="set d2 border-y-2 border-ink py-5">
+    <div class="grid gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:items-end">
+      <label class="block">
+        <span class="standing">{{.S "listing.searchPlaceholder"}}</span>
+        <input type="search" name="q" value="{{$q.Query}}" placeholder="{{.S "listing.searchPlaceholder"}}" class="field mt-1.5">
       </label>
 
-      <label class="block space-y-1.5">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.anyStatus"}}</span>
-        <select name="status" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+      <label class="block">
+        <span class="standing">{{.S "listing.anyStatus"}}</span>
+        <select name="status" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.anyStatus"}}</option>
           {{range $k, $v := $d.StatusCounts}}<option value="{{$k}}" {{if eq $q.Status $k}}selected{{end}}>{{$p.StatusLabel $k}} ({{$v}})</option>{{end}}
         </select>
       </label>
 
-      <label class="block space-y-1.5">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.allTypes"}}</span>
-        <select name="type" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+      <label class="block">
+        <span class="standing">{{.S "listing.allTypes"}}</span>
+        <select name="type" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.allTypes"}}</option>
           {{range $t := list "land" "house" "apartment" "commercial"}}<option value="{{$t}}" {{if eq $q.Type $t}}selected{{end}}>{{$p.TypeLabel $t}}</option>{{end}}
         </select>
       </label>
 
-      <label class="block space-y-1.5">
-        <span class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">{{.S "listing.allDistricts"}}</span>
-        <select name="district" class="h-11 w-full cursor-pointer rounded-xl border border-ink/12 bg-ivory px-3 text-sm sm:w-auto sm:min-w-44">
+      <label class="block">
+        <span class="standing">{{.S "listing.allDistricts"}}</span>
+        <select name="district" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.allDistricts"}}</option>
           {{range $d.Districts}}<option value="{{.}}" {{if eq $q.District .}}selected{{end}}>{{.}}</option>{{end}}
         </select>
       </label>
 
-      <div class="flex gap-2">
-        <button type="submit" class="h-11 rounded-full bg-evergreen-800 px-6 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700">{{.S "listing.apply"}}</button>
-        <a href="/auctions" class="flex h-11 items-center rounded-full border border-ink/15 px-5 text-sm font-medium text-ink-soft transition-colors hover:text-ink">{{.S "listing.clear"}}</a>
-      </div>
+    </div>
+
+    {{/* The actions sit on their own row so neither language's wording can
+         push them off the edge of the grid. */}}
+    <div class="mt-6 flex flex-wrap items-center justify-end gap-x-7 gap-y-3">
+      <a href="/auctions" class="pb-1 text-sm text-ink-soft transition-colors hover:text-ink">{{.S "listing.clear"}}</a>
+      <button type="submit" class="border-b-2 border-ink pb-1 font-display text-lg text-ink transition-colors hover:border-brass-500 hover:text-seal-800">{{.S "listing.apply"}}</button>
     </div>
   </form>
 
-  {{if gt $d.Total 0}}<p class="mb-5 text-sm text-ink-soft">{{.T "listing.showing" "from" $q.From "to" ($q.To $d.Total) "total" $d.Total}}</p>{{end}}
+  {{if gt $d.Total 0}}
+    <p class="standing set d3 py-4">{{.T "listing.showing" "from" $q.From "to" ($q.To $d.Total) "total" $d.Total}}</p>
+  {{end}}
 
   {{if $d.Items}}
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="set d3 border-t-2 border-ink">
       {{range $d.Items}}{{template "card" (card $p .)}}{{end}}
     </div>
 
     {{$pages := $q.Pages $d.Total}}
     {{if gt $pages 1}}
-    <nav class="mt-10 flex flex-wrap items-center justify-center gap-1.5" aria-label="{{$p.S "listing.pagination"}}">
+    <nav class="mt-10 flex flex-wrap items-center justify-center gap-6" aria-label="{{$p.S "listing.pagination"}}">
       {{range $n := seq 1 $pages}}
         <a href="{{$q.Href "page" (itoa $n)}}" aria-label="{{$p.T "listing.gotoPage" "n" $n}}"
            {{if eq $n $q.Page}}aria-current="page"{{end}}
-           class="grid size-9 place-items-center rounded-full text-sm font-medium transition-colors {{if eq $n $q.Page}}bg-evergreen-800 text-ivory{{else}}border border-ink/12 text-ink-soft hover:border-ink/25 hover:text-ink{{end}}">{{$n}}</a>
+           class="figure border-b-2 pb-1 text-lg transition-colors {{if eq $n $q.Page}}border-ink text-ink{{else}}border-transparent text-ink-faint hover:border-rule-strong hover:text-ink{{end}}">{{$n}}</a>
       {{end}}
     </nav>
     {{end}}
   {{else}}
-    <div class="rounded-2xl border border-ink/8 bg-white p-12 text-center shadow-card">
-      <p class="font-display text-xl font-semibold text-evergreen-900">{{.S "listing.emptyTitle"}}</p>
-      <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{{.S "listing.emptySub"}}</p>
+    <div class="border-y-2 border-ink py-20 text-center">
+      <p class="font-display text-2xl text-ink">{{.S "listing.emptyTitle"}}</p>
+      <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">{{.S "listing.emptySub"}}</p>
     </div>
   {{end}}
 </main>

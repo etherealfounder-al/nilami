@@ -71,8 +71,8 @@ function Gate() {
 
 function Splash({ message }: { message?: string }) {
   return (
-    <main class="grid min-h-dvh place-items-center bg-evergreen-950 px-5">
-      <p class="text-sm text-ivory/60">{message ?? "Loading…"}</p>
+    <main class="grid min-h-dvh place-items-center bg-seal-950 px-5">
+      <p class="text-sm text-oat/60">{message ?? "Loading…"}</p>
     </main>
   );
 }

@@ -183,11 +183,11 @@ export function AuctionEditor({ mode }: { mode: "new" | "edit" }) {
         <Section title="Terms">
           <Field label="Terms of sale">
             <textarea name="terms" rows={4} value={a?.terms}
-                      class="w-full rounded-xl border border-ink/15 bg-white p-3.5 text-sm outline-none transition-colors focus:border-evergreen-600" />
+                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
           </Field>
           <Field label="Documents required with a bid">
             <textarea name="required_documents" rows={3} value={a?.required_documents}
-                      class="w-full rounded-xl border border-ink/15 bg-white p-3.5 text-sm outline-none transition-colors focus:border-evergreen-600" />
+                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
           </Field>
           <Field label="Notice PDF">
             <input name="notice_pdf_url" type="url" value={a?.notice_pdf_url ?? ""} placeholder="https://" class={inputCls} />

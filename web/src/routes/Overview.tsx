@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { statusLabel } from "../lib/format";
+import { PageHeader, Pill } from "../components/ui";
 
 type Dashboard = {
   properties: number;
@@ -23,10 +25,10 @@ export function Overview() {
     queryFn: () => api<Dashboard>("/v1/admin/dashboard"),
   });
 
-  if (isPending) return <p class="text-sm text-ink-soft">Loading…</p>;
+  if (isPending) return <p class="py-12 text-center text-sm text-ink-faint">Loading…</p>;
   if (error) {
     return (
-      <p class="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">
+      <p class="border-l-2 border-vermilion bg-vermilion-soft px-4 py-3 text-sm text-vermilion">
         {error.message}
       </p>
     );
@@ -40,40 +42,36 @@ export function Overview() {
   ];
 
   return (
-    <div class="space-y-8">
-      <h1 class="font-display text-2xl font-semibold text-evergreen-900">Overview</h1>
+    <div class="space-y-12">
+      <PageHeader title="Overview" subtitle="The department's record at a glance." />
 
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* The standing figures, ruled like the summary block of an account
+          rather than boxed as cards. */}
+      <dl class="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((t) => (
-          <div
-            key={t.label}
-            class="rounded-2xl border border-ink/8 bg-ivory p-5 shadow-card"
-          >
-            <p class="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
-              {t.label}
-            </p>
-            <p class="mt-2 font-display text-3xl font-semibold tabular-nums text-evergreen-900">
-              {t.value}
-            </p>
-            <p class="mt-1 text-xs text-ink-soft">{t.note}</p>
+          <div key={t.label} class="border-t-2 border-ink pt-3">
+            <dt class="standing">{t.label}</dt>
+            <dd class="figure mt-1.5 text-[2.5rem] leading-none text-ink">{t.value}</dd>
+            <dd class="mt-1.5 text-xs text-ink-faint">{t.note}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      <section class="space-y-3">
-        <h2 class="font-semibold text-evergreen-900">Recent auctions</h2>
+      <section>
+        <h2 class="font-display border-b-2 border-ink pb-2 text-2xl text-ink">
+          Recent auctions
+        </h2>
         {data.recent.length === 0 ? (
-          <p class="rounded-2xl border border-ink/8 bg-ivory p-6 text-sm text-ink-soft shadow-card">
-            Nothing here yet.
-          </p>
+          <p class="py-12 text-center text-sm text-ink-faint">Nothing here yet.</p>
         ) : (
-          <ul class="divide-y divide-ink/8 overflow-hidden rounded-2xl border border-ink/8 bg-ivory shadow-card">
+          <ul>
             {data.recent.map((a) => (
-              <li key={a.id} class="flex items-center justify-between gap-4 px-5 py-4">
-                <span class="truncate text-sm font-medium text-ink">{a.title}</span>
-                <span class="shrink-0 text-xs uppercase tracking-[0.1em] text-ink-soft">
-                  {a.status}
-                </span>
+              <li
+                key={a.id}
+                class="flex items-center justify-between gap-4 border-b border-rule-faint py-3.5"
+              >
+                <span class="truncate text-ink">{a.title}</span>
+                <Pill label={statusLabel(a.status)} tone={a.status} />
               </li>
             ))}
           </ul>

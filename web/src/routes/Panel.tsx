@@ -41,12 +41,21 @@ export function Panel({ viewer }: { viewer: Viewer }) {
   ];
 
   return (
-    <div class="min-h-dvh bg-cream">
-      <header class="border-b border-ink/8 bg-evergreen-950">
-        <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5">
-          <div class="flex items-baseline gap-3">
-            <span class="font-display text-xl font-semibold text-ivory">Nilami</span>
-            <span class="text-xs uppercase tracking-[0.14em] text-ivory/50">
+    <div class="min-h-dvh lg:grid lg:grid-cols-[15rem_1fr]">
+      {/*
+        The rail.
+
+        A column rather than a row of tabs: it gives each section a full line
+        to name itself, leaves the top of the page for the work, and does not
+        start scrolling sideways the moment a seventh section appears.
+      */}
+      <aside class="bg-seal-950 text-oat/70 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-r lg:border-oat/10">
+        <div class="flex items-center justify-between gap-4 px-6 pt-7 pb-6 lg:block">
+          <div>
+            <span aria-hidden="true" class="font-display block text-3xl leading-none text-oat">
+              निलामी
+            </span>
+            <span class="mt-2 block text-[0.625rem] font-semibold tracking-[0.3em] text-brass-500 uppercase">
               {orgLabel}
             </span>
           </div>
@@ -55,12 +64,13 @@ export function Panel({ viewer }: { viewer: Viewer }) {
               await signOut();
               await queryClient.invalidateQueries({ queryKey: ["session"] });
             }}
-            class="text-sm font-medium text-ivory/70 transition-colors hover:text-ivory"
+            class="shrink-0 border-b border-oat/25 pb-0.5 text-xs text-oat/60 transition-colors hover:border-oat hover:text-oat lg:hidden"
           >
             Sign out
           </button>
         </div>
-        <nav class="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-5">
+
+        <nav class="flex gap-1 overflow-x-auto px-4 pb-3 lg:flex-col lg:gap-0 lg:overflow-visible lg:px-3">
           {/* react-router's components carry React's prop types, so NavLink
               takes className; Preact's `class` shorthand is for DOM tags. */}
           {nav.map((item) => (
@@ -69,10 +79,10 @@ export function Panel({ viewer }: { viewer: Viewer }) {
               to={item.to}
               end={item.end}
               className={({ isActive }: { isActive: boolean }) =>
-                `shrink-0 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
+                `shrink-0 border-l-2 px-3 py-2.5 text-sm transition-colors lg:px-4 ${
                   isActive
-                    ? "border-brass-500 text-ivory"
-                    : "border-transparent text-ivory/55 hover:text-ivory/85"
+                    ? "border-brass-500 text-oat"
+                    : "border-transparent text-oat/50 hover:text-oat/90"
                 }`
               }
             >
@@ -80,9 +90,21 @@ export function Panel({ viewer }: { viewer: Viewer }) {
             </NavLink>
           ))}
         </nav>
-      </header>
 
-      <main class="mx-auto max-w-7xl px-5 py-8">
+        <div class="mt-auto hidden px-6 pb-7 lg:block">
+          <button
+            onClick={async () => {
+              await signOut();
+              await queryClient.invalidateQueries({ queryKey: ["session"] });
+            }}
+            class="border-b border-oat/25 pb-0.5 text-xs text-oat/60 transition-colors hover:border-oat hover:text-oat"
+          >
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main class="mx-auto w-full max-w-6xl px-5 py-10 lg:px-10">
         <Routes>
           <Route index element={<Overview />} />
           <Route path="properties" element={<Properties />} />

@@ -18,7 +18,7 @@ type Organization = {
 };
 
 const field =
-  "h-11 w-full rounded-xl border border-ink/15 bg-white px-3.5 text-sm outline-none transition-colors focus:border-evergreen-600";
+  "h-11 w-full rounded-xl border border-rule-strong bg-white px-3.5 text-sm outline-none transition-colors focus:border-seal-600";
 const label = "text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft";
 
 /**
@@ -63,7 +63,7 @@ export function Institution() {
     return (
       <div class="space-y-8">
         <PageHeader title="Institution" />
-        <p class="rounded-2xl border border-ink/8 bg-ivory p-6 text-sm text-ink-soft shadow-card">
+        <p class="rounded-2xl border border-rule-faint bg-oat p-6 text-sm text-ink-soft shadow-sheet">
           Your account is not attached to an institution.
         </p>
       </div>
@@ -91,14 +91,14 @@ export function Institution() {
 
       {save.error && <ErrorNote message={save.error.message} />}
       {saved && !save.isPending && (
-        <p class="rounded-xl bg-evergreen-100 px-4 py-3 text-sm text-evergreen-900">
+        <p class="rounded-xl bg-seal-100 px-4 py-3 text-sm text-seal-900">
           Saved.
         </p>
       )}
 
       <form
         onSubmit={onSubmit}
-        class="space-y-6 rounded-2xl border border-ink/8 bg-ivory p-8 shadow-card"
+        class="space-y-6 rounded-2xl border border-rule-faint bg-oat p-8 shadow-sheet"
       >
         <div class="grid gap-4 sm:grid-cols-2">
           <label class="block space-y-1.5">
@@ -142,11 +142,11 @@ export function Institution() {
           </label>
         </div>
 
-        <div class="flex items-center gap-4 border-t border-ink/8 pt-6">
+        <div class="flex items-center gap-4 border-t border-rule-faint pt-6">
           <button
             type="submit"
             disabled={save.isPending}
-            class="rounded-full bg-evergreen-800 px-7 py-3 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700 disabled:opacity-60"
+            class="rounded-full bg-seal-800 px-7 py-3 text-sm font-semibold text-oat transition-colors hover:bg-seal-700 disabled:opacity-60"
           >
             {save.isPending ? "Saving…" : "Save changes"}
           </button>

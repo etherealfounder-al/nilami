@@ -3,9 +3,16 @@
 
 /* The fonts the design system names. Bundled rather than fetched from a third
    party: one fewer connection on a slow link, and no request to anyone else
-   carrying a reader's address. */
-@import "@fontsource-variable/fraunces";
-@import "@fontsource-variable/inter";
+   carrying a reader's address.
+
+   Each face is split by unicode-range, so a reader downloads only the script
+   they are actually shown — an English reader never fetches the Devanagari,
+   and a Nepali reader never fetches the Cyrillic that comes along for the
+   ride inside the Latin packages. */
+@import "@fontsource-variable/fraunces/wght.css";
+@import "@fontsource-variable/newsreader/wght.css";
+@import "@fontsource/tiro-devanagari-hindi/devanagari.css";
+@import "@fontsource/tiro-devanagari-hindi/latin.css";
 
 /* Tailwind emits only the classes it can see. This app is one source; the Go
    templates that render the public pages are the other, and they are outside

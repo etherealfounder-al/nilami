@@ -59,7 +59,7 @@ export function Bidders() {
         ) : (
           <table class="w-full min-w-[920px] text-sm">
             <thead>
-              <tr class="border-b border-ink/8 text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
                 <th class="px-6 py-4">Bidder</th>
                 <th class="px-4 py-4">Auction</th>
                 <th class="px-4 py-4 text-right">Deposit</th>
@@ -67,9 +67,9 @@ export function Bidders() {
                 <th class="px-6 py-4 text-right">Deposit status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-ink/8">
+            <tbody class="divide-y divide-rule-faint">
               {data.map((b) => (
-                <tr key={b.id} class="hover:bg-cream/50">
+                <tr key={b.id} class="hover:bg-linen/50">
                   <td class="px-6 py-3.5">
                     <span class="block font-medium text-ink">{b.full_name}</span>
                     <span class="text-xs text-ink-soft">
@@ -92,7 +92,7 @@ export function Bidders() {
                         href={b.deposit_proof_url}
                         target="_blank"
                         rel="noreferrer"
-                        class="block text-xs text-evergreen-700 underline"
+                        class="block text-xs text-seal-700 underline"
                       >
                         proof
                       </a>
@@ -111,7 +111,7 @@ export function Bidders() {
                             status: (e.currentTarget as HTMLSelectElement).value,
                           })
                         }
-                        class="h-8 rounded-full border border-ink/15 bg-white px-2 text-xs disabled:opacity-60"
+                        class="h-8 rounded-full border border-rule-strong bg-white px-2 text-xs disabled:opacity-60"
                       >
                         <option value="pending">Pending</option>
                         <option value="verified">Verified</option>

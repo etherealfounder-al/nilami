@@ -108,19 +108,35 @@ func (p Page) Countdown(deadline time.Time) string {
 	return p.T("common.countdown.leftHM", "h", hours, "m", int(left.Minutes())%60)
 }
 
-// StatusTone is the badge's colour, kept here so one status looks alike on
+// StatusTone is the stamp's colour, kept here so one status looks alike on
 // every page that shows it.
+//
+// A single colour rather than a foreground/background pair: the stamp draws
+// its own rule in currentColor, the way an inked impression is one colour on
+// whatever paper it lands on.
 func (p Page) StatusTone(status string) string {
 	switch status {
 	case "open":
-		return "bg-evergreen-100 text-evergreen-900"
+		return "text-seal-700"
 	case "upcoming":
-		return "bg-brass-100 text-brass-600"
+		return "text-brass-700"
 	case "sold":
-		return "bg-brass-500 text-evergreen-950"
+		return "text-ink"
 	case "cancelled":
-		return "bg-danger-soft text-danger"
+		return "text-vermilion"
 	default:
-		return "bg-cream text-ink-soft"
+		return "text-ink-faint"
 	}
+}
+
+// TypeInitial is the single letter shown where a property has no photograph.
+//
+// Taken from the translated type name rather than the database value, so the
+// Nepali edition shows a Devanagari letter instead of a Latin one standing in
+// for a word the reader is not being shown.
+func (p Page) TypeInitial(t string) string {
+	for _, r := range p.TypeLabel(t) {
+		return string(r)
+	}
+	return ""
 }

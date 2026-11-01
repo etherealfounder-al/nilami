@@ -8,74 +8,101 @@
 {{if .Canonical}}<link rel="canonical" href="{{.Canonical}}">{{end}}
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{{.Assets.CSS}}">
+<meta name="theme-color" content="#f7f4ea">
 <meta property="og:site_name" content="Nilami">
 <meta property="og:title" content="{{.Title}}">
 <meta property="og:description" content="{{.Description}}">
 {{if .Canonical}}<meta property="og:url" content="{{.Canonical}}">{{end}}
 {{block "head" .}}{{end}}
 </head>
-<body>
+<body class="min-h-screen">
 
-<header class="sticky top-0 z-40 border-b border-ink/8 bg-ivory/85 backdrop-blur-md">
-  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-5">
-    <a href="/" class="group inline-flex items-baseline gap-2.5">
-      <span aria-hidden class="grid size-8 shrink-0 place-items-center self-center rounded-full border border-evergreen-800/40 text-evergreen-800">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12h6M5 12V7.5M2.5 2.5l4 4M4.5 1.5l4 4M1.5 4.5l4 4M8 6l4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-      </span>
-      <span class="font-display text-2xl font-semibold tracking-tight text-evergreen-900">Nilami</span>
-    </a>
-    <div class="flex items-center gap-1.5 sm:gap-2">
-      <nav class="hidden items-center gap-0.5 sm:flex sm:gap-2">
-        <a href="/auctions" class="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-evergreen-50 hover:text-evergreen-800 sm:px-3.5">{{.S "nav.auctions"}}</a>
-        <a href="/how-it-works" class="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-evergreen-50 hover:text-evergreen-800 sm:px-3.5">{{.S "nav.howItWorks"}}</a>
-      </nav>
+{{/*
+  The masthead.
 
-      {{/* Links, not buttons: the choice survives a browser that runs no
-           JavaScript, and each is a real address a reader can bookmark. */}}
-      <div class="inline-flex items-center gap-0.5 rounded-full border border-ink/15 p-0.5" role="group" aria-label="Language">
-        <a href="/lang/en?to={{.Path}}" class="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors {{if .IsNepali}}text-ink-soft hover:text-evergreen-800{{else}}bg-evergreen-800 text-ivory{{end}}">EN</a>
-        <a href="/lang/ne?to={{.Path}}" class="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors {{if .IsNepali}}bg-evergreen-800 text-ivory{{else}}text-ink-soft hover:text-evergreen-800{{end}}">ने</a>
+  A gazette announces itself before it says anything else, and the two scripts
+  are given equal billing rather than one being a translation of the other —
+  which is the honest arrangement for a bilingual record in Nepal.
+*/}}
+<header>
+  <div class="mx-auto max-w-[76rem] px-5">
+    <div class="flex items-end justify-between gap-6 pt-7 pb-4 sm:pt-9">
+      <a href="/" class="group block">
+        <span class="sr-only">Nilami</span>
+        <span aria-hidden="true" class="block font-display text-[2.75rem] leading-[0.82] tracking-[-0.03em] text-ink transition-colors group-hover:text-seal-800 sm:text-[4rem]">निलामी</span>
+        <span aria-hidden="true" class="mt-1.5 block text-[0.6875rem] font-semibold uppercase tracking-[0.42em] text-ink-soft sm:text-xs">Nilami</span>
+      </a>
+
+      <div class="flex shrink-0 flex-col items-end gap-2.5 pb-1">
+        {{/* Links, not buttons: the choice survives a browser that runs no
+             JavaScript, and each is a real address a reader can bookmark. */}}
+        <div class="flex items-baseline gap-2 text-[0.6875rem] font-semibold uppercase tracking-[0.16em]" role="group" aria-label="Edition">
+          <a href="/lang/en?to={{.Path}}" class="transition-colors {{if .IsNepali}}text-ink-faint hover:text-ink{{else}}text-ink underline decoration-brass-500 decoration-2 underline-offset-4{{end}}">EN</a>
+          <span aria-hidden="true" class="text-ink-faint/50">/</span>
+          <a href="/lang/ne?to={{.Path}}" class="font-deva text-xs normal-case tracking-normal transition-colors {{if .IsNepali}}text-ink underline decoration-brass-500 decoration-2 underline-offset-4{{else}}text-ink-faint hover:text-ink{{end}}">नेपाली</a>
+        </div>
+        <a href="/admin" class="whitespace-nowrap border-b border-ink/25 pb-0.5 text-xs text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{if .SignedIn}}{{.S "nav.dashboard"}}{{else}}{{.S "nav.staffSignIn"}}{{end}}</a>
       </div>
-
-      <a href="/admin" class="ml-1 hidden rounded-full border border-evergreen-800/25 px-4 py-2 text-sm font-medium text-evergreen-800 transition-colors hover:bg-evergreen-800 hover:text-ivory sm:block">{{if .SignedIn}}{{.S "nav.dashboard"}}{{else}}{{.S "nav.staffSignIn"}}{{end}}</a>
     </div>
+
+    <div class="rule-double"></div>
+
+    {{/* The edition line: what this publication is, and where to turn. */}}
+    <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-2.5">
+      <p class="standing">{{.S "masthead.strap"}}</p>
+      <nav class="flex items-center gap-5 text-sm">
+        <a href="/auctions" class="border-b border-transparent pb-px text-ink-soft transition-colors hover:border-ink hover:text-ink">{{.S "nav.auctions"}}</a>
+        <a href="/how-it-works" class="border-b border-transparent pb-px text-ink-soft transition-colors hover:border-ink hover:text-ink">{{.S "nav.howItWorks"}}</a>
+      </nav>
+    </div>
+
+    <div class="h-px bg-ink"></div>
   </div>
 </header>
 
 {{template "content" .}}
 
-<footer class="bg-evergreen-950 text-ivory/70">
-  <div class="mx-auto max-w-6xl px-5 py-14">
-    <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-      <div class="max-w-sm space-y-4">
-        <a href="/" class="group inline-flex items-baseline gap-2.5">
-          <span aria-hidden class="grid size-8 shrink-0 place-items-center self-center rounded-full border border-brass-300/60 text-brass-300">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12h6M5 12V7.5M2.5 2.5l4 4M4.5 1.5l4 4M1.5 4.5l4 4M8 6l4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          </span>
-          <span class="font-display text-2xl font-semibold tracking-tight text-ivory">Nilami</span>
+{{/*
+  The colophon.
+
+  Dark, so the page closes on a firm note, and set as three ruled columns the
+  way the back page of a record carries its particulars.
+*/}}
+<footer class="mt-24 bg-seal-950 text-oat/65">
+  <div class="mx-auto max-w-[76rem] px-5 py-16">
+    <div class="grid gap-12 md:grid-cols-[1.2fr_2fr]">
+      <div>
+        <a href="/" class="group block">
+          <span aria-hidden="true" class="block font-display text-4xl leading-none text-oat transition-colors group-hover:text-brass-300">निलामी</span>
+          <span aria-hidden="true" class="mt-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.42em] text-brass-500">Nilami</span>
         </a>
-        <p class="text-sm leading-relaxed">{{.S "footer.tagline"}}</p>
+        <p class="mt-5 max-w-xs text-sm leading-relaxed">{{.S "footer.tagline"}}</p>
       </div>
-      <div class="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
-        <div class="space-y-3">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.browse"}}</p>
-          <ul class="space-y-2">
-            <li><a class="hover:text-ivory" href="/auctions">{{.S "footer.allAuctions"}}</a></li>
-            <li><a class="hover:text-ivory" href="/auctions?status=open">{{.S "footer.openForBids"}}</a></li>
-            <li><a class="hover:text-ivory" href="/how-it-works">{{.S "footer.howItWorks"}}</a></li>
+
+      <div class="grid gap-10 sm:grid-cols-3">
+        <div>
+          <p class="standing !text-brass-500">{{.S "footer.browse"}}</p>
+          <ul class="mt-4 space-y-2.5 text-sm">
+            <li><a class="border-b border-transparent transition-colors hover:border-oat/40 hover:text-oat" href="/auctions">{{.S "footer.allAuctions"}}</a></li>
+            <li><a class="border-b border-transparent transition-colors hover:border-oat/40 hover:text-oat" href="/auctions?status=open">{{.S "footer.openForBids"}}</a></li>
+            <li><a class="border-b border-transparent transition-colors hover:border-oat/40 hover:text-oat" href="/how-it-works">{{.S "footer.howItWorks"}}</a></li>
           </ul>
         </div>
-        <div class="space-y-3">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.platform"}}</p>
-          <ul class="space-y-2">{{range .List "footer.platformLines"}}<li>{{.}}</li>{{end}}</ul>
+        <div>
+          <p class="standing !text-brass-500">{{.S "footer.platform"}}</p>
+          <ul class="mt-4 space-y-2.5 text-sm">{{range .List "footer.platformLines"}}<li>{{.}}</li>{{end}}</ul>
         </div>
-        <div class="space-y-3">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.noticeTitle"}}</p>
-          <p class="leading-relaxed">{{.S "footer.noticeBody"}}</p>
+        <div>
+          <p class="standing !text-brass-500">{{.S "footer.noticeTitle"}}</p>
+          <p class="mt-4 text-sm leading-relaxed">{{.S "footer.noticeBody"}}</p>
         </div>
       </div>
     </div>
-    <div class="mt-12 border-t border-ivory/10 pt-6 text-xs text-ivory/40">© {{.Year}} Nilami. {{.S "footer.rights"}}</div>
+
+    <div class="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-oat/12 pt-6 text-xs text-oat/40">
+      <span>© {{.Year}} Nilami. {{.S "footer.rights"}}</span>
+      <span aria-hidden="true" class="font-display text-base text-oat/25">निलामी</span>
+    </div>
   </div>
 </footer>
 

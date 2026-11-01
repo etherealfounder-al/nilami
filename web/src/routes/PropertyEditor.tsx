@@ -146,7 +146,7 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
             </Field>
             <label class="flex items-center gap-3 self-end pb-2 sm:col-span-2">
               <input type="checkbox" name="is_published" checked={p?.is_published ?? false}
-                     class="size-4 accent-evergreen-700" />
+                     class="size-4 accent-seal-700" />
               <span class="text-sm font-medium text-ink">Published on the public site</span>
             </label>
           </div>
@@ -193,7 +193,7 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
         <Section title="Narrative and media">
           <Field label="Description">
             <textarea name="description" rows={5} value={p?.description}
-                      class="w-full rounded-xl border border-ink/15 bg-white p-3.5 text-sm outline-none transition-colors focus:border-evergreen-600" />
+                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
           </Field>
           <Field label="Video (YouTube, Vimeo or a direct .mp4 link)">
             <input name="video_url" type="url" value={p?.video_url ?? ""} placeholder="https://" class={inputCls} />

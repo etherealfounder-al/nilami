@@ -54,7 +54,7 @@ export function Staff() {
         ) : (
           <table class="w-full min-w-[820px] text-sm">
             <thead>
-              <tr class="border-b border-ink/8 text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
                 <th class="px-6 py-4">Person</th>
                 <th class="px-4 py-4">Institution</th>
                 <th class="px-4 py-4">Role</th>
@@ -62,9 +62,9 @@ export function Staff() {
                 <th class="px-6 py-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-ink/8">
+            <tbody class="divide-y divide-rule-faint">
               {data.map((s) => (
-                <tr key={s.id} class="hover:bg-cream/50">
+                <tr key={s.id} class="hover:bg-linen/50">
                   <td class="px-6 py-3.5">
                     <span class="block font-medium text-ink">{s.full_name}</span>
                     <span class="text-xs text-ink-soft">{s.email}</span>
@@ -87,7 +87,7 @@ export function Staff() {
                         <button
                           disabled={decide.isPending}
                           onClick={() => decide.mutate({ id: s.id, action: "approve" })}
-                          class="rounded-full bg-evergreen-800 px-4 py-1.5 text-xs font-semibold text-ivory transition-colors hover:bg-evergreen-700 disabled:opacity-60"
+                          class="rounded-full bg-seal-800 px-4 py-1.5 text-xs font-semibold text-oat transition-colors hover:bg-seal-700 disabled:opacity-60"
                         >
                           Approve
                         </button>
@@ -97,7 +97,7 @@ export function Staff() {
                           // The page it replaces asked for no confirmation, so
                           // neither does this; worth revisiting as a product call.
                           onClick={() => decide.mutate({ id: s.id, action: "reject" })}
-                          class="rounded-full border border-ink/15 px-4 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-danger hover:text-danger disabled:opacity-60"
+                          class="rounded-full border border-rule-strong px-4 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-vermilion hover:text-vermilion disabled:opacity-60"
                         >
                           Reject
                         </button>

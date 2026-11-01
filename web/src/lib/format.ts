@@ -63,21 +63,28 @@ export function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
-/** Tailwind classes for a status pill, so one status looks alike everywhere. */
+/**
+ * The colour of a status stamp, so one status looks alike everywhere.
+ *
+ * A single colour rather than a foreground/background pair: the stamp draws
+ * its own rule in currentColor, matching the public pages, where the same
+ * states are printed on the same paper.
+ */
 export function statusTone(status: string): string {
   switch (status) {
     case "open":
-      return "bg-evergreen-100 text-evergreen-900";
+    case "verified":
+    case "published":
+      return "text-seal-700";
     case "upcoming":
-      return "bg-brass-100 text-brass-600";
+    case "pending":
+      return "text-brass-700";
     case "sold":
-      return "bg-evergreen-50 text-evergreen-700";
+      return "text-ink";
     case "cancelled":
     case "rejected":
-      return "bg-danger-soft text-danger";
-    case "verified":
-      return "bg-evergreen-100 text-evergreen-900";
+      return "text-vermilion";
     default:
-      return "bg-cream text-ink-soft";
+      return "text-ink-faint";
   }
 }

@@ -2,48 +2,128 @@
  * The design system.
  *
  * Tailwind v4 is CSS-first, so the tokens below are the whole of it. One
- * stylesheet is built from here and serves both halves of the site: this app,
- * and the Go templates that render the public pages, which app.css names as a
- * second source for Tailwind to scan.
+ * stylesheet is built from here and serves both halves of the site: the admin
+ * app, and the Go templates that render the public pages, which app.css names
+ * as a second source for Tailwind to scan.
+ *
+ * The brief: a bank auction notice is a legal instrument. In Nepal these are
+ * published in the newspapers as dense, formal, stamped notices, and that is
+ * the visual language the audience already trusts. So this is set as a gazette
+ * — a register of notices — rather than a property marketplace. Rules instead
+ * of cards, figures instead of photographs, and paper instead of screen.
  */
 @theme {
-  /* Palette — private-bank calm */
-  --color-ink: #161512;
-  --color-ink-soft: #4a463d;
-  --color-ivory: #faf7f0;
-  --color-cream: #f3eee1;
-  --color-parchment: #ece5d3;
-  --color-evergreen-950: #071f17;
-  --color-evergreen-900: #0a2b21;
-  --color-evergreen-800: #0e3b2e;
-  --color-evergreen-700: #14503e;
-  --color-evergreen-600: #1b6a52;
-  --color-evergreen-100: #e3eee9;
-  --color-evergreen-50: #f0f6f3;
-  --color-brass-600: #a8873a;
-  --color-brass-500: #c2a24b;
-  --color-brass-300: #e4d3a1;
-  --color-brass-100: #f4ecd7;
-  --color-danger: #9c3b2e;
-  --color-danger-soft: #f7e8e5;
+  /* ── Ink ──────────────────────────────────────────────────────────────
+     Not black. A printed near-black carries a hue, and this one leans the
+     same green the institution colour does, so text and brand sit in one
+     family rather than two. */
+  --color-ink: #1a1c18;
+  --color-ink-soft: #55584e;
+  --color-ink-faint: #8a8d82;
 
-  --font-display: var(--font-fraunces, "Fraunces Variable"), Georgia, serif;
-  --font-sans: var(--font-inter, "Inter Variable"), system-ui, sans-serif;
+  /* ── Paper ────────────────────────────────────────────────────────────
+     Three warm grounds, light to dark. Oat is the page; linen is a recessed
+     band; vellum is the raised surface that would otherwise be a card. */
+  --color-oat: #f7f4ea;
+  --color-linen: #efead9;
+  --color-vellum: #fdfbf5;
 
-  --shadow-card: 0 1px 2px rgba(22, 21, 18, 0.05), 0 8px 28px -8px rgba(22, 21, 18, 0.14);
-  --shadow-lift: 0 2px 4px rgba(22, 21, 18, 0.06), 0 18px 44px -12px rgba(22, 21, 18, 0.22);
+  /* ── Seal ─────────────────────────────────────────────────────────────
+     The institutional green, deepened from the old palette so it reads as
+     printed ink rather than a brand swatch. */
+  --color-seal-950: #0b1a14;
+  --color-seal-900: #112b21;
+  --color-seal-800: #17402f;
+  --color-seal-700: #1d5740;
+  --color-seal-600: #2a7458;
+  --color-seal-100: #dfeae4;
+  --color-seal-50: #eff5f2;
+
+  /* ── Brass ────────────────────────────────────────────────────────────
+     Used sparingly and only where it means something: a figure, a stamp, a
+     live deadline. Gold leaf on a legal document, not a brand gradient. */
+  --color-brass-700: #8a6d26;
+  --color-brass-600: #a8872f;
+  --color-brass-500: #c4a03f;
+  --color-brass-300: #e3d1a0;
+  --color-brass-100: #f5eed9;
+
+  /* ── Vermilion ────────────────────────────────────────────────────────
+     The sindoor red of a Nepali official stamp. Reserved for urgency and
+     error — never decoration. */
+  --color-vermilion: #a33421;
+  --color-vermilion-soft: #f7e6e2;
+
+  /* ── Type ─────────────────────────────────────────────────────────────
+     Fraunces sets the headlines and every figure: it has real optical-size
+     and "wonk" axes, which almost nobody uses, and pushed hard they give a
+     voice no system stack can imitate. Newsreader carries the prose — this
+     is a document, so the body is a serif.
+
+     Tiro Devanagari Hindi sets the Nepali edition. It was drawn from the
+     calligraphic tradition rather than adapted from a Latin face, and until
+     now Nepali readers were served whatever their operating system happened
+     to have. Its unicode-range means a reader of the English edition never
+     downloads a byte of it. */
+  --font-display: "Fraunces Variable", "Tiro Devanagari Hindi", Georgia, serif;
+  --font-text: "Newsreader Variable", "Tiro Devanagari Hindi", Georgia, serif;
+  --font-deva: "Tiro Devanagari Hindi", "Newsreader Variable", serif;
+
+  /* ── Rules ────────────────────────────────────────────────────────────
+     A gazette is built from rules, so they are tokens, not ad-hoc borders. */
+  --color-rule: rgba(26, 28, 24, 0.14);
+  --color-rule-strong: rgba(26, 28, 24, 0.32);
+  --color-rule-faint: rgba(26, 28, 24, 0.07);
+
+  /* Depth is almost absent on purpose: paper does not float. What little
+     there is suggests a sheet resting on a sheet. */
+  --shadow-sheet: 0 1px 0 rgba(26, 28, 24, 0.04), 0 12px 30px -22px rgba(26, 28, 24, 0.5);
+  --shadow-raised: 0 1px 0 rgba(26, 28, 24, 0.05), 0 22px 48px -28px rgba(26, 28, 24, 0.55);
+
+  --radius-sheet: 2px;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Page
+   ────────────────────────────────────────────────────────────────────────── */
 
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background: var(--color-ivory);
+  background-color: var(--color-oat);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-text);
+  font-size: 1.0625rem;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Every figure on this site is money or a date, and money in a column has
+     to line up. */
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The grain.
+ *
+ * An inline SVG turbulence, so the paper texture costs no extra request and
+ * no image file. It sits above the background and below everything else, is
+ * never interactive, and is faint enough to read as tooth rather than noise.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 ::selection {
@@ -51,32 +131,213 @@ body {
   color: var(--color-ink);
 }
 
-/* Display headings */
+/* ──────────────────────────────────────────────────────────────────────────
+   Type
+   ────────────────────────────────────────────────────────────────────────── */
+
+/*
+ * Display.
+ *
+ * WONK is Fraunces' flourish axis — it swaps in the drawn, slightly unruly
+ * letterforms. At full strength on headlines it is the thing a reader will
+ * remember; it is kept off anywhere text gets small or dense.
+ */
 .font-display {
   font-family: var(--font-display);
-  font-variation-settings: "SOFT" 40, "WONK" 0;
+  font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 48;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.04;
 }
 
-/* Hairline rule */
-.rule {
+/* Figures. Money is the content of this site, so it gets its own treatment:
+   display face, lining tabular numerals, no wonk (it makes digits wobble). */
+.figure {
+  font-family: var(--font-display);
+  font-variation-settings: "SOFT" 20, "WONK" 0, "opsz" 36;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.02em;
+}
+
+/*
+ * The standing head.
+ *
+ * Small, letterspaced, uppercase — the label above a column in a record
+ * book. Used everywhere a field needs naming.
+ */
+.standing {
+  font-family: var(--font-text);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+/* Devanagari does not have uppercase, and letterspacing breaks its
+   conjuncts, so the Nepali edition gets the same role expressed differently:
+   slightly smaller, still quiet, but left as drawn. */
+:lang(ne) .standing {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-family: var(--font-deva);
+}
+
+:lang(ne) {
+  font-family: var(--font-deva);
+  line-height: 1.85;
+}
+
+:lang(ne) .font-display,
+:lang(ne) .figure {
+  font-family: var(--font-deva);
+  font-variation-settings: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Marks
+   ────────────────────────────────────────────────────────────────────────── */
+
+/*
+ * The stamp.
+ *
+ * Auction status is the one thing a reader scans for, and a pill badge says
+ * "web app". This says "stamped by someone with the authority to stamp it":
+ * ruled box, letterspaced, very slightly rotated so it reads as applied to
+ * the page rather than printed with it.
+ */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.7em;
+  border: 1.5px solid currentColor;
+  border-radius: 1px;
+  font-family: var(--font-text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  transform: rotate(-1.2deg);
+}
+
+:lang(ne) .stamp {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-family: var(--font-deva);
+}
+
+/* A rule that fades at both ends, for closing a section rather than
+   dividing one. */
+.rule-fade {
   height: 1px;
-  background: linear-gradient(to right, transparent, rgba(22, 21, 18, 0.18), transparent);
+  background: linear-gradient(to right, transparent, var(--color-rule-strong), transparent);
 }
 
-/* Reveal on scroll */
-@keyframes rise-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+/* The double rule that sits under a masthead. */
+.rule-double {
+  border-top: 3px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-ink);
+  height: 5px;
 }
-.rise {
-  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.rise-1 { animation-delay: 0.08s; }
-.rise-2 { animation-delay: 0.16s; }
-.rise-3 { animation-delay: 0.24s; }
 
-/* Thin, elegant scrollbar */
-* {
+/* ──────────────────────────────────────────────────────────────────────────
+   Motion
+   ──────────────────────────────────────────────────────────────────────────
+   One orchestrated arrival rather than scattered fidgeting: the page sets
+   itself like a sheet being laid down. Everything here is CSS, because the
+   public pages ship no JavaScript at all.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@keyframes set-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.set {
+  animation: set-in 0.72s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.draw {
+  transform-origin: left;
+  animation: rule-draw 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.d1 { animation-delay: 0.06s; }
+.d2 { animation-delay: 0.13s; }
+.d3 { animation-delay: 0.2s; }
+.d4 { animation-delay: 0.27s; }
+.d5 { animation-delay: 0.34s; }
+.d6 { animation-delay: 0.41s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .set,
+  .draw {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Controls
+   ────────────────────────────────────────────────────────────────────────── */
+
+*{
   scrollbar-width: thin;
-  scrollbar-color: rgba(22, 21, 18, 0.25) transparent;
+  scrollbar-color: var(--color-rule-strong) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-seal-700);
+  outline-offset: 2px;
+}
+
+/*
+ * Native selects and inputs are styled as ruled fields — an underline rather
+ * than a box, the way a form on paper names where to write.
+ */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--color-rule-strong);
+  border-radius: 0;
+  padding: 0.45rem 0.1rem;
+  font-family: var(--font-text);
+  font-size: 0.9375rem;
+  color: var(--color-ink);
+  transition: border-color 0.18s ease;
+}
+
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--color-seal-700);
+}
+
+.field::placeholder {
+  color: var(--color-ink-faint);
 }

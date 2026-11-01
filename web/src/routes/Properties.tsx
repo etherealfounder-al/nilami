@@ -47,7 +47,7 @@ export function Properties() {
           ) : (
             <table class="w-full min-w-[780px] text-sm">
               <thead>
-                <tr class="border-b border-ink/8 text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+                <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
                   <th class="px-6 py-4">Property</th>
                   <th class="px-4 py-4">Institution</th>
                   <th class="px-4 py-4">Type</th>
@@ -56,12 +56,12 @@ export function Properties() {
                   <th class="px-4 py-4 text-right">Views</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-ink/8">
+              <tbody class="divide-y divide-rule-faint">
                 {data.map((p) => (
-                  <tr key={p.id} class="hover:bg-cream/50">
+                  <tr key={p.id} class="hover:bg-linen/50">
                     <td class="px-6 py-3.5">
                       <div class="flex items-center gap-3">
-                        <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-parchment">
+                        <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-linen">
                           {p.cover_url && (
                             <img
                               src={p.cover_url}
@@ -76,7 +76,7 @@ export function Properties() {
                         <div class="min-w-0">
                           <Link
                             to={`/properties/${p.id}`}
-                            className="block truncate font-medium text-ink hover:text-evergreen-700"
+                            className="block truncate font-medium text-ink hover:text-seal-700"
                           >
                             {p.title}
                           </Link>

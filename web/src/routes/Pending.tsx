@@ -5,12 +5,12 @@ import { signOut } from "../lib/session";
 export function PendingPage() {
   const queryClient = useQueryClient();
   return (
-    <main class="grid min-h-dvh place-items-center bg-evergreen-950 px-5">
-      <div class="w-full max-w-md space-y-5 rounded-3xl border border-ivory/10 bg-ivory p-8 text-center shadow-lift">
+    <main class="grid min-h-dvh place-items-center bg-seal-950 px-5">
+      <div class="w-full max-w-md space-y-5 rounded-3xl border border-oat/10 bg-oat p-8 text-center shadow-raised">
         <div class="mx-auto grid size-12 place-items-center rounded-full bg-brass-100 text-2xl">
           ⏳
         </div>
-        <h1 class="font-display text-2xl font-semibold text-evergreen-900">
+        <h1 class="font-display text-2xl font-semibold text-seal-900">
           Account pending approval
         </h1>
         <p class="text-sm leading-relaxed text-ink-soft">
