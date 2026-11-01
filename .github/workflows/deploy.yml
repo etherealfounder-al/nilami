@@ -1,15 +1,14 @@
-# Tests the API on every push, and deploys main in the order the two halves depend on:
-# the Go API (Coolify on the VPS) first, then the Next.js frontend (Vercel),
-# each only when its own files changed.
+# Tests every push, and deploys main.
 #
-# Vercel's own production deploys are off (vercel.json, git.deploymentEnabled),
-# so a frontend that needs a new API field can never go live before the API that
-# serves it. Preview deployments of other branches still come from Vercel's Git
-# integration as before.
+# One image now holds the whole site — the Go API, the pages it renders and
+# the admin app embedded in the binary — so there is one deployment rather
+# than two that could disagree about which half was live. That split is what
+# broke the panel on 1 November: the API went out, the frontend build failed
+# silently, and a success was reported because the deploy only confirmed that
+# a webhook had been accepted.
 #
 # Secrets:
-#   COOLIFY_TOKEN            Coolify API token with only the read + deploy abilities
-#   VERCEL_DEPLOY_HOOK_URL   Vercel deploy hook for the main branch
+#   COOLIFY_TOKEN  Coolify API token with only the read + deploy abilities
 
 name: CI / Deploy
 
@@ -29,32 +28,10 @@ permissions:
 env:
   COOLIFY_URL: https://coolify.ujjwolkayastha.com.np
   COOLIFY_APP_UUID: wsnpyyxf9dbsloac0g5opp8d
-  API_URL: https://nilami.ujjwolkayastha.com.np
+  SITE_URL: https://nilami.ujjwolkayastha.com.np
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      web: ${{ steps.filter.outputs.web }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            api:
-              - 'api/**'
-            web:
-              - '**'
-              - '!api/**'
-              - '!.github/**'
-              - '!docs/**'
-              - '!**/*.md'
-
-  api-test:
-    needs: changes
-    if: needs.changes.outputs.api == 'true'
+  api:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -82,12 +59,47 @@ jobs:
         run: go test ./... -count=1 -p 1
         env:
           TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/nilami?sslmode=disable
-      - name: Docker image builds
-        run: docker build -q -t nilami-api:ci .
 
-  deploy-api:
-    needs: [changes, api-test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.api == 'true'
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      # --ignore-workspace because the repository root is a pnpm workspace
+      # that does not list this directory, and --ignore-scripts because
+      # nothing here needs a dependency's install script to build.
+      - run: pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
+      - run: pnpm typecheck
+      - run: pnpm build
+
+  image:
+    # Built on every push, not only on main: a Dockerfile that fails is worth
+    # knowing about on the branch, which is the lesson of a deploy that only
+    # failed once it reached production.
+    needs: [api, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [api, web, image]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -100,7 +112,7 @@ jobs:
           deployment=$(curl -fsS -X POST "${auth[@]}" "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_APP_UUID&force=false" \
             | jq -r '.deployments[0].deployment_uuid')
           echo "Coolify deployment $deployment"
-          for i in $(seq 1 90); do
+          for i in $(seq 1 120); do
             status=$(curl -fsS "${auth[@]}" "$COOLIFY_URL/api/v1/deployments/$deployment" | jq -r .status)
             echo "status: $status"
             case "$status" in
@@ -110,29 +122,23 @@ jobs:
             sleep 10
           done
           [ "$status" = finished ] || { echo "::error::timed out waiting for Coolify"; exit 1; }
-      - name: API is healthy
+
+      - name: The site is healthy
         run: |
           for i in $(seq 1 30); do
-            curl -fsS "$API_URL/healthz" && exit 0
+            curl -fsS "$SITE_URL/healthz" && exit 0
             sleep 5
           done
-          echo "::error::$API_URL/healthz did not come up"; exit 1
+          echo "::error::$SITE_URL/healthz did not come up"; exit 1
 
-  deploy-web:
-    needs: [changes, deploy-api]
-    # Runs after the API deploy when both changed, and on its own when only the
-    # frontend did; never if the API deploy failed. The frontend is checked by
-    # Vercel's own build: if it fails, the previous deployment keeps serving.
-    if: >-
-      always() &&
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
-      needs.changes.outputs.web == 'true' &&
-      (needs.deploy-api.result == 'success' || needs.deploy-api.result == 'skipped')
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Trigger the Vercel production build
-        env:
-          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+      - name: The pages and the panel are served, not just the API
         run: |
-          curl -fsS -X POST "$HOOK" | jq '{job: .job.id, state: .job.state}'
+          # /healthz answers before the embedded frontend is reachable, so it
+          # alone cannot tell a working deploy from a binary built without one.
+          fail=0
+          for path in / /auctions /how-it-works /admin; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$SITE_URL$path")
+            echo "$path -> $code"
+            [ "$code" = 200 ] || fail=1
+          done
+          [ "$fail" = 0 ] || { echo "::error::the deploy is serving the API but not the site"; exit 1; }

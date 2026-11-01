@@ -1,9 +1,15 @@
-# Deployed by Coolify's Docker Compose build pack.
+# Deployed by Coolify's Docker Compose build pack, from the repository root:
+# the image needs the admin app and the shared stylesheet, which sit outside
+# api/.
 #
 # Coolify's Traefik already owns 80 and 443 and issues the certificate, so
-# nothing here publishes a port or terminates TLS. The API is reachable only
-# through Traefik; Postgres only from the API, over the private network.
+# nothing here publishes a port or terminates TLS. The site is reachable only
+# through Traefik; Postgres only from the server, over the private network.
 services:
+  # Still called api, though it now serves the whole site. Coolify binds the
+  # domain to a named service and the SERVICE_FQDN_ variable carries that
+  # name, so renaming it would detach the domain — which is how the site went
+  # down this morning.
   api:
     build:
       context: .
@@ -25,13 +31,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      # The binary doubles as its own probe: distroless has no shell or curl.
-      test: ["CMD", "/server", "-healthcheck"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
 
   postgres:
     image: postgres:17-alpine

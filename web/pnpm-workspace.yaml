@@ -1,6 +1,0 @@
-# web/ installs on its own, not as part of the repository root's workspace:
-# the container builds this directory alone, with only its package.json and
-# lockfile copied in. esbuild is listed because Vite needs its postinstall to
-# produce a working binary.
-onlyBuiltDependencies:
-  - esbuild
