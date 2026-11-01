@@ -77,12 +77,14 @@ jobs:
           node-version: 24
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-      # --ignore-workspace because the repository root is a pnpm workspace
-      # that does not list this directory, and --ignore-scripts because
-      # nothing here needs a dependency's install script to build.
+      # --ignore-workspace on every call, including the script runs: the
+      # repository root is a pnpm workspace that does not list this directory,
+      # and `pnpm run` without the flag installs that workspace first — which
+      # fails on build scripts belonging to the Next app, not to this one.
+      # --ignore-scripts because nothing here needs one to build.
       - run: pnpm install --frozen-lockfile --ignore-workspace --ignore-scripts
-      - run: pnpm typecheck
-      - run: pnpm build
+      - run: pnpm --ignore-workspace typecheck
+      - run: pnpm --ignore-workspace build
 
   image:
     # Built on every push, not only on main: a Dockerfile that fails is worth
