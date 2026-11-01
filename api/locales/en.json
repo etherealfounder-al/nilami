@@ -1,0 +1,260 @@
+{
+  "nav": {
+    "auctions": "Auctions",
+    "howItWorks": "How it works",
+    "staffSignIn": "Staff sign in",
+    "dashboard": "Dashboard",
+    "menu": "Menu"
+  },
+  "common": {
+    "statuses": {
+      "draft": "Draft",
+      "upcoming": "Upcoming",
+      "open": "Open for Bids",
+      "closed": "Bidding Closed",
+      "sold": "Sold",
+      "cancelled": "Cancelled"
+    },
+    "types": {
+      "land": "Land",
+      "house": "House",
+      "apartment": "Apartment",
+      "commercial": "Commercial"
+    },
+    "minimumBid": "Minimum bid",
+    "npr": "NPR",
+    "rs": "Rs",
+    "crore": "Cr",
+    "lakh": "Lakh",
+    "aana": "Aana",
+    "countdown": {
+      "days": "days",
+      "hrs": "hrs",
+      "min": "min",
+      "sec": "sec",
+      "passed": "Deadline passed",
+      "leftDH": "{d}d {h}h left",
+      "leftHM": "{h}h {m}m left"
+    },
+    "soldDot": "Sold",
+    "closedOn": "Closed {d}",
+    "viewOnMap": "View on map",
+    "goToPhoto": "Go to photo {n}",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "photosPending": "Photographs pending",
+    "photoOf": "Photo {n} of {total}"
+  },
+  "home": {
+    "badge": "Official auction notices",
+    "title1": "Institution-held properties,",
+    "title2": "openly auctioned.",
+    "sub": "Browse collateral properties offered for sale by participating banks and financial institutions — complete with appraised values, minimum bids, terms, and deadlines. Transparent recovery, fair opportunity.",
+    "ctaBrowse": "Browse auctions",
+    "ctaHow": "How bidding works",
+    "statOpen": "Open auctions",
+    "statValue": "Combined minimum bids (NPR)",
+    "statSecurity": "Bid security",
+    "featured": "Featured · Closing soonest",
+    "mapCaption": "Districts with properties currently on offer — tap a marker to filter.",
+    "mapEmpty": "No properties on offer yet.",
+    "mapCount": {
+      "one": "{n} property",
+      "other": "{n} properties"
+    },
+    "mapView": "View auctions →",
+    "kicker": "Current notices",
+    "underAuction": "Properties under auction",
+    "viewAll": "View all →",
+    "processKicker": "The process",
+    "processTitle": "Bidding, in four steps",
+    "processSub": "Bids are submitted in sealed form at the institution as per each auction notice. This portal keeps every notice, valuation, and deadline in one place.",
+    "steps": [
+      {
+        "title": "Review the notice",
+        "body": "Every property carries a published auction notice with the minimum bid, bid security, deadline, and opening date."
+      },
+      {
+        "title": "Inspect the property",
+        "body": "Visit the property and verify ownership documents with the institution's recovery department before you decide to bid."
+      },
+      {
+        "title": "Deposit bid security",
+        "body": "Deposit 10% of your quoted amount to the institution's designated account and keep the voucher."
+      },
+      {
+        "title": "Submit your sealed bid",
+        "body": "Deliver the sealed bid form with your voucher and documents to the stated office before the deadline."
+      }
+    ],
+    "assurance1": "Every sale follows a published notice.",
+    "assurance2": " No exceptions.",
+    "assuranceSub": "Auctions are conducted by each institution's recovery department under prevailing law, with valuations by licensed appraisers and bids opened publicly at the stated venue.",
+    "assuranceCta": "See current notices"
+  },
+  "listing": {
+    "kicker": "Auction notices",
+    "title": "All properties",
+    "sub": "Collateral properties currently offered for sale by participating institutions. Filter by type, district, institution, or auction status.",
+    "searchPlaceholder": "Search title or place…",
+    "allTypes": "All types",
+    "allDistricts": "All districts",
+    "allOrgs": "All institutions",
+    "anyStatus": "Any status",
+    "apply": "Apply",
+    "clear": "Clear",
+    "count": {
+      "one": "{n} property",
+      "other": "{n} properties"
+    },
+    "showing": "Showing {from}–{to} of {total}",
+    "perPage": "Per page",
+    "pagination": "Pagination",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "gotoPage": "Go to page {n}",
+    "pageOf": "Page {n} of {total}",
+    "emptyTitle": "No properties match those filters.",
+    "emptySub": "Try clearing a filter or check back soon — new notices are published regularly."
+  },
+  "institution": {
+    "verified": "Verified Partner",
+    "contactToBid": "Contact to bid",
+    "contactHint": "Bids are submitted to the institution directly — Nilami publishes the notice.",
+    "headOffice": "Head Office",
+    "visitBank": "Visit Bank Auction",
+    "enquire": "Contact to bid",
+    "allFromBank": "View all auctions from this bank"
+  },
+  "detail": {
+    "breadcrumb": "Auctions",
+    "notice": "Notice",
+    "views": {
+      "one": "{n} view",
+      "other": "{n} views"
+    },
+    "about": "About this property",
+    "video": "Video walkthrough",
+    "location": "Location",
+    "openInOsm": "Open in OpenStreetMap →",
+    "details": "Property details",
+    "facts": {
+      "type": "Property type",
+      "offeredBy": "Offered by",
+      "location": "Location",
+      "address": "Address",
+      "landArea": "Land area",
+      "floors": "Floors",
+      "builtYear": "Built year",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "roadAccess": "Road access",
+      "facing": "Facing",
+      "loanRef": "Loan reference"
+    },
+    "terms": "Terms of sale",
+    "docs": "Documents required with your bid",
+    "appraised": "Appraised value",
+    "security": "Bid security ({pct}%)",
+    "noticeNo": "Notice number",
+    "round": "Auction round",
+    "roundN": "Round {n}",
+    "published": "Notice published",
+    "deadline": "Bid submission deadline",
+    "opening": "Bid opening",
+    "venue": "Opening venue",
+    "closesIn": "Submission closes in",
+    "soldAt": "Sold at",
+    "howToBid": "How to bid",
+    "howToBidBody": "Bids are submitted in sealed form at the institution's recovery department with your bid-security voucher — this portal does not accept online bids.",
+    "contact": "Contact the institution",
+    "enquiry": "Enquiry",
+    "share": {
+      "title": "Share this listing",
+      "facebook": "Facebook",
+      "whatsapp": "WhatsApp",
+      "viber": "Viber",
+      "x": "X",
+      "telegram": "Telegram",
+      "linkedin": "LinkedIn",
+      "email": "Email",
+      "copy": "Copy",
+      "copied": "Copied",
+      "more": "Share…",
+      "message": "Auction notice — {title}"
+    }
+  },
+  "how": {
+    "kicker": "The process",
+    "title": "How recovery auctions work",
+    "sub": "When a loan is not repaid, the lending institution recovers it by auctioning the property pledged as collateral — openly, at a published minimum price, following a fixed legal process. Here is that process, end to end.",
+    "steps": [
+      {
+        "title": "The institution publishes an auction notice",
+        "body": "When a borrower defaults, the collateral property is appraised by a licensed valuer and an auction notice is published in national newspapers and on this portal. The notice states the minimum bid, the bid-security amount, the submission deadline, and the date, time, and venue of the bid opening."
+      },
+      {
+        "title": "You inspect the property and documents",
+        "body": "Every listing on this portal carries the property's key details, photographs, and loan reference. We strongly advise visiting the property in person and reviewing the ownership documents (lalpurja), blueprints, and tax clearances at the institution's recovery department before deciding to bid. Properties are sold on an “as is, where is” basis."
+      },
+      {
+        "title": "You deposit the bid security",
+        "body": "Deposit 10% of the amount you intend to quote into the institution's designated account, using the account details stated in the notice. Keep the deposit voucher — it must be enclosed with your bid. Unsuccessful bidders are refunded in full after the bid opening."
+      },
+      {
+        "title": "You submit a sealed bid before the deadline",
+        "body": "Complete the institution's bid form, enclose your deposit voucher, a copy of your citizenship certificate (or company registration and board resolution for firms), and your PAN certificate. Seal the envelope and deliver it to the office stated in the notice before the deadline. Late bids are not accepted."
+      },
+      {
+        "title": "Bids are opened publicly",
+        "body": "At the stated date and venue, bids are opened in the presence of the bidders who choose to attend. The highest bid at or above the minimum is provisionally accepted, subject to the institution's approval."
+      },
+      {
+        "title": "The winning bidder completes payment",
+        "body": "The successful bidder must deposit the remaining amount within 35 days of acceptance. Once payment completes, the institution executes the transfer deed and the property is registered in the buyer's name. Registration fees and applicable taxes are borne as per prevailing law."
+      }
+    ],
+    "faqTitle": "Common questions",
+    "faqs": [
+      {
+        "q": "Can I bid online through this portal?",
+        "a": "Not yet. This portal publishes notices and property details; bids are submitted in sealed form at the institution as required by the notice. Online sealed bidding is planned for a future release."
+      },
+      {
+        "q": "What happens if the auction fails?",
+        "a": "If no valid bid meets the minimum, the institution may re-auction the property in a subsequent round, often with a revised minimum bid. Each round appears as a fresh notice on this portal."
+      },
+      {
+        "q": "Is the minimum bid negotiable?",
+        "a": "No. The minimum bid is fixed by the institution based on the appraised value and outstanding dues, and is stated in the published notice."
+      },
+      {
+        "q": "When is my bid security refunded?",
+        "a": "Unsuccessful bidders are refunded after the bid opening, typically within 7 working days, to the account named in the bid form."
+      },
+      {
+        "q": "Can the borrower settle before the auction?",
+        "a": "Yes. If the borrower clears the outstanding dues before the bid opening, the institution may withdraw the auction. Withdrawn notices are marked as cancelled on this portal."
+      }
+    ],
+    "ctaTitle": "Ready to look at what's on offer?",
+    "ctaSub": "New notices are published regularly. Open auctions show a live countdown to their submission deadline.",
+    "ctaButton": "Browse current auctions"
+  },
+  "footer": {
+    "tagline": "The official portal for collateral properties offered for sale by participating institutions under prevailing recovery laws. All sales are conducted through published auction notices.",
+    "browse": "Browse",
+    "allAuctions": "All auctions",
+    "openForBids": "Open for bids",
+    "howItWorks": "How it works",
+    "platform": "Platform",
+    "platformLines": [
+      "Nilami Auction Platform",
+      "recovery@nilami.app",
+      "Sun–Fri, 10:00–17:00"
+    ],
+    "noticeTitle": "Notice",
+    "noticeBody": "Properties are sold on an “as is, where is” basis. Bidders must inspect properties and verify documents with the offering institution before bidding.",
+    "rights": "A multi-institution auction platform (demo)."
+  }
+}

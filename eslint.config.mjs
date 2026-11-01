@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The admin app is a separate project: its own dependencies, its own
+    // tsconfig, and Preact rather than React, so this configuration judges it
+    // against rules it was never written for. web/dist is build output, and
+    // linting minified bundles produced 294 of the 300 problems this config
+    // reported before it was ignored.
+    "web/**",
   ]),
 ]);
 
