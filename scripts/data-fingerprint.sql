@@ -1,5 +1,8 @@
--- Per-table fingerprint, for proving the VPS copy matches Supabase before the
--- Supabase data layer is torn down.
+-- Per-table fingerprint, for proving one copy of this database matches another.
+--
+-- Written to verify the move off Supabase in November 2026; kept because the
+-- question recurs — before a restore, after a dump reload, or any time two
+-- copies are meant to be identical.
 --
 -- Run it on BOTH databases and compare the seven md5s. Counts alone do not
 -- answer the question: the same number of rows can hold different values, and a
@@ -9,11 +12,10 @@
 -- the host to the CDN on purpose. Without that, every image row would differ
 -- and the check would be useless.
 --
---   Supabase: run through the SQL editor or the MCP.
---   VPS:      docker exec -i <postgres container> psql -U postgres -d nilami -t -A -f -
+--   docker exec -i <postgres container> psql -U nilami -d nilami -t -A -f -
 --
 -- property_view_stats is expected to drift: the counter moves whenever a page is
--- opened, and it is reloaded wholesale at cutover. Any OTHER table differing
+-- opened. Any OTHER table differing
 -- means the copy is not faithful, and nothing should be dropped until it is.
 with
 o as (select md5(string_agg(t,'|' order by t)) h, count(*) n from (
