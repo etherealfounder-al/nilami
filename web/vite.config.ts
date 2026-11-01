@@ -16,6 +16,16 @@ import tailwindcss from "@tailwindcss/vite";
  */
 export default defineConfig({
   plugins: [preact(), tailwindcss()],
+  css: {
+    // Vite searches upward for a PostCSS config and finds the repository
+    // root's, which is the Next app's and names a plugin not installed here.
+    // Tailwind v4 arrives through the Vite plugin above, so this app needs no
+    // PostCSS config at all — an empty one stops the search.
+    //
+    // It passed locally only because the root's node_modules happened to be
+    // there to satisfy it.
+    postcss: { plugins: [] },
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,
