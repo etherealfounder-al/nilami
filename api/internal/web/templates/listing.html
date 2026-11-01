@@ -135,6 +135,30 @@
            class="mt-3 inline-block text-sm font-medium text-evergreen-700 hover:underline">{{.S "detail.openInOsm"}}</a>
       </div>
       {{end}}
+      {{/* Plain links, no JavaScript: every one of these is a URL the target
+           service already understands, and a page that ships a share widget
+           to do the same thing would be heavier for no gain. Copy-to-clipboard
+           and the Web Share API are the two that genuinely need a runtime, so
+           they are the two this leaves out. */}}
+      {{$msg := $p.T "detail.share.message" "title" $prop.Title}}
+      {{$text := printf "%s %s" $msg $p.Canonical}}
+      <div class="rounded-2xl border border-ink/8 bg-white p-6 shadow-card">
+        <p class="text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft">{{$p.S "detail.share.title"}}</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <a href="https://wa.me/?text={{urlquery $text}}" target="_blank" rel="noreferrer"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.whatsapp"}}</a>
+          <a href="viber://forward?text={{urlquery $text}}"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.viber"}}</a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.facebook"}}</a>
+          <a href="https://t.me/share/url?url={{urlquery $p.Canonical}}&text={{urlquery $msg}}" target="_blank" rel="noreferrer"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.telegram"}}</a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.linkedin"}}</a>
+          <a href="mailto:?subject={{urlquery $msg}}&body={{urlquery $text}}"
+             class="rounded-full border border-ink/12 px-3.5 py-1.5 text-sm font-medium text-ink-soft transition-colors hover:border-evergreen-700/40 hover:text-evergreen-800">{{$p.S "detail.share.email"}}</a>
+        </div>
+      </div>
     </aside>
   </div>
 </main>

@@ -1,4 +1,6 @@
 import type { ComponentChildren } from "preact";
+import { useState } from "react";
+import { Link } from "react-router";
 import { statusTone } from "../lib/format";
 
 /** The shapes every panel screen repeats, so they stay identical across them. */
@@ -59,20 +61,78 @@ export function ErrorNote({ message }: { message: string }) {
   );
 }
 
-/** The primary action button, used for the "new" links on list screens. */
+/**
+ * The primary action button, used for the "new" links on list screens.
+ *
+ * A router Link rather than an anchor: an anchor reloads the whole app to
+ * reach a route it already holds, which costs a blank screen and a fresh
+ * round of queries.
+ */
 export function PrimaryLink({
-  href,
+  to,
   children,
 }: {
-  href: string;
+  to: string;
   children: ComponentChildren;
 }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={to}
       class="shrink-0 self-start rounded-full bg-evergreen-800 px-5 py-2.5 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700 sm:self-auto"
     >
       {children}
-    </a>
+    </Link>
+  );
+}
+
+/**
+ * A password field that can be revealed.
+ *
+ * Typing a long password blind is where most failed sign-ins come from, and a
+ * reveal toggle is cheaper than a reset. The button carries type="button" so
+ * it never submits the form it sits in, and aria-pressed so a screen reader
+ * announces the current state rather than just the label.
+ */
+export function PasswordInput({
+  name,
+  autoComplete,
+  required,
+  class: cls,
+}: {
+  name: string;
+  autoComplete?: string;
+  required?: boolean;
+  class?: string;
+}) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div class="relative">
+      <input
+        type={shown ? "text" : "password"}
+        name={name}
+        required={required}
+        autoComplete={autoComplete}
+        class={`${cls ?? ""} pr-12`}
+      />
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-pressed={shown}
+        aria-label={shown ? "Hide password" : "Show password"}
+        class="absolute inset-y-0 right-0 grid w-12 place-items-center text-ink-soft transition-colors hover:text-evergreen-700"
+      >
+        {shown ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-5" aria-hidden="true">
+            <path d="M3 3l18 18M10.6 10.7a2 2 0 002.8 2.8" stroke-linecap="round" />
+            <path d="M16.7 16.8A9.3 9.3 0 0112 18c-5 0-9-6-9-6a16.8 16.8 0 014.1-4.6m3.1-1.2A9.3 9.3 0 0112 6c5 0 9 6 9 6a16.9 16.9 0 01-2.3 3" stroke-linecap="round" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-5" aria-hidden="true">
+            <path d="M3 12s4-6 9-6 9 6 9 6-4 6-9 6-9-6-9-6z" stroke-linecap="round" />
+            <circle cx="12" cy="12" r="2.4" />
+          </svg>
+        )}
+      </button>
+    </div>
   );
 }

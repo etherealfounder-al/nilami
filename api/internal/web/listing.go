@@ -35,6 +35,12 @@ func (p Page) Facts() []Fact {
 	if area := p.area(prop); area != "" {
 		facts = append(facts, Fact{p.S("detail.facts.landArea"), area})
 	}
+	if prop.RoadAccess != "" {
+		facts = append(facts, Fact{p.S("detail.facts.roadAccess"), prop.RoadAccess})
+	}
+	if prop.BuiltYear != nil && *prop.BuiltYear > 0 {
+		facts = append(facts, Fact{p.S("detail.facts.builtYear"), strconv.Itoa(*prop.BuiltYear)})
+	}
 	return facts
 }
 

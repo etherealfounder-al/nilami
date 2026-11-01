@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { api } from "../lib/api";
 import { formatDateTime, npr, statusLabel } from "../lib/format";
-import { Card, Empty, ErrorNote, Loading, PageHeader, Pill } from "../components/ui";
+import { Card, Empty, ErrorNote, Loading, PageHeader, Pill, PrimaryLink } from "../components/ui";
 
 type AuctionRow = {
   id: string;
@@ -35,12 +35,7 @@ export function Auctions() {
         title="Auctions"
         subtitle="Notices published against the portfolio."
         action={
-          <Link
-            to="/auctions/new"
-            className="shrink-0 self-start rounded-full bg-evergreen-800 px-5 py-2.5 text-sm font-semibold text-ivory transition-colors hover:bg-evergreen-700 sm:self-auto"
-          >
-            + New auction
-          </Link>
+          <PrimaryLink to="/auctions/new">+ New auction</PrimaryLink>
         }
       />
 

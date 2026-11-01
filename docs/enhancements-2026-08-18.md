@@ -1,5 +1,12 @@
 # Enhancement pass — 2026-08-18
 
+> Historical. The `src/` paths below belong to the Next.js app, deleted on
+> 2026-11-01 when the site moved to the Go server. Most of this behaviour was
+> carried over, but four items were not, and are tracked in the README's
+> "Known gaps": the password reveal (1), the cascading location selects (6),
+> the ropani-aana-paisa-daam land area field (8), and the institution card on
+> listings (15).
+
 Worked from the enhancement checklist kept in Notes ("Sannstha ko information haru
 raakham…"). Each point below was audited against the codebase; this pass implements
 three of them plus one latent bug found along the way.

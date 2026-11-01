@@ -3,8 +3,7 @@
     "auctions": "Auctions",
     "howItWorks": "How it works",
     "staffSignIn": "Staff sign in",
-    "dashboard": "Dashboard",
-    "menu": "Menu"
+    "dashboard": "Dashboard"
   },
   "common": {
     "statuses": {
@@ -29,7 +28,6 @@
     "aana": "Aana",
     "countdown": {
       "days": "days",
-      "hrs": "hrs",
       "min": "min",
       "sec": "sec",
       "passed": "Deadline passed",
@@ -38,12 +36,7 @@
     },
     "soldDot": "Sold",
     "closedOn": "Closed {d}",
-    "viewOnMap": "View on map",
-    "goToPhoto": "Go to photo {n}",
-    "previousPhoto": "Previous photo",
-    "nextPhoto": "Next photo",
-    "photosPending": "Photographs pending",
-    "photoOf": "Photo {n} of {total}"
+    "photosPending": "Photographs pending"
   },
   "home": {
     "badge": "Official auction notices",
@@ -62,7 +55,6 @@
       "one": "{n} property",
       "other": "{n} properties"
     },
-    "mapView": "View auctions →",
     "kicker": "Current notices",
     "underAuction": "Properties under auction",
     "viewAll": "View all →",
@@ -87,8 +79,6 @@
         "body": "Deliver the sealed bid form with your voucher and documents to the stated office before the deadline."
       }
     ],
-    "assurance1": "Every sale follows a published notice.",
-    "assurance2": " No exceptions.",
     "assuranceSub": "Auctions are conducted by each institution's recovery department under prevailing law, with valuations by licensed appraisers and bids opened publicly at the stated venue.",
     "assuranceCta": "See current notices"
   },
@@ -99,7 +89,6 @@
     "searchPlaceholder": "Search title or place…",
     "allTypes": "All types",
     "allDistricts": "All districts",
-    "allOrgs": "All institutions",
     "anyStatus": "Any status",
     "apply": "Apply",
     "clear": "Clear",
@@ -108,23 +97,13 @@
       "other": "{n} properties"
     },
     "showing": "Showing {from}–{to} of {total}",
-    "perPage": "Per page",
     "pagination": "Pagination",
-    "prevPage": "Previous page",
-    "nextPage": "Next page",
     "gotoPage": "Go to page {n}",
-    "pageOf": "Page {n} of {total}",
     "emptyTitle": "No properties match those filters.",
     "emptySub": "Try clearing a filter or check back soon — new notices are published regularly."
   },
   "institution": {
-    "verified": "Verified Partner",
-    "contactToBid": "Contact to bid",
-    "contactHint": "Bids are submitted to the institution directly — Nilami publishes the notice.",
-    "headOffice": "Head Office",
-    "visitBank": "Visit Bank Auction",
-    "enquire": "Contact to bid",
-    "allFromBank": "View all auctions from this bank"
+    "verified": "Verified Partner"
   },
   "detail": {
     "breadcrumb": "Auctions",
@@ -149,8 +128,7 @@
       "bedrooms": "Bedrooms",
       "bathrooms": "Bathrooms",
       "roadAccess": "Road access",
-      "facing": "Facing",
-      "loanRef": "Loan reference"
+      "facing": "Facing"
     },
     "terms": "Terms of sale",
     "docs": "Documents required with your bid",
@@ -164,11 +142,9 @@
     "opening": "Bid opening",
     "venue": "Opening venue",
     "closesIn": "Submission closes in",
-    "soldAt": "Sold at",
     "howToBid": "How to bid",
     "howToBidBody": "Bids are submitted in sealed form at the institution's recovery department with your bid-security voucher — this portal does not accept online bids.",
     "contact": "Contact the institution",
-    "enquiry": "Enquiry",
     "share": {
       "title": "Share this listing",
       "facebook": "Facebook",

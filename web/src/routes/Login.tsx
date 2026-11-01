@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ApiError } from "../lib/api";
+import { PasswordInput } from "../components/ui";
 import { signIn } from "../lib/session";
 
 /**
@@ -61,8 +62,7 @@ export function LoginPage() {
             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
               Password
             </span>
-            <input
-              type="password"
+            <PasswordInput
               name="password"
               required
               autoComplete="current-password"

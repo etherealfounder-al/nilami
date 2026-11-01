@@ -152,6 +152,22 @@ The schema lives in `api/migrations/`, embedded in the binary and applied at boo
 
 `scripts/data-fingerprint.sql` hashes every table column by column. Run it on two databases and compare seven strings — counts alone cannot tell you a copy is faithful, because the same number of rows can hold different values.
 
+## Known gaps
+
+Four things the Next.js app did that this one does not yet. All four are
+recoverable from git history — the commit before the deletion holds the files,
+and `docs/enhancements-2026-08-18.md` records why each was built.
+
+| Gap | Was | Cost to restore |
+| --- | --- | --- |
+| Province / district / municipality are free text in the property editor | Cascading selects over Nepal's administrative divisions | The dataset is 120 KB. Bundling it would roughly double a 40 KB admin app, so it belongs behind an endpoint the editor fetches once, not in the bundle. |
+| Land area takes aana and m² only | Ropani-aana-paisa-daam, the subdivision the paperwork uses | Small: `src/lib/nepal/land-area.ts`, 54 lines, no imports. |
+| Listings do not name the institution in a card | An institution card with branding and contact | Moderate: the dictionary keys were removed with it, so they come back too. |
+| ~~Password fields cannot be revealed~~ | — | Restored 2026-11-01. |
+
+The location one matters most: a typo in a free-text district silently drops a
+property out of the public district filter, and nothing surfaces that.
+
 ## Deployment
 
 `main` deploys through `.github/workflows/deploy.yml`: the Go tests, the admin

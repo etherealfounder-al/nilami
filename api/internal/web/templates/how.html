@@ -17,5 +17,23 @@
     </li>
     {{end}}
   </ol>
+
+  <section class="mx-auto mt-4 max-w-3xl">
+    <h2 class="font-display text-2xl font-semibold text-evergreen-900">{{.S "how.faqTitle"}}</h2>
+    <dl class="mt-6 divide-y divide-ink/10 border-y border-ink/10">
+      {{range .Items "how.faqs"}}
+      <div class="py-5">
+        <dt class="font-display text-lg font-semibold text-evergreen-900">{{index . "q"}}</dt>
+        <dd class="mt-2 leading-relaxed text-ink-soft">{{index . "a"}}</dd>
+      </div>
+      {{end}}
+    </dl>
+  </section>
+
+  <section class="mx-auto mt-16 max-w-3xl rounded-3xl bg-evergreen-900 px-8 py-12 text-center">
+    <h2 class="font-display text-2xl font-semibold text-ivory sm:text-3xl">{{.S "how.ctaTitle"}}</h2>
+    <p class="mx-auto mt-3 max-w-xl leading-relaxed text-ivory/70">{{.S "how.ctaSub"}}</p>
+    <a href="/auctions" class="mt-7 inline-flex items-center justify-center rounded-full bg-brass-500 px-7 py-3 text-sm font-semibold text-evergreen-950 transition-colors hover:bg-brass-400">{{.S "how.ctaButton"}}</a>
+  </section>
 </main>
 {{end}}
