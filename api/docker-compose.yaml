@@ -1,6 +1,11 @@
-# Deployed by Coolify's Docker Compose build pack, from the repository root:
-# the image needs the admin app and the shared stylesheet, which sit outside
-# api/.
+# Deployed by Coolify's Docker Compose build pack.
+#
+# This file stays in api/ because that is Coolify's base directory for this
+# application, and changing that setting detaches the domain from the service
+# — which is how the site went down on 1 November. The build context points
+# one level up instead, because the image needs the admin app's source, the
+# design system both front ends share, and the templates Tailwind scans, none
+# of which are inside api/.
 #
 # Coolify's Traefik already owns 80 and 443 and issues the certificate, so
 # nothing here publishes a port or terminates TLS. The site is reachable only
@@ -12,7 +17,7 @@ services:
   # down this morning.
   api:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
