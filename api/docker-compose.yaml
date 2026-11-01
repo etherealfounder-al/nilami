@@ -15,7 +15,6 @@ services:
       - ADDR=:8080
       # Password is generated and held by Coolify, never written here.
       - DATABASE_URL=postgres://nilami:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/nilami?sslmode=disable
-      - SUPABASE_URL=${SUPABASE_URL}
       - SERVICE_TOKEN=${SERVICE_TOKEN}
       - R2_ACCOUNT_ID=${R2_ACCOUNT_ID:-}
       - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID:-}
