@@ -1,12 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Route, Routes } from "react-router";
 import { signOut, type Viewer } from "../lib/session";
+import { AuctionEditor } from "./AuctionEditor";
 import { Auctions } from "./Auctions";
 import { Bidders } from "./Bidders";
 import { Institution } from "./Institution";
 import { Overview } from "./Overview";
 import { Placeholder } from "./Placeholder";
 import { Properties } from "./Properties";
+import { PropertyEditor } from "./PropertyEditor";
 import { Staff } from "./Staff";
 
 /**
@@ -84,11 +86,11 @@ export function Panel({ viewer }: { viewer: Viewer }) {
         <Routes>
           <Route index element={<Overview />} />
           <Route path="properties" element={<Properties />} />
-          <Route path="properties/new" element={<Placeholder title="New property" />} />
-          <Route path="properties/:id" element={<Placeholder title="Edit property" />} />
+          <Route path="properties/new" element={<PropertyEditor mode="new" />} />
+          <Route path="properties/:id" element={<PropertyEditor mode="edit" />} />
           <Route path="auctions" element={<Auctions />} />
-          <Route path="auctions/new" element={<Placeholder title="New auction" />} />
-          <Route path="auctions/:id" element={<Placeholder title="Edit auction" />} />
+          <Route path="auctions/new" element={<AuctionEditor mode="new" />} />
+          <Route path="auctions/:id" element={<AuctionEditor mode="edit" />} />
           <Route path="bidders" element={<Bidders />} />
           <Route path="institution" element={<Institution />} />
           {/* Not merely hidden from the navigation: the API scopes every

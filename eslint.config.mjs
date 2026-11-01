@@ -18,6 +18,10 @@ const eslintConfig = defineConfig([
     // linting minified bundles produced 294 of the 300 problems this config
     // reported before it was ignored.
     "web/**",
+    // The same bundle again, copied into the Go module before the build. It
+    // is minified output either way, and linting it reported 298 problems
+    // that belong to a minifier rather than to anyone's code.
+    "api/internal/web/dist/**",
   ]),
 ]);
 
