@@ -47,3 +47,7 @@ next-env.d.ts
 # admin SPA — installed and built on its own, then embedded in the Go binary
 /web/node_modules
 /web/dist
+
+# the built admin app, copied into the Go module before `go build`
+/api/internal/web/dist/*
+!/api/internal/web/dist/.gitkeep

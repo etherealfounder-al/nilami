@@ -18,6 +18,7 @@ import (
 	"github.com/UjjwolKayastha/nilami/api/internal/handlers"
 	"github.com/UjjwolKayastha/nilami/api/internal/httpx"
 	"github.com/UjjwolKayastha/nilami/api/internal/storage"
+	"github.com/UjjwolKayastha/nilami/api/internal/web"
 )
 
 func main() {
@@ -137,6 +138,15 @@ func run() error {
 		Attempts: httpx.NewLimiter(1.0/60.0, 5),
 	}.Routes(signin)
 	mux.Handle("/v1/auth/", httpx.Chain(signin, cors.Apply, limiter.Limit))
+
+	// Everything that is not the API: the public pages this process renders,
+	// and the admin app it serves as a built bundle. Registered last so the
+	// /v1 and /healthz patterns above are matched first.
+	site, err := web.New()
+	if err != nil {
+		return err
+	}
+	site.Routes(mux)
 
 	srv := &http.Server{
 		Addr: cfg.Addr,

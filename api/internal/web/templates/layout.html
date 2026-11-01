@@ -1,0 +1,84 @@
+{{define "layout"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<meta name="description" content="{{.Description}}">
+{{if .Canonical}}<link rel="canonical" href="{{.Canonical}}">{{end}}
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{.Assets.CSS}}">
+<meta property="og:site_name" content="Nilami">
+<meta property="og:title" content="{{.Title}}">
+<meta property="og:description" content="{{.Description}}">
+<meta property="og:type" content="website">
+{{if .Canonical}}<meta property="og:url" content="{{.Canonical}}">{{end}}
+{{block "head" .}}{{end}}
+</head>
+<body>
+
+<header class="sticky top-0 z-40 border-b border-ink/8 bg-ivory/85 backdrop-blur-md">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:px-5">
+    <a href="/" class="group inline-flex items-baseline gap-2.5">
+      <span aria-hidden class="grid size-8 shrink-0 place-items-center self-center rounded-full border border-evergreen-800/40 text-evergreen-800">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12h6M5 12V7.5M2.5 2.5l4 4M4.5 1.5l4 4M1.5 4.5l4 4M8 6l4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </span>
+      <span class="font-display text-2xl font-semibold tracking-tight text-evergreen-900">Nilami</span>
+    </a>
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <nav class="hidden items-center gap-0.5 sm:flex sm:gap-2">
+        <a href="/auctions" class="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-evergreen-50 hover:text-evergreen-800 sm:px-3.5">{{.S "nav.auctions"}}</a>
+        <a href="/how-it-works" class="whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-evergreen-50 hover:text-evergreen-800 sm:px-3.5">{{.S "nav.howItWorks"}}</a>
+      </nav>
+
+      {{/* Links, not buttons: the choice survives a browser that runs no
+           JavaScript, and each is a real address a reader can bookmark. */}}
+      <div class="inline-flex items-center gap-0.5 rounded-full border border-ink/15 p-0.5" role="group" aria-label="Language">
+        <a href="/lang/en?to={{.Path}}" class="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors {{if .IsNepali}}text-ink-soft hover:text-evergreen-800{{else}}bg-evergreen-800 text-ivory{{end}}">EN</a>
+        <a href="/lang/ne?to={{.Path}}" class="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors {{if .IsNepali}}bg-evergreen-800 text-ivory{{else}}text-ink-soft hover:text-evergreen-800{{end}}">ने</a>
+      </div>
+
+      <a href="/admin" class="ml-1 hidden rounded-full border border-evergreen-800/25 px-4 py-2 text-sm font-medium text-evergreen-800 transition-colors hover:bg-evergreen-800 hover:text-ivory sm:block">{{if .SignedIn}}{{.S "nav.dashboard"}}{{else}}{{.S "nav.staffSignIn"}}{{end}}</a>
+    </div>
+  </div>
+</header>
+
+{{template "content" .}}
+
+<footer class="bg-evergreen-950 text-ivory/70">
+  <div class="mx-auto max-w-6xl px-5 py-14">
+    <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+      <div class="max-w-sm space-y-4">
+        <a href="/" class="group inline-flex items-baseline gap-2.5">
+          <span aria-hidden class="grid size-8 shrink-0 place-items-center self-center rounded-full border border-brass-300/60 text-brass-300">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12h6M5 12V7.5M2.5 2.5l4 4M4.5 1.5l4 4M1.5 4.5l4 4M8 6l4.5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </span>
+          <span class="font-display text-2xl font-semibold tracking-tight text-ivory">Nilami</span>
+        </a>
+        <p class="text-sm leading-relaxed">{{.S "footer.tagline"}}</p>
+      </div>
+      <div class="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
+        <div class="space-y-3">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.browse"}}</p>
+          <ul class="space-y-2">
+            <li><a class="hover:text-ivory" href="/auctions">{{.S "footer.allAuctions"}}</a></li>
+            <li><a class="hover:text-ivory" href="/auctions?status=open">{{.S "footer.openForBids"}}</a></li>
+            <li><a class="hover:text-ivory" href="/how-it-works">{{.S "footer.howItWorks"}}</a></li>
+          </ul>
+        </div>
+        <div class="space-y-3">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.platform"}}</p>
+          <ul class="space-y-2">{{range .List "footer.platformLines"}}<li>{{.}}</li>{{end}}</ul>
+        </div>
+        <div class="space-y-3">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass-300">{{.S "footer.noticeTitle"}}</p>
+          <p class="leading-relaxed">{{.S "footer.noticeBody"}}</p>
+        </div>
+      </div>
+    </div>
+    <div class="mt-12 border-t border-ivory/10 pt-6 text-xs text-ivory/40">© {{.Year}} Nilami. {{.S "footer.rights"}}</div>
+  </div>
+</footer>
+
+</body>
+</html>{{end}}

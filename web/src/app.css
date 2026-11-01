@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "../../styles/theme.css";
 
-/* Tailwind v4 scans from this file's directory by default, which would miss
-   nothing here but would also wander into the Next app above. Pinned. */
+/* The fonts the design system names. Bundled rather than fetched from a third
+   party: one fewer connection on a slow link, and no request to anyone else
+   carrying a reader's address. */
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/inter";
+
+/* Tailwind emits only the classes it can see. This app is one source; the Go
+   templates that render the public pages are the other, and they are outside
+   this directory, so they have to be named. One stylesheet serves both. */
 @source "./";
+@source "../../api/internal/web/templates";

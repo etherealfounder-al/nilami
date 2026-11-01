@@ -19,6 +19,9 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // The Go server reads this to find the hashed asset names, so the public
+    // templates can link the same stylesheet the admin app loads.
+    manifest: true,
     // The Go server serves these from the embedded filesystem at /assets/.
     assetsDir: "assets",
   },
