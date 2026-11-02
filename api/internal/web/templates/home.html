@@ -164,12 +164,25 @@
              aria-label="{{$p.S "home.mapCaption"}}">
           {{range $p.NepalMap $d.Districts}}
             {{if .Active}}
+              {{/* A district with properties gets the mark itself, set as a pin:
+                   the same teardrop and gavel the panel's map picker uses, so a
+                   marker here reads as ours rather than as a dot. The halo behind
+                   it still carries the count by area, which a pin cannot do
+                   without putting a number beside it. */}}
               <a href="/auctions?district={{.District}}">
                 <title>{{.District}} · {{.Count}}</title>
                 <circle cx="{{printf "%.1f" .X}}" cy="{{printf "%.1f" .Y}}" r="{{printf "%.1f" .R}}"
-                        fill="var(--color-accent)" opacity="0.22"/>
-                <circle cx="{{printf "%.1f" .X}}" cy="{{printf "%.1f" .Y}}" r="{{printf "%.1f" (mulf .R 0.4)}}"
-                        fill="var(--color-accent)"/>
+                        fill="var(--color-accent)" opacity="0.18"/>
+                <g transform="translate({{printf "%.1f" (subf .X 7.5)}} {{printf "%.1f" (subf .Y 20.6)}}) scale(0.469)">
+                  <path d="M16 43.5C16 43.5 30.5 27.5 30.5 16.5 30.5 8.5 24 2 16 2S1.5 8.5 1.5 16.5c0 11 14.5 27 14.5 27Z"
+                        fill="var(--color-accent)" stroke="var(--color-canvas)" stroke-width="2"/>
+                  <g stroke="var(--color-on-accent)" stroke-width="1.7" stroke-linecap="round" fill="none"
+                     transform="translate(7.6 8.4) scale(1.2)">
+                    <path d="M2 12h6"/><path d="M5 12V7.5"/>
+                    <path d="M2.5 2.5l4 4"/><path d="M4.5 1.5l4 4"/>
+                    <path d="M1.5 4.5l4 4"/><path d="M8 6l4.5 4.5"/>
+                  </g>
+                </g>
               </a>
             {{else}}
               <circle cx="{{printf "%.1f" .X}}" cy="{{printf "%.1f" .Y}}" r="{{printf "%.1f" .R}}"

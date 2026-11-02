@@ -189,6 +189,8 @@ var tmplFuncs = template.FuncMap{
 	// page's own address as a parameter, and an unescaped "&" in it would
 	// truncate the link at the first query separator.
 	"urlquery": url.QueryEscape,
+	"subf":     func(a, b float64) float64 { return a - b },
+	"divf":     func(a, b float64) float64 { return a / b },
 	// A bounding box around a point, for the map embed. Degrees rather than
 	// metres: at Nepal's latitude these are roughly 1.2 km across, which
 	// frames a plot with its surrounding streets.

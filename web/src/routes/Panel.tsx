@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Route, Routes } from "react-router";
 import { signOut, type Viewer } from "../lib/session";
+import { setViewAsTarget } from "../lib/api";
 import { Mark } from "../components/ui";
 import { AuctionEditor } from "./AuctionEditor";
 import { Auctions } from "./Auctions";
@@ -110,6 +111,33 @@ export function Panel({ viewer }: { viewer: Viewer }) {
         </div>
       </aside>
 
+      <div class="min-w-0">
+        {/* The way back.
+
+            Viewing as someone narrows every answer the server gives, so a
+            proxied administrator sees a panel that is quietly missing things
+            and has nothing on screen saying why. This says whose panel it is
+            and gives one way out; it sits above the content on every screen
+            because there is no other place that is always visible. */}
+        {proxied && (
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-warn/40 bg-warn-wash px-5 py-2.5 lg:px-10">
+            <p class="text-sm text-warn">
+              Viewing as <strong class="font-semibold">{proxied.full_name ?? proxied.email}</strong>
+              {proxied.organization_name ? ` · ${proxied.organization_name}` : ""}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setViewAsTarget(null);
+                location.assign("/admin");
+              }}
+              class="text-sm text-warn underline underline-offset-4 transition-opacity hover:opacity-70"
+            >
+              Stop
+            </button>
+          </div>
+        )}
+
       <main class="mx-auto w-full max-w-6xl px-5 py-10 lg:px-10">
         <Routes>
           <Route index element={<Overview />} />
@@ -127,6 +155,7 @@ export function Panel({ viewer }: { viewer: Viewer }) {
           <Route path="*" element={<Placeholder title="Not found" />} />
         </Routes>
       </main>
+      </div>
     </div>
   );
 }

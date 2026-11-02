@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
+import { api, setViewAsTarget} from "../lib/api";
 import { formatDate } from "../lib/format";
 import { Card, Empty, ErrorNote, Loading, PageHeader, Pill } from "../components/ui";
 
@@ -81,7 +81,34 @@ export function Staff() {
                   <td class="px-4 py-3.5 text-content-soft">{formatDate(s.created_at)}</td>
                   <td class="px-6 py-3.5 text-right">
                     {s.approved ? (
-                      <Pill label="Approved" tone="open" />
+                      <span class="inline-flex items-center gap-3">
+                        <Pill label="Approved" tone="open" />
+                        {/* Standing in a colleague's shoes.
+
+                            The server has always honoured X-View-As, narrowing
+                            the scope to that account and refusing to widen it —
+                            a query test asserts both. Nothing ever sent it, so
+                            the panel could display who it was proxying as and
+                            offered no way to say who. This screen is reachable
+                            only by a platform administrator, which is the same
+                            condition the server enforces. */}
+                        {/* Only for staff who belong to an institution: a
+                            platform administrator has none, so viewing as one
+                            narrows to nothing and viewing as yourself is a
+                            no-op the server would quietly ignore. */}
+                        {s.organization_id && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setViewAsTarget(s.id);
+                            location.assign("/admin");
+                          }}
+                          class="text-xs text-content-faint underline-offset-4 transition-colors hover:text-accent hover:underline"
+                        >
+                          View as
+                        </button>
+                        )}
+                      </span>
                     ) : (
                       <span class="inline-flex gap-2">
                         <button

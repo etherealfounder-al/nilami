@@ -98,7 +98,20 @@ await send("Runtime.evaluate", {
   })`,
 });
 await new Promise((r) => setTimeout(r, 600));
-const { data } = await send("Page.captureScreenshot", { format: "png" });
+// Capture the whole document, not just the first screen.
+//
+// A fixed 900px viewport meant anything below the fold — which is most of a
+// long page — could not be reviewed without scrolling by hand, and a section
+// that renders only further down looked absent.
+const { cssContentSize } = await send("Page.getLayoutMetrics");
+const full = cssContentSize
+  ? { x: 0, y: 0, width: cssContentSize.width, height: Math.min(cssContentSize.height, 20000), scale: 1 }
+  : undefined;
+const { data } = await send("Page.captureScreenshot", {
+  format: "png",
+  captureBeyondViewport: true,
+  ...(full ? { clip: full } : {}),
+});
 writeFileSync(out, Buffer.from(data, "base64"));
 console.log("captured", out);
 ws.close();
