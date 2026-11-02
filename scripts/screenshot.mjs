@@ -13,9 +13,9 @@
 //   node scripts/screenshot.mjs http://localhost:5173/admin/properties "$TOKEN" out.png
 import { writeFileSync } from "node:fs";
 
-const [, , url, cookieValue, out, widthArg] = process.argv;
+const [, , url, cookieValue, out, widthArg, themeArg] = process.argv;
 if (!url || !out) {
-  console.error("usage: shot.mjs <url> <session-cookie-value|-> <out.png> [width]");
+  console.error("usage: shot.mjs <url> <session-cookie-value|-> <out.png> [width] [light|dark]");
   process.exit(1);
 }
 
@@ -57,6 +57,17 @@ if (cookieValue && cookieValue !== "-") {
     httpOnly: true,
   });
 }
+// The ground is a cookie the server reads, so a theme can be captured without
+// a click — and the admin app reads the same one through the data-theme the
+// server writes into its index.html.
+if (themeArg === "light" || themeArg === "dark") {
+  await send("Network.setCookie", {
+    name: "theme",
+    value: themeArg,
+    url: new URL(url).origin,
+    path: "/",
+  });
+}
 // A width can be passed to check a layout at phone size; the viewport is
 // overridden here rather than by sizing the browser window, because headless
 // Chrome ignores --window-size once a page has its own metrics override.
@@ -69,7 +80,24 @@ await send("Emulation.setDeviceMetricsOverride", {
 });
 await send("Page.navigate", { url });
 // Let the SPA mount and its queries resolve.
-await new Promise((r) => setTimeout(r, 2500));
+// Wait for the pictures, not just the markup.
+//
+// A fixed pause caught these pages before their photographs arrived from the
+// CDN, which made a working register look like one with no covers. Poll the
+// document's own images instead, and keep the timeout as the floor rather
+// than the measure.
+await send("Runtime.evaluate", {
+  awaitPromise: true,
+  expression: `new Promise((done) => {
+    const ready = () => [...document.images].every((i) => i.complete);
+    const deadline = Date.now() + 8000;
+    (function poll() {
+      if (ready() || Date.now() > deadline) return done(true);
+      setTimeout(poll, 150);
+    })();
+  })`,
+});
+await new Promise((r) => setTimeout(r, 600));
 const { data } = await send("Page.captureScreenshot", { format: "png" });
 writeFileSync(out, Buffer.from(data, "base64"));
 console.log("captured", out);
