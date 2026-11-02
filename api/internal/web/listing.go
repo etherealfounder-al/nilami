@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"html/template"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -46,10 +47,41 @@ func (p Page) Facts() []Fact {
 
 // area reads as the notices write it: aana first, since that is the unit the
 // paperwork uses, with the metric figure beside it when both are recorded.
+// Hill-region land measure: 1 ropani = 16 aana, 1 aana = 4 paisa,
+// 1 paisa = 4 daam.
+const (
+	aanaPerRopani = 16
+	paisaPerAana  = 4
+	daamPerPaisa  = 4
+)
+
+// ropaniAana renders a decimal number of aana the way the paperwork writes it.
+//
+// Areas are stored as aana because that is the one unit every property has,
+// but a Nepali notice prints ropani-aana-paisa-daam and a reader comparing
+// this page against the newspaper needs the same figure in the same form.
+// Rounded to whole daam first, so the parts always sum back to the stored
+// value instead of drifting by a fraction nobody can see.
+func ropaniAana(aana float64) string {
+	totalDaam := int(math.Round(aana * paisaPerAana * daamPerPaisa))
+	perRopani := aanaPerRopani * paisaPerAana * daamPerPaisa
+
+	ropani := totalDaam / perRopani
+	rest := totalDaam % perRopani
+	a := rest / (paisaPerAana * daamPerPaisa)
+	rest %= paisaPerAana * daamPerPaisa
+	paisa := rest / daamPerPaisa
+	daam := rest % daamPerPaisa
+
+	return strconv.Itoa(ropani) + "-" + strconv.Itoa(a) + "-" +
+		strconv.Itoa(paisa) + "-" + strconv.Itoa(daam)
+}
+
 func (p Page) area(prop Property) string {
 	var parts []string
 	if prop.LandAreaAana != nil && *prop.LandAreaAana > 0 {
-		parts = append(parts, trimFloat(*prop.LandAreaAana, 2)+" "+p.S("common.aana"))
+		parts = append(parts, trimFloat(*prop.LandAreaAana, 2)+" "+p.S("common.aana")+
+			" ("+ropaniAana(*prop.LandAreaAana)+")")
 	}
 	if prop.LandAreaSqm != nil && *prop.LandAreaSqm > 0 {
 		parts = append(parts, trimFloat(*prop.LandAreaSqm, 2)+" m²")

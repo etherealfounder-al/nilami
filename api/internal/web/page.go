@@ -13,10 +13,60 @@ import (
 // the Next app used, so nobody's existing choice is forgotten in the move.
 const LangCookie = "lang"
 
+// ThemeCookie is where a reader's choice of ground is kept.
+//
+// Held server-side for the same reason the language is: the page is rendered
+// with the choice already applied, so there is no moment where the wrong
+// theme is painted and then corrected — which is exactly what a script-based
+// toggle cannot avoid without blocking the render.
+const ThemeCookie = "theme"
+
+// Themes a reader may choose. The empty value is the third option and the
+// default: follow whatever the device asks for.
+const (
+	ThemeAuto  = ""
+	ThemeLight = "light"
+	ThemeDark  = "dark"
+)
+
+func parseTheme(v string) string {
+	switch v {
+	case ThemeLight, ThemeDark:
+		return v
+	default:
+		return ThemeAuto
+	}
+}
+
+// SetTheme records the choice and sends the reader back where they were.
+//
+// Same shape as SetLanguage: a link and a redirect, so it works with no
+// JavaScript at all. "auto" clears the cookie and hands the decision back to
+// the operating system.
+func SetTheme(w http.ResponseWriter, r *http.Request) {
+	theme := parseTheme(r.PathValue("theme"))
+	c := &http.Cookie{
+		Name:     ThemeCookie,
+		Value:    theme,
+		Path:     "/",
+		MaxAge:   int((365 * 24 * time.Hour).Seconds()),
+		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
+	}
+	if theme == ThemeAuto {
+		c.Value = ""
+		c.MaxAge = -1
+	}
+	http.SetCookie(w, c)
+	http.Redirect(w, r, safePath(r.URL.Query().Get("to")), http.StatusSeeOther)
+}
+
 // Page is what every template is given: the chrome, and whatever that page
 // needs in Data.
 type Page struct {
-	Lang        string
+	Lang string
+	// Theme is "light", "dark", or empty for "follow the device".
+	Theme       string
 	Assets      Assets
 	Title       string
 	Description string
@@ -54,9 +104,14 @@ func (s *Server) newPage(r *http.Request, title, description string) Page {
 	if c, err := r.Cookie(LangCookie); err == nil {
 		lang = locales.Parse(c.Value)
 	}
+	theme := ThemeAuto
+	if c, err := r.Cookie(ThemeCookie); err == nil {
+		theme = parseTheme(c.Value)
+	}
 	_, signedIn := sessionCookie(r)
 	return Page{
 		Lang:        string(lang),
+		Theme:       theme,
 		Assets:      s.assets,
 		Title:       title,
 		Description: description,
@@ -126,6 +181,12 @@ var tmplFuncs = template.FuncMap{
 	// Numbering a list that the template ranges over, since Go's range gives
 	// a zero-based index and a reader counts from one.
 	"add": func(a, b int) int { return a + b },
+	// The rows-per-page choices, so the template offers exactly the sizes the
+	// parser will accept rather than a list that can drift from it.
+	"pageSizes": func() []int { return PageSizes },
+	// Scales a radius inside the map plate, so the marker and its halo are
+	// drawn from one number rather than two that can drift apart.
+	"mulf": func(a, b float64) float64 { return a * b },
 	// Templates cannot follow a pointer, and several money fields are
 	// nullable because a notice has no winning amount until it is sold.
 	"deref": func(f *float64) float64 {

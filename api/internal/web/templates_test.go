@@ -39,8 +39,15 @@ func TestEveryDictionaryKeyUsedByATemplateExists(t *testing.T) {
 	for _, lang := range []locales.Lang{locales.EN, locales.NE} {
 		d := locales.For(lang)
 		for key, file := range seen {
-			// Get returns the path itself when nothing is there.
+			// Get returns the path itself when nothing is there — and also
+			// when the entry is a plural object rather than a plain string,
+			// since there is no single value to return. A key with "one" and
+			// "other" underneath it is present, so look for those before
+			// calling it missing.
 			if got := d.Get(key); got == key && !strings.HasPrefix(key, "common.types.") {
+				if d.Get(key+".other") != key+".other" {
+					continue
+				}
 				t.Errorf("%s: %s has no %q", file, lang, key)
 			}
 		}

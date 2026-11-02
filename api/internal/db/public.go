@@ -69,15 +69,35 @@ func (d *DB) HomeSummary(ctx context.Context) ([]byte, error) {
 				select jsonb_agg(jsonb_build_object('district', district, 'count', n))
 				  from (select district, count(*) as n from live group by district) t
 			), '[]'::jsonb),
+			-- "Closing soonest" has to mean soonest among the ones a reader
+			-- can still bid on. Ordering every auction by deadline puts the
+			-- oldest settled notice first, because its deadline is the one
+			-- furthest in the past — so the page led with a sold property
+			-- under a heading promising the opposite.
+			--
+			-- Open first, by how little time is left; then upcoming, by when
+			-- they start; then everything settled, most recent first.
 			'featured', coalesce((
-				select jsonb_agg(c order by c->>'submission_deadline')
+				select jsonb_agg(c order by rank, sort_key)
 				  from (
-					select ` + cardJSON + ` as c
+					select ` + cardJSON + ` as c,
+					       case
+					         when a.status = 'open' and a.submission_deadline >= now() then 0
+					         when a.status = 'upcoming' then 1
+					         else 2
+					       end as rank,
+					       case
+					         when a.status = 'open' and a.submission_deadline >= now()
+					           then extract(epoch from a.submission_deadline)
+					         when a.status = 'upcoming'
+					           then extract(epoch from a.submission_deadline)
+					         else -extract(epoch from a.submission_deadline)
+					       end as sort_key
 					  from auctions a
 					  join properties p on p.id = a.property_id
 					  join organizations o on o.id = p.organization_id
 					 where ` + publishedAuction + `
-					 order by a.submission_deadline
+					 order by rank, sort_key
 					 limit 6
 				  ) f
 			), '[]'::jsonb)

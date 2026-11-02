@@ -5,9 +5,9 @@
 <main class="mx-auto max-w-[76rem] px-5 pb-20">
 
   <div class="set d1 py-12">
-    <p class="standing">{{.S "masthead.register"}}</p>
-    <h1 class="font-display mt-3 text-[2.75rem] leading-[0.98] text-ink sm:text-[3.5rem]">{{.S "listing.title"}}</h1>
-    <p class="mt-4 max-w-2xl leading-relaxed text-ink-soft">{{.S "listing.sub"}}</p>
+    <p class="eyebrow">{{.S "masthead.register"}}</p>
+    <h1 class="display mt-3 text-[2.75rem] leading-[0.98] text-content sm:text-[3.5rem]">{{.S "listing.title"}}</h1>
+    <p class="mt-4 max-w-2xl leading-relaxed text-content-soft">{{.S "listing.sub"}}</p>
   </div>
 
   {{/*
@@ -18,15 +18,15 @@
     Set as ruled fields rather than boxes — a form on paper names where to
     write with a line, not a container.
   */}}
-  <form method="get" action="/auctions" class="set d2 border-y-2 border-ink py-5">
+  <form method="get" action="/auctions" class="set d2 border-y-2 border-content py-5">
     <div class="grid gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:items-end">
       <label class="block">
-        <span class="standing">{{.S "listing.searchPlaceholder"}}</span>
+        <span class="eyebrow">{{.S "listing.searchPlaceholder"}}</span>
         <input type="search" name="q" value="{{$q.Query}}" placeholder="{{.S "listing.searchPlaceholder"}}" class="field mt-1.5">
       </label>
 
       <label class="block">
-        <span class="standing">{{.S "listing.anyStatus"}}</span>
+        <span class="eyebrow">{{.S "listing.anyStatus"}}</span>
         <select name="status" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.anyStatus"}}</option>
           {{range $k, $v := $d.StatusCounts}}<option value="{{$k}}" {{if eq $q.Status $k}}selected{{end}}>{{$p.StatusLabel $k}} ({{$v}})</option>{{end}}
@@ -34,7 +34,7 @@
       </label>
 
       <label class="block">
-        <span class="standing">{{.S "listing.allTypes"}}</span>
+        <span class="eyebrow">{{.S "listing.allTypes"}}</span>
         <select name="type" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.allTypes"}}</option>
           {{range $t := list "land" "house" "apartment" "commercial"}}<option value="{{$t}}" {{if eq $q.Type $t}}selected{{end}}>{{$p.TypeLabel $t}}</option>{{end}}
@@ -42,7 +42,7 @@
       </label>
 
       <label class="block">
-        <span class="standing">{{.S "listing.allDistricts"}}</span>
+        <span class="eyebrow">{{.S "listing.allDistricts"}}</span>
         <select name="district" class="field mt-1.5 cursor-pointer">
           <option value="">{{.S "listing.allDistricts"}}</option>
           {{range $d.Districts}}<option value="{{.}}" {{if eq $q.District .}}selected{{end}}>{{.}}</option>{{end}}
@@ -54,17 +54,33 @@
     {{/* The actions sit on their own row so neither language's wording can
          push them off the edge of the grid. */}}
     <div class="mt-6 flex flex-wrap items-center justify-end gap-x-7 gap-y-3">
-      <a href="/auctions" class="pb-1 text-sm text-ink-soft transition-colors hover:text-ink">{{.S "listing.clear"}}</a>
-      <button type="submit" class="border-b-2 border-ink pb-1 font-display text-lg text-ink transition-colors hover:border-brass-500 hover:text-seal-800">{{.S "listing.apply"}}</button>
+      <a href="/auctions" class="pb-1 text-sm text-content-soft transition-colors hover:text-content">{{.S "listing.clear"}}</a>
+      <button type="submit" class="border-b-2 border-content pb-1 display text-lg text-content transition-colors hover:border-accent hover:text-accent">{{.S "listing.apply"}}</button>
     </div>
   </form>
 
   {{if gt $d.Total 0}}
-    <p class="standing set d3 py-4">{{.T "listing.showing" "from" $q.From "to" ($q.To $d.Total) "total" $d.Total}}</p>
+    <div class="set d3 flex flex-wrap items-center justify-between gap-3 py-4">
+      <p class="eyebrow">{{.T "listing.showing" "from" $q.From "to" ($q.To $d.Total) "total" $d.Total}}</p>
+
+      {{/* Rows per page, as links rather than a control: the choice survives
+           a browser running no JavaScript, and each size is an address a
+           reader can bookmark or share. */}}
+      {{if gt $d.Total 6}}
+      <nav class="flex items-center gap-1 text-sm" aria-label="{{.S "listing.perPage"}}">
+        <span class="eyebrow mr-1">{{.S "listing.perPage"}}</span>
+        {{range $n := pageSizes}}
+          <a href="{{$q.Href "size" (itoa $n)}}"
+             {{if eq $n $q.Size}}aria-current="true"{{end}}
+             class="rounded-md px-2 py-1 transition-colors {{if eq $n $q.Size}}bg-accent-wash text-accent{{else}}text-content-soft hover:bg-surface-sunken hover:text-content{{end}}">{{$n}}</a>
+        {{end}}
+      </nav>
+      {{end}}
+    </div>
   {{end}}
 
   {{if $d.Items}}
-    <div class="set d3 border-t-2 border-ink">
+    <div class="set d3 border-t-2 border-content">
       {{range $d.Items}}{{template "card" (card $p .)}}{{end}}
     </div>
 
@@ -74,14 +90,14 @@
       {{range $n := seq 1 $pages}}
         <a href="{{$q.Href "page" (itoa $n)}}" aria-label="{{$p.T "listing.gotoPage" "n" $n}}"
            {{if eq $n $q.Page}}aria-current="page"{{end}}
-           class="figure border-b-2 pb-1 text-lg transition-colors {{if eq $n $q.Page}}border-ink text-ink{{else}}border-transparent text-ink-faint hover:border-rule-strong hover:text-ink{{end}}">{{$n}}</a>
+           class="figure border-b-2 pb-1 text-lg transition-colors {{if eq $n $q.Page}}border-content text-content{{else}}border-transparent text-content-faint hover:border-line hover:text-content{{end}}">{{$n}}</a>
       {{end}}
     </nav>
     {{end}}
   {{else}}
-    <div class="border-y-2 border-ink py-20 text-center">
-      <p class="font-display text-2xl text-ink">{{.S "listing.emptyTitle"}}</p>
-      <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-soft">{{.S "listing.emptySub"}}</p>
+    <div class="border-y-2 border-content py-20 text-center">
+      <p class="display text-2xl text-content">{{.S "listing.emptyTitle"}}</p>
+      <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-content-soft">{{.S "listing.emptySub"}}</p>
     </div>
   {{end}}
 </main>

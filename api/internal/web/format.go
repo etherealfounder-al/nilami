@@ -117,15 +117,15 @@ func (p Page) Countdown(deadline time.Time) string {
 func (p Page) StatusTone(status string) string {
 	switch status {
 	case "open":
-		return "text-seal-700"
+		return "bg-accent-wash text-accent"
 	case "upcoming":
-		return "text-brass-700"
+		return "bg-warn-wash text-warn"
 	case "sold":
-		return "text-ink"
+		return "bg-surface-sunken text-content"
 	case "cancelled":
-		return "text-vermilion"
+		return "bg-bad-wash text-bad"
 	default:
-		return "text-ink-faint"
+		return "bg-surface-sunken text-content-soft"
 	}
 }
 
@@ -139,4 +139,29 @@ func (p Page) TypeInitial(t string) string {
 		return string(r)
 	}
 	return ""
+}
+
+// Monogram is the institution's initials, for the mark shown where it has not
+// uploaded a logo.
+//
+// Most institutions on this portal never will, so the fallback is the common
+// case and has to look deliberate rather than broken. Two letters at most:
+// "Nepal Investment Mega Bank" is NI, not NIMB, because four letters in a
+// small square stop being a mark and start being text.
+func (p Page) Monogram(name string) string {
+	var out []rune
+	take := true
+	for _, r := range name {
+		switch {
+		case r == ' ' || r == '-':
+			take = true
+		case take:
+			out = append(out, r)
+			take = false
+			if len(out) == 2 {
+				return string(out)
+			}
+		}
+	}
+	return string(out)
 }

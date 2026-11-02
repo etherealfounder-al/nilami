@@ -101,12 +101,31 @@ func run() error {
 	// they keep the shared credential and never answer a browser.
 	public := http.NewServeMux()
 	handlers.Public{DB: store}.Routes(public)
-	handlers.Signup{DB: store}.Routes(public)
 	mux.Handle("/v1/pages/", httpx.Chain(public,
 		limiter.Limit,
 		mw.ServiceGuard, // prove the request came from our frontend
 		mw.Identity,     // then, optionally, prove who the user is
 	))
+
+	// Signing up is reachable without any credential — that is what signing up
+	// is. It sat behind the shared credential because the Next.js server used
+	// to render the form and call these itself; since that server went, the
+	// only caller is a browser, and a browser cannot be given the credential
+	// without publishing it.
+	//
+	// Registered on the root mux rather than inside the guarded one: Go's
+	// router prefers the more specific pattern, so these two win over the
+	// "/v1/pages/" prefix above.
+	//
+	// What stops this being an open door is not the credential. CreateSignup
+	// selects the institution from the organizations table, so an unknown id
+	// yields no row rather than a profile with a null organization_id — which
+	// is this system's definition of a platform administrator — and every
+	// account lands unapproved regardless of what the form asked for.
+	signup := http.NewServeMux()
+	handlers.Signup{DB: store}.Routes(signup)
+	mux.Handle("GET /v1/pages/signup/organizations", httpx.Chain(signup, limiter.Limit))
+	mux.Handle("POST /v1/pages/signup", httpx.Chain(signup, limiter.Limit))
 
 	// Admin routes are called by signed-in browsers as well as by our server, so
 	// they are gated by the user's token instead. Asking for the shared

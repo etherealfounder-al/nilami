@@ -5,6 +5,7 @@ package web
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/UjjwolKayastha/nilami/api/internal/db"
 )
@@ -160,12 +162,36 @@ func (s *Server) Admin() http.Handler {
 			http.Error(w, "the admin app is missing", http.StatusServiceUnavailable)
 			return
 		}
+
+		// The panel is a built bundle, so it has no server-rendered <html> to
+		// carry the reader's theme. Without this it follows the device and
+		// ignores a choice made on the public pages — and it would paint the
+		// wrong ground first, then correct it, because only a script could
+		// apply the attribute and a script runs after the first paint.
+		if c, err := r.Cookie(ThemeCookie); err == nil {
+			if theme := parseTheme(c.Value); theme != ThemeAuto {
+				body = bytes.Replace(body, []byte("<html"),
+					[]byte(`<html data-theme="`+theme+`"`), 1)
+			}
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Robots-Tag", "noindex")
 		_, _ = w.Write(body)
 	})
 }
+
+// Nepal's federal administrative divisions: 7 provinces, 77 districts and the
+// 753 local levels, from https://github.com/sagautam5/local-states-nepal (MIT).
+//
+// Served rather than bundled. It is 103 KB — more than twice the whole admin
+// app — and exactly one screen needs it, so putting it in the bundle would
+// make every page of the panel pay for the property editor. The browser
+// caches it for a day; these boundaries change about once a decade.
+//
+//go:embed divisions.json
+var divisions []byte
 
 //go:embed icon.svg
 var iconSVG []byte
@@ -189,6 +215,13 @@ func (s *Server) Routes(mux *http.ServeMux) {
 	mux.Handle("GET /admin/", s.Admin())
 
 	mux.HandleFunc("GET /lang/{lang}", SetLanguage)
+	mux.HandleFunc("GET /theme/{theme}", SetTheme)
+
+	mux.HandleFunc("GET /assets/nepal-divisions.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		_, _ = w.Write(divisions)
+	})
 
 	mux.HandleFunc("GET /{$}", s.handleHome)
 	mux.HandleFunc("GET /auctions", s.handleAuctions)
@@ -315,6 +348,23 @@ func (s *Server) handleListing(w http.ResponseWriter, r *http.Request) {
 	page.Canonical = s.canonical(r)
 	page.Data = listing
 	s.render(w, r, "listing", page)
+
+	// Count the visit after the page has gone out.
+	//
+	// This used to be a POST the browser made once the listing had rendered,
+	// which meant only something running JavaScript was counted. Nothing runs
+	// JavaScript here any more, so it is counted on the server instead — after
+	// the response, in its own goroutine, because a counter is not worth
+	// delaying a page for and certainly not worth failing one over.
+	//
+	// The request's context is finished by now, so this takes a fresh one.
+	go func(slug string) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if _, err := s.db.RecordPropertyView(ctx, slug); err != nil {
+			slog.Warn("view counter", "slug", slug, "err", err)
+		}
+	}(r.PathValue("slug"))
 }
 
 // canonical is the address this page should be known by. Built from the host

@@ -3,7 +3,13 @@
     "auctions": "Auctions",
     "howItWorks": "How it works",
     "staffSignIn": "Staff sign in",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "theme": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Match device",
+    "menu": "Menu",
+    "close": "Close"
   },
   "common": {
     "statuses": {
@@ -80,7 +86,13 @@
       }
     ],
     "assuranceSub": "Auctions are conducted by each institution's recovery department under prevailing law, with valuations by licensed appraisers and bids opened publicly at the stated venue.",
-    "assuranceCta": "See current notices"
+    "assuranceCta": "See current notices",
+    "mapKicker": "Across the country",
+    "mapLegend": "All seventy-seven districts · inked where notices are open",
+    "lead": "Closing soonest",
+    "viewLot": "View this lot",
+    "lot": "Lot",
+    "statDistricts": "Districts"
   },
   "listing": {
     "kicker": "Auction notices",
@@ -100,7 +112,8 @@
     "pagination": "Pagination",
     "gotoPage": "Go to page {n}",
     "emptyTitle": "No properties match those filters.",
-    "emptySub": "Try clearing a filter or check back soon — new notices are published regularly."
+    "emptySub": "Try clearing a filter or check back soon — new notices are published regularly.",
+    "perPage": "Per page"
   },
   "institution": {
     "verified": "Verified Partner"
@@ -158,6 +171,12 @@
       "copied": "Copied",
       "more": "Share…",
       "message": "Auction notice — {title}"
+    },
+    "aboutInstitution": "The selling institution",
+    "visitSite": "Visit website",
+    "photoCount": {
+      "one": "{n} photograph",
+      "other": "{n} photographs"
     }
   },
   "how": {

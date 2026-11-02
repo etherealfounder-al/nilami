@@ -3,45 +3,45 @@
 {{define "content"}}
 <main class="mx-auto max-w-[76rem] px-5 pb-20">
   <div class="set d1 max-w-3xl py-14">
-    <p class="standing">{{.S "how.kicker"}}</p>
-    <h1 class="font-display mt-3 text-[2.75rem] leading-[0.98] text-ink sm:text-[3.75rem]">{{.S "how.title"}}</h1>
-    <p class="mt-6 text-[1.125rem] leading-relaxed text-ink-soft">{{.S "how.sub"}}</p>
+    <p class="eyebrow">{{.S "how.kicker"}}</p>
+    <h1 class="display mt-3 text-[2.75rem] leading-[0.98] text-content sm:text-[3.75rem]">{{.S "how.title"}}</h1>
+    <p class="mt-6 text-[1.125rem] leading-relaxed text-content-soft">{{.S "how.sub"}}</p>
   </div>
 
   {{/* The procedure, as numbered clauses.
 
        Each step is ruled off and numbered in the display face, so the page
        reads as the schedule of a document rather than a marketing timeline. */}}
-  <ol class="set d2 border-t-2 border-ink">
+  <ol class="set d2 border-t-2 border-content">
     {{range $i, $s := .Items "how.steps"}}
-    <li class="grid gap-x-10 gap-y-3 border-b border-rule py-9 sm:grid-cols-[5rem_1fr] lg:grid-cols-[8rem_1fr]">
-      <p class="figure text-[2.5rem] leading-none text-brass-600">{{pad2 (add $i 1)}}</p>
+    <li class="grid gap-x-10 gap-y-3 border-b border-line py-9 sm:grid-cols-[5rem_1fr] lg:grid-cols-[8rem_1fr]">
+      <p class="figure text-[2.5rem] leading-none text-accent">{{pad2 (add $i 1)}}</p>
       <div class="max-w-2xl">
-        <h2 class="font-display text-[1.625rem] leading-tight text-ink">{{index $s "title"}}</h2>
-        <p class="mt-2.5 leading-[1.75] text-ink-soft">{{index $s "body"}}</p>
+        <h2 class="display text-[1.625rem] leading-tight text-content">{{index $s "title"}}</h2>
+        <p class="mt-2.5 leading-[1.75] text-content-soft">{{index $s "body"}}</p>
       </div>
     </li>
     {{end}}
   </ol>
 
   <section class="set d3 mx-auto mt-16 max-w-3xl">
-    <h2 class="font-display border-b-2 border-ink pb-2 text-2xl text-ink">{{.S "how.faqTitle"}}</h2>
+    <h2 class="display border-b-2 border-content pb-2 text-2xl text-content">{{.S "how.faqTitle"}}</h2>
     <dl>
       {{range .Items "how.faqs"}}
-      <div class="border-b border-rule py-5">
-        <dt class="font-display text-[1.25rem] leading-snug text-ink">{{index . "q"}}</dt>
-        <dd class="mt-2 leading-[1.75] text-ink-soft">{{index . "a"}}</dd>
+      <div class="border-b border-line py-5">
+        <dt class="display text-[1.25rem] leading-snug text-content">{{index . "q"}}</dt>
+        <dd class="mt-2 leading-[1.75] text-content-soft">{{index . "a"}}</dd>
       </div>
       {{end}}
     </dl>
   </section>
 
   {{/* The closing notice, set as a dark panel — the one moment on the page
-       where the ink reverses, so it reads as a stamp at the foot of a form. */}}
-  <section class="set d4 mx-auto mt-16 max-w-3xl bg-seal-950 px-8 py-14 text-center sm:px-14">
-    <h2 class="font-display text-[2rem] leading-tight text-oat sm:text-[2.5rem]">{{.S "how.ctaTitle"}}</h2>
-    <p class="mx-auto mt-4 max-w-xl leading-relaxed text-oat/65">{{.S "how.ctaSub"}}</p>
-    <a href="/auctions" class="group mt-9 inline-flex items-baseline gap-2.5 border-b-2 border-brass-500 pb-1 font-display text-lg text-oat transition-colors hover:border-oat">
+       where the ink reverses, so it reads as a chip at the foot of a form. */}}
+  <section class="set d4 mx-auto mt-16 max-w-3xl bg-deep px-8 py-14 text-center sm:px-14">
+    <h2 class="display text-[2rem] leading-tight text-on-deep sm:text-[2.5rem]">{{.S "how.ctaTitle"}}</h2>
+    <p class="mx-auto mt-4 max-w-xl leading-relaxed text-on-deep/65">{{.S "how.ctaSub"}}</p>
+    <a href="/auctions" class="group mt-9 inline-flex items-baseline gap-2.5 border-b-2 border-accent pb-1 display text-lg text-on-deep transition-colors hover:border-on-deep">
       {{.S "how.ctaButton"}}
       <span aria-hidden="true" class="transition-transform duration-300 group-hover:translate-x-1">→</span>
     </a>

@@ -12,102 +12,114 @@
 
 {{define "content"}}
 {{$p := .}}{{$l := .Data}}{{$prop := $l.Property}}
-<main class="mx-auto max-w-[76rem] px-5 pb-20">
+{{/*
+    The lot.
 
-  <nav class="flex items-center gap-2.5 py-5 text-sm text-ink-faint">
-    <a href="/auctions" class="transition-colors hover:text-ink">{{.S "detail.breadcrumb"}}</a>
-    <span aria-hidden="true">/</span>
-    <span class="truncate text-ink-soft">{{$prop.Title}}</span>
-  </nav>
+    Staged like the front page so a reader arriving from it is not handed a
+    different product: the photograph fills the frame, the figures sit on it,
+    and the particulars follow on the page's own ground underneath.
+*/}}
+<section class="relative isolate flex min-h-[32rem] items-end overflow-hidden bg-deep text-on-deep lg:min-h-[38rem]">
+  {{if $prop.Cover}}
+    <img src="{{$prop.Cover}}" alt="" width="2400" height="1600"
+         class="absolute inset-0 -z-20 size-full object-cover opacity-50">
+  {{end}}
+  <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-t from-deep via-deep/85 to-deep/40"></div>
 
-  {{/*
-    The notice.
+  <div class="mx-auto w-full max-w-[82rem] px-6 pb-14 pt-10">
+    <nav class="flex items-center gap-2.5 text-xs uppercase tracking-[0.2em] text-on-deep/50">
+      <a href="/auctions" class="transition-colors hover:text-on-deep">{{.S "detail.breadcrumb"}}</a>
+      <span aria-hidden="true">/</span>
+      <span class="truncate text-on-deep/75">{{$prop.Title}}</span>
+      {{if gt $prop.ViewCount 0}}
+        <span aria-hidden="true" class="text-on-deep/30">·</span>
+        <span class="text-on-deep/50">{{$p.T "detail.views" "n" (group $prop.ViewCount)}}</span>
+      {{end}}
+    </nav>
 
-    Laid out the way the instrument itself is: who is selling, under what
-    number, then the property, then the figures. A reader who has seen one of
-    these in a newspaper should recognise the shape of it immediately.
-  */}}
-  <article class="set d1 border-t-2 border-ink pt-6">
-    <div class="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
-      <div class="min-w-0">
-        <p class="font-display text-xl leading-tight text-seal-800 sm:text-2xl">{{$prop.Organization.Display .Lang}}</p>
-        <p class="standing mt-2">
-          {{.S "detail.noticeNo"}} {{$l.NoticeNumber}}
-          <span aria-hidden="true" class="mx-1.5 opacity-50">·</span>{{.T "detail.roundN" "n" $l.Round}}
-          <span aria-hidden="true" class="mx-1.5 opacity-50">·</span>{{.TypeLabel $prop.Type}}
-        </p>
-      </div>
-      <span class="stamp shrink-0 {{.StatusTone $l.Status}}">{{.StatusLabel $l.Status}}</span>
+    <div class="set d1 mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+      <span class="text-[0.6875rem] uppercase tracking-[0.3em] text-accent">{{$prop.Organization.Display .Lang}}</span>
+      <span class="h-px w-12 bg-accent/60"></span>
+      <span class="chip {{.StatusTone $l.Status}}">{{.StatusLabel $l.Status}}</span>
     </div>
 
-    <h1 class="font-display mt-6 text-[2.5rem] leading-[1.02] text-ink sm:text-[3.25rem]">{{$prop.Title}}</h1>
-    <p class="mt-3 text-[1.0625rem] text-ink-soft">
-      {{$prop.Where}}{{with $prop.Address}}<span aria-hidden="true" class="mx-1.5 text-ink-faint/60">·</span>{{.}}{{end}}
+    <h1 class="set d2 display mt-5 max-w-4xl text-[2.5rem] leading-[0.98] text-on-deep sm:text-[3.5rem] lg:text-[4.25rem]">{{$prop.Title}}</h1>
+    <p class="set d3 mt-4 text-on-deep/60">
+      {{$prop.Where}}{{with $prop.Address}}<span aria-hidden="true" class="mx-2 text-on-deep/30">·</span>{{.}}{{end}}
+    </p>
+    <p class="set d3 mt-2 text-xs uppercase tracking-[0.22em] text-on-deep/40">
+      {{.S "detail.noticeNo"}} {{$l.NoticeNumber}}<span aria-hidden="true" class="mx-2">·</span>{{.T "detail.roundN" "n" $l.Round}}<span aria-hidden="true" class="mx-2">·</span>{{.TypeLabel $prop.Type}}
     </p>
 
-    {{/* The figures. This is what the page is for, so they are set as large
-         as the headline and ruled off like the summary line of an account. */}}
-    <dl class="mt-9 grid gap-x-8 gap-y-6 border-y-2 border-ink py-7 sm:grid-cols-3">
+    <dl class="set d4 mt-11 grid gap-x-12 gap-y-7 border-t border-on-deep/20 pt-7 sm:grid-cols-3">
       <div>
-        <dt class="standing">{{.S "common.minimumBid"}}</dt>
-        <dd class="figure mt-1.5 text-[2.25rem] leading-none text-ink sm:text-[2.75rem]">{{.NPRCompact $l.MinimumBid}}</dd>
-        <dd class="mt-1.5 text-xs text-ink-faint">{{.NPR $l.MinimumBid}}</dd>
+        <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.S "common.minimumBid"}}</dt>
+        <dd class="figure mt-2.5 text-[2.25rem] leading-none text-on-deep sm:text-[2.75rem]">{{.NPRCompact $l.MinimumBid}}</dd>
+        <dd class="mt-2 text-xs text-on-deep/40">{{.NPR $l.MinimumBid}}</dd>
       </div>
-      <div class="sm:border-l sm:border-rule sm:pl-8">
-        <dt class="standing">{{.T "detail.security" "pct" $l.SecurityPercent}}</dt>
-        <dd class="figure mt-1.5 text-[2.25rem] leading-none text-seal-800 sm:text-[2.75rem]">{{.NPRCompact $l.BidSecurityAmount}}</dd>
-        <dd class="mt-1.5 text-xs text-ink-faint">{{.NPR $l.BidSecurityAmount}}</dd>
+      <div>
+        <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.T "detail.security" "pct" $l.SecurityPercent}}</dt>
+        <dd class="figure mt-2.5 text-[2.25rem] leading-none text-accent sm:text-[2.75rem]">{{.NPRCompact $l.BidSecurityAmount}}</dd>
+        <dd class="mt-2 text-xs text-on-deep/40">{{.NPR $l.BidSecurityAmount}}</dd>
       </div>
-      <div class="sm:border-l sm:border-rule sm:pl-8">
-        <dt class="standing">{{.S "detail.deadline"}}</dt>
-        <dd class="figure mt-1.5 text-[1.5rem] leading-tight text-ink">{{.DateTime $l.SubmissionDeadline}}</dd>
+      <div>
+        <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.S "detail.deadline"}}</dt>
+        <dd class="figure mt-2.5 text-[1.5rem] leading-tight text-on-deep">{{.DateTime $l.SubmissionDeadline}}</dd>
         {{if $l.Open}}{{with .Countdown $l.SubmissionDeadline}}
-          <dd class="mt-1.5 text-sm font-semibold tracking-wide text-vermilion">{{$p.S "detail.closesIn"}} · {{.}}</dd>
+          <dd class="mt-2 text-sm uppercase tracking-[0.16em] text-bad">{{$p.S "detail.closesIn"}} · {{.}}</dd>
         {{end}}{{end}}
       </div>
     </dl>
-  </article>
+  </div>
+</section>
 
+<main class="mx-auto max-w-[82rem] px-6 pb-20">
   <div class="mt-12 grid gap-x-14 gap-y-12 lg:grid-cols-[1.55fr_1fr] lg:items-start">
     <div class="set d2 space-y-12">
 
-      {{/* The plate. Bordered and captioned, the way a photograph is set into
-           a printed record rather than used as a banner. */}}
-      {{if $prop.Images}}
+      {{/* The rest of the photographs. The first already carries the stage
+           above, so this is the remainder rather than a repeat of it. */}}
+      {{if gt (len $prop.Images) 1}}
+      {{/*
+        The rest of the photographs.
+
+        A swipeable strip on a phone and a grid on a wider screen, done with
+        scroll-snap rather than a carousel script. The browser already handles
+        momentum, rubber-banding and the touch gesture better than a library
+        would, it keeps working with no JavaScript, and every photograph stays
+        a real element a reader can long-press to save or a crawler can see.
+      */}}
       <figure>
-        <div class="border border-rule bg-linen p-2">
-          <img src="{{(index $prop.Images 0).URL}}" alt="{{$prop.Title}}" width="1200" height="800"
-               class="aspect-[3/2] w-full object-cover">
-        </div>
-        {{if gt (len $prop.Images) 1}}
-        <div class="mt-2 grid grid-cols-4 gap-2">
-          {{range $i, $img := $prop.Images}}{{if $i}}{{if lt $i 5}}
-            <img src="{{$img.URL}}" alt="" width="300" height="225" loading="lazy" decoding="async"
-                 class="aspect-[4/3] w-full border border-rule object-cover">
+        <ul class="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {{range $i, $img := $prop.Images}}{{if $i}}{{if lt $i 7}}
+            <li class="w-[78%] shrink-0 snap-center sm:w-auto">
+              <img src="{{$img.URL}}" alt="{{$img.Alt}}" width="600" height="450" loading="lazy" decoding="async"
+                   class="aspect-[4/3] w-full rounded-lg object-cover">
+            </li>
           {{end}}{{end}}{{end}}
-        </div>
-        {{end}}
-        <figcaption class="standing mt-3">{{$prop.Where}}</figcaption>
+        </ul>
+        <figcaption class="mt-3 flex items-center justify-between text-xs text-content-faint">
+          <span>{{$prop.Where}}</span>
+          <span class="sm:hidden">{{$p.T "detail.photoCount" "n" (len $prop.Images)}}</span>
+        </figcaption>
       </figure>
-      {{else}}
-      <div class="grid aspect-[3/1] place-items-center border border-rule bg-linen text-sm text-ink-faint">{{.S "common.photosPending"}}</div>
       {{end}}
 
       {{with $prop.Description}}
       <section>
-        <h2 class="font-display border-b border-ink pb-2 text-2xl text-ink">{{$p.S "detail.about"}}</h2>
-        <p class="mt-4 whitespace-pre-line text-[1.0625rem] leading-[1.75] text-ink-soft">{{.}}</p>
+        <h2 class="display border-b border-content pb-2 text-2xl text-content">{{$p.S "detail.about"}}</h2>
+        <p class="mt-4 whitespace-pre-line text-[1.0625rem] leading-[1.75] text-content-soft">{{.}}</p>
       </section>
       {{end}}
 
       {{/* Particulars, as a ruled schedule. */}}
       <section>
-        <h2 class="font-display border-b border-ink pb-2 text-2xl text-ink">{{.S "detail.details"}}</h2>
+        <h2 class="display border-b border-content pb-2 text-2xl text-content">{{.S "detail.details"}}</h2>
         <dl class="mt-1">
           {{range .Facts}}
-          <div class="flex items-baseline justify-between gap-8 border-b border-rule-faint py-3">
-            <dt class="standing !tracking-[0.1em]">{{.Label}}</dt>
-            <dd class="text-right text-[0.9375rem] text-ink">{{.Value}}</dd>
+          <div class="flex items-baseline justify-between gap-8 border-b border-line-soft py-3">
+            <dt class="eyebrow !tracking-[0.1em]">{{.Label}}</dt>
+            <dd class="text-right text-[0.9375rem] text-content">{{.Value}}</dd>
           </div>
           {{end}}
         </dl>
@@ -115,50 +127,86 @@
 
       {{with $l.RequiredDocuments}}
       <section>
-        <h2 class="font-display border-b border-ink pb-2 text-2xl text-ink">{{$p.S "detail.docs"}}</h2>
-        <p class="mt-4 whitespace-pre-line leading-[1.75] text-ink-soft">{{.}}</p>
+        <h2 class="display border-b border-content pb-2 text-2xl text-content">{{$p.S "detail.docs"}}</h2>
+        <p class="mt-4 whitespace-pre-line leading-[1.75] text-content-soft">{{.}}</p>
       </section>
       {{end}}
 
       {{with $l.Terms}}
       <section>
-        <h2 class="font-display border-b border-ink pb-2 text-2xl text-ink">{{$p.S "detail.terms"}}</h2>
-        <p class="mt-4 whitespace-pre-line leading-[1.75] text-ink-soft">{{.}}</p>
+        <h2 class="display border-b border-content pb-2 text-2xl text-content">{{$p.S "detail.terms"}}</h2>
+        <p class="mt-4 whitespace-pre-line leading-[1.75] text-content-soft">{{.}}</p>
       </section>
       {{end}}
 
       <section>
-        <h2 class="font-display border-b border-ink pb-2 text-2xl text-ink">{{.S "detail.howToBid"}}</h2>
-        <p class="mt-4 leading-[1.75] text-ink-soft">{{.S "detail.howToBidBody"}}</p>
+        <h2 class="display border-b border-content pb-2 text-2xl text-content">{{.S "detail.howToBid"}}</h2>
+        <p class="mt-4 leading-[1.75] text-content-soft">{{.S "detail.howToBidBody"}}</p>
       </section>
     </div>
 
     {{/* The right-hand column of the form: where, when, and who to ask. */}}
     <aside class="set d3 space-y-10 lg:sticky lg:top-6">
-      <section class="border-t-2 border-ink pt-4">
-        <h2 class="standing">{{.S "detail.opening"}}</h2>
-        <p class="figure mt-2 text-lg leading-tight text-ink">{{.DateTime $l.OpeningDatetime}}</p>
-        {{with $l.OpeningVenue}}<p class="mt-2 text-sm leading-relaxed text-ink-soft">{{.}}</p>{{end}}
+      <section class="border-t-2 border-content pt-4">
+        <h2 class="eyebrow">{{.S "detail.opening"}}</h2>
+        <p class="figure mt-2 text-lg leading-tight text-content">{{.DateTime $l.OpeningDatetime}}</p>
+        {{with $l.OpeningVenue}}<p class="mt-2 text-sm leading-relaxed text-content-soft">{{.}}</p>{{end}}
       </section>
 
-      <section class="border-t border-rule pt-4">
-        <h2 class="standing">{{.S "detail.contact"}}</h2>
-        <p class="font-display mt-2 text-lg leading-snug text-ink">{{$prop.Organization.Display .Lang}}</p>
-        {{with $prop.Organization.Address}}<p class="mt-1.5 text-sm leading-relaxed text-ink-soft">{{.}}</p>{{end}}
-        {{with $prop.Organization.ContactPhone}}<a href="tel:{{.}}" class="mt-2.5 inline-block border-b border-rule-strong pb-0.5 text-sm text-ink transition-colors hover:border-seal-700 hover:text-seal-800">{{.}}</a>{{end}}
-        {{with $prop.Organization.ContactEmail}}<a href="mailto:{{.}}" class="mt-1.5 block text-sm text-ink-soft transition-colors hover:text-seal-800">{{.}}</a>{{end}}
+      {{/*
+        The selling institution.
+
+        A notice is only as good as the body behind it, so this carries the
+        institution's own mark, address and two ways to reach it — which is
+        what a bidder needs before they will put a security down.
+      */}}
+      <section class="card p-5">
+        <h2 class="eyebrow">{{.S "detail.aboutInstitution"}}</h2>
+        <div class="mt-3 flex items-center gap-3">
+          <span class="grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-canvas">
+            {{with $prop.Organization.LogoURL}}
+              <img src="{{.}}" alt="" width="96" height="96" loading="lazy" decoding="async" class="size-full object-contain p-1">
+            {{else}}
+              <span aria-hidden="true" class="text-sm font-semibold text-content-faint">{{$p.Monogram ($prop.Organization.Display $p.Lang)}}</span>
+            {{end}}
+          </span>
+          <p class="title text-base leading-snug">{{$prop.Organization.Display .Lang}}</p>
+        </div>
+
+        {{with $prop.Organization.Address}}<p class="mt-3 text-sm leading-relaxed text-content-soft">{{.}}</p>{{end}}
+
+        <div class="mt-4 space-y-1.5 border-t border-line-soft pt-3 text-sm">
+          {{with $prop.Organization.ContactPhone}}
+            <a href="tel:{{.}}" class="flex items-center gap-2 text-content transition-colors hover:text-accent">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 shrink-0 text-content-faint" aria-hidden="true"><path d="M3 3.5h3l1 3-1.8 1.2a9 9 0 0 0 4.1 4.1L10.5 10l3 1v3a9.5 9.5 0 0 1-10.5-10.5Z" stroke-linejoin="round"/></svg>
+              {{.}}
+            </a>
+          {{end}}
+          {{with $prop.Organization.ContactEmail}}
+            <a href="mailto:{{.}}" class="flex items-center gap-2 text-content transition-colors hover:text-accent">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 shrink-0 text-content-faint" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="1.5"/><path d="M2 4.5l6 4 6-4" stroke-linecap="round"/></svg>
+              <span class="truncate">{{.}}</span>
+            </a>
+          {{end}}
+          {{with $prop.Organization.Website}}
+            <a href="{{.}}" target="_blank" rel="noreferrer" class="flex items-center gap-2 text-content transition-colors hover:text-accent">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="size-4 shrink-0 text-content-faint" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8a12 12 0 0 1 0 12.4A12 12 0 0 1 8 1.8Z"/></svg>
+              {{$p.S "detail.visitSite"}}
+            </a>
+          {{end}}
+        </div>
       </section>
 
       {{if and $prop.Latitude $prop.Longitude}}
-      <section id="location" class="border-t border-rule pt-4">
-        <h2 class="standing">{{.S "detail.location"}}</h2>
-        <p class="mt-2 text-sm text-ink">{{$prop.Where}}</p>
+      <section id="location" class="border-t border-line pt-4">
+        <h2 class="eyebrow">{{.S "detail.location"}}</h2>
+        <p class="mt-2 text-sm text-content">{{$prop.Where}}</p>
         {{/* A link rather than an embedded map: the map was the only thing on
              this page that required a JavaScript runtime, and a reader who
              wants it gets a better one than we would draw. */}}
         <a href="https://www.openstreetmap.org/?mlat={{deref $prop.Latitude}}&mlon={{deref $prop.Longitude}}#map=16/{{deref $prop.Latitude}}/{{deref $prop.Longitude}}"
            target="_blank" rel="noreferrer"
-           class="mt-2.5 inline-block border-b border-rule-strong pb-0.5 text-sm text-ink transition-colors hover:border-seal-700 hover:text-seal-800">{{.S "detail.openInOsm"}}</a>
+           class="mt-2.5 inline-block border-b border-line pb-0.5 text-sm text-content transition-colors hover:border-accent hover:text-accent">{{.S "detail.openInOsm"}}</a>
       </section>
       {{end}}
 
@@ -169,15 +217,15 @@
            they are the two this leaves out. */}}
       {{$msg := $p.T "detail.share.message" "title" $prop.Title}}
       {{$text := printf "%s %s" $msg $p.Canonical}}
-      <section class="border-t border-rule pt-4">
-        <h2 class="standing">{{$p.S "detail.share.title"}}</h2>
+      <section class="border-t border-line pt-4">
+        <h2 class="eyebrow">{{$p.S "detail.share.title"}}</h2>
         <ul class="mt-2.5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <li><a href="https://wa.me/?text={{urlquery $text}}" target="_blank" rel="noreferrer" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.whatsapp"}}</a></li>
-          <li><a href="viber://forward?text={{urlquery $text}}" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.viber"}}</a></li>
-          <li><a href="https://www.facebook.com/sharer/sharer.php?u={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.facebook"}}</a></li>
-          <li><a href="https://t.me/share/url?url={{urlquery $p.Canonical}}&text={{urlquery $msg}}" target="_blank" rel="noreferrer" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.telegram"}}</a></li>
-          <li><a href="https://www.linkedin.com/sharing/share-offsite/?url={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.linkedin"}}</a></li>
-          <li><a href="mailto:?subject={{urlquery $msg}}&body={{urlquery $text}}" class="border-b border-rule pb-0.5 text-ink-soft transition-colors hover:border-seal-700 hover:text-seal-800">{{$p.S "detail.share.email"}}</a></li>
+          <li><a href="https://wa.me/?text={{urlquery $text}}" target="_blank" rel="noreferrer" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.whatsapp"}}</a></li>
+          <li><a href="viber://forward?text={{urlquery $text}}" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.viber"}}</a></li>
+          <li><a href="https://www.facebook.com/sharer/sharer.php?u={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.facebook"}}</a></li>
+          <li><a href="https://t.me/share/url?url={{urlquery $p.Canonical}}&text={{urlquery $msg}}" target="_blank" rel="noreferrer" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.telegram"}}</a></li>
+          <li><a href="https://www.linkedin.com/sharing/share-offsite/?url={{urlquery $p.Canonical}}" target="_blank" rel="noreferrer" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.linkedin"}}</a></li>
+          <li><a href="mailto:?subject={{urlquery $msg}}&body={{urlquery $text}}" class="border-b border-line pb-0.5 text-content-soft transition-colors hover:border-accent hover:text-accent">{{$p.S "detail.share.email"}}</a></li>
         </ul>
       </section>
     </aside>

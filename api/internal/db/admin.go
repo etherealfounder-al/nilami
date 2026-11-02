@@ -40,6 +40,32 @@ func (d *DB) Dashboard(ctx context.Context, s auth.Scope) ([]byte, error) {
 			'pending_deposits', (select count(*) from bidder_records b
 			                      where b.auction_id in (select id from auction_rows)
 			                        and b.deposit_status = 'pending'),
+			-- The work is deadline-driven, so the panel needs the deadlines
+			-- themselves rather than a count of them: every live auction in
+			-- date order, which is what the overview's calendar draws.
+			'calendar', coalesce((
+				select jsonb_agg(c order by c.submission_deadline)
+				  from (
+					select a.id, a.status::text, a.submission_deadline,
+					       a.minimum_bid, p.title, p.district
+					  from auctions a
+					  join properties p on p.id = a.property_id
+					 where a.property_id in (select id from scoped)
+					   and a.status in ('open', 'upcoming')
+					   and a.submission_deadline >= now()
+					 order by a.submission_deadline
+					 limit 14
+				  ) c
+			), '[]'::jsonb),
+			-- The pipeline, as counts by state.
+			'by_status', coalesce((
+				select jsonb_object_agg(st, n)
+				  from (select status::text as st, count(*) as n
+				          from auction_rows group by status) t
+			), '{}'::jsonb),
+			-- What is on the block, in rupees.
+			'at_stake', (select coalesce(sum(minimum_bid), 0) from auction_rows
+			              where status = 'open' and submission_deadline >= now()),
 			'recent', coalesce((
 				select jsonb_agg(r order by r.updated_at desc)
 				  from (
