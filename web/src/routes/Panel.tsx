@@ -138,7 +138,7 @@ export function Panel({ viewer }: { viewer: Viewer }) {
           </div>
         )}
 
-      <main class="mx-auto w-full max-w-6xl px-5 py-10 lg:px-10">
+      <main class="mx-auto w-full max-w-6xl px-5 py-7 sm:py-10 lg:px-10">
         <Routes>
           <Route index element={<Overview />} />
           <Route path="properties" element={<Properties />} />

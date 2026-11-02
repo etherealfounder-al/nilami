@@ -64,7 +64,7 @@ export function FormCard({
   return (
     <form
       onSubmit={onSubmit}
-      class="space-y-10 border border-line bg-surface p-7 shadow-soft sm:p-9"
+      class="space-y-8 border border-line bg-surface p-5 shadow-soft sm:space-y-10 sm:p-7 lg:p-9"
     >
       {children}
     </form>

@@ -32,7 +32,7 @@
          it happens to contain. */}}
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-t from-deep via-deep/85 to-deep/35"></div>
 
-    <div class="mx-auto w-full max-w-[82rem] px-6 pb-16 pt-20 lg:pb-24 lg:pt-24">
+    <div class="mx-auto w-full max-w-[82rem] px-6 pb-10 sm:pb-16 pt-12 sm:pt-20 lg:pb-24 lg:pt-24">
       <div class="set d1 flex flex-wrap items-center gap-x-5 gap-y-3">
         <span class="text-[0.6875rem] font-medium uppercase tracking-[0.4em] text-accent">{{.S "home.lead"}}</span>
         <span class="h-px w-16 bg-accent/60"></span>
@@ -47,7 +47,7 @@
         {{$prop.Where}}<span aria-hidden="true" class="mx-2.5 text-on-deep/30">·</span>{{$prop.Organization.Display $p.Lang}}
       </p>
 
-      <div class="set d4 mt-12 flex flex-wrap items-end gap-x-16 gap-y-8 border-t border-on-deep/15 pt-8">
+      <div class="set d4 mt-8 sm:mt-12 flex flex-wrap items-end gap-x-16 gap-y-8 border-t border-on-deep/15 pt-8">
         <div>
           <p class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{$p.S "common.minimumBid"}}</p>
           <p class="figure mt-2.5 text-[3rem] leading-none text-on-deep sm:text-[4rem]">
@@ -90,17 +90,27 @@
 
   {{/* The rest of the catalogue, as lots. */}}
   {{if gt (len $d.Featured) 1}}
-  <section class="mx-auto max-w-[82rem] px-6 py-20">
+  <section class="mx-auto max-w-[82rem] px-6 py-12 sm:py-20">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <h2 class="display text-[2.25rem] leading-none text-content sm:text-[3rem]">{{.S "home.featured"}}</h2>
       <a href="/auctions" class="text-sm uppercase tracking-[0.2em] text-accent transition-colors hover:text-content">{{.S "home.viewAll"}}</a>
     </div>
 
-    <div class="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+    {{/*
+      The lots.
+    
+      A swipeable row on a phone and a grid above it. Six of these stacked
+      full-width is most of a page of scrolling before a reader reaches
+      anything else, and the plate that makes a lot worth looking at on a
+      wide screen is what makes the column unreadable on a narrow one.
+      Scroll-snap rather than a carousel script, the same way a notice's
+      gallery works, so this still costs no JavaScript.
+    */}}
+    <div class="-mx-5 mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-2 sm:mx-0 sm:mt-12 sm:grid sm:gap-x-8 sm:gap-y-14 sm:overflow-visible sm:px-0 sm:grid-cols-2 lg:grid-cols-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {{range $i, $c := $d.Featured}}{{if $i}}
       {{$lp := $c.Property}}
-      <article class="group relative">
-        <div class="relative aspect-[4/5] overflow-hidden bg-surface-sunken">
+      <article class="group relative w-[82%] shrink-0 snap-center sm:w-auto sm:shrink">
+        <div class="relative aspect-[3/2] overflow-hidden bg-surface-sunken sm:aspect-[4/5]">
           {{if $lp.Cover}}
             <img src="{{$lp.Cover}}" alt="" width="800" height="1000" loading="lazy" decoding="async"
                  class="size-full object-cover opacity-80 transition-all duration-700 group-hover:scale-[1.04] group-hover:opacity-100">
@@ -143,7 +153,7 @@
     are lit, and each is a link that filters the catalogue.
   */}}
   <section class="border-t border-line">
-    <div class="mx-auto grid max-w-[82rem] gap-x-16 gap-y-10 px-6 py-20 lg:grid-cols-[20rem_1fr] lg:items-center">
+    <div class="mx-auto grid max-w-[82rem] gap-x-16 gap-y-7 sm:gap-y-10 px-6 py-12 sm:py-20 lg:grid-cols-[20rem_1fr] lg:items-center">
       <div>
         <p class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-accent">{{.S "home.mapKicker"}}</p>
         <h2 class="display mt-4 text-[2rem] leading-tight text-content">{{.S "home.underAuction"}}</h2>
@@ -198,10 +208,10 @@
 
   {{/* How a bid is made. */}}
   <section class="border-t border-line">
-    <div class="mx-auto max-w-[82rem] px-6 py-20">
+    <div class="mx-auto max-w-[82rem] px-6 py-12 sm:py-20">
       <p class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-accent">{{.S "home.processKicker"}}</p>
       <h2 class="display mt-4 max-w-3xl text-[2.25rem] leading-tight text-content sm:text-[3rem]">{{.S "home.processTitle"}}</h2>
-      <ol class="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+      <ol class="mt-9 sm:mt-14 grid gap-x-10 gap-y-8 sm:gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
         {{range $i, $s := .Items "home.steps"}}
         <li>
           <p class="figure text-accent/70 text-5xl leading-none">{{pad2 (add $i 1)}}</p>
@@ -210,7 +220,7 @@
         </li>
         {{end}}
       </ol>
-      <a href="/how-it-works" class="group mt-14 inline-flex items-center gap-3 border border-line px-8 py-4 text-sm uppercase tracking-[0.2em] text-content transition-all hover:border-accent hover:bg-accent hover:text-on-accent">
+      <a href="/how-it-works" class="group mt-9 sm:mt-14 inline-flex items-center gap-3 border border-line px-8 py-4 text-sm uppercase tracking-[0.2em] text-content transition-all hover:border-accent hover:bg-accent hover:text-on-accent">
         {{.S "home.assuranceCta"}}
         <span aria-hidden="true" class="transition-transform duration-300 group-hover:translate-x-1">→</span>
       </a>

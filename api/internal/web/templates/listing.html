@@ -51,7 +51,7 @@
       {{.S "detail.noticeNo"}} {{$l.NoticeNumber}}<span aria-hidden="true" class="mx-2">·</span>{{.T "detail.roundN" "n" $l.Round}}<span aria-hidden="true" class="mx-2">·</span>{{.TypeLabel $prop.Type}}
     </p>
 
-    <dl class="set d4 mt-11 grid gap-x-12 gap-y-7 border-t border-on-deep/20 pt-7 sm:grid-cols-3">
+    <dl class="set d4 mt-7 sm:mt-11 grid gap-x-12 gap-y-7 border-t border-on-deep/20 pt-7 sm:grid-cols-3">
       <div>
         <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.S "common.minimumBid"}}</dt>
         <dd class="figure mt-2.5 text-[2.25rem] leading-none text-on-deep sm:text-[2.75rem]">{{.NPRCompact $l.MinimumBid}}</dd>
@@ -73,9 +73,9 @@
   </div>
 </section>
 
-<main class="mx-auto max-w-[82rem] px-6 pb-20">
-  <div class="mt-12 grid gap-x-14 gap-y-12 lg:grid-cols-[1.55fr_1fr] lg:items-start">
-    <div class="set d2 space-y-12">
+<main class="mx-auto max-w-[82rem] px-6 pb-12 sm:pb-20">
+  <div class="mt-8 sm:mt-12 grid gap-x-14 gap-y-8 sm:gap-y-12 lg:grid-cols-[1.55fr_1fr] lg:items-start">
+    <div class="set d2 space-y-8 sm:space-y-12">
 
       {{/* The rest of the photographs. The first already carries the stage
            above, so this is the remainder rather than a repeat of it. */}}
@@ -146,7 +146,7 @@
     </div>
 
     {{/* The right-hand column of the form: where, when, and who to ask. */}}
-    <aside class="set d3 space-y-10 lg:sticky lg:top-6">
+    <aside class="set d3 space-y-7 sm:space-y-10 lg:sticky lg:top-6">
       <section class="border-t-2 border-content pt-4">
         <h2 class="eyebrow">{{.S "detail.opening"}}</h2>
         <p class="figure mt-2 text-lg leading-tight text-content">{{.DateTime $l.OpeningDatetime}}</p>

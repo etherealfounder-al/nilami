@@ -1,7 +1,7 @@
 {{define "head"}}<meta property="og:type" content="website">{{end}}
 
 {{define "content"}}
-<main class="mx-auto max-w-[76rem] px-5 pb-20">
+<main class="mx-auto max-w-[76rem] px-5 pb-12 sm:pb-20">
   <div class="set d1 max-w-3xl py-14">
     <p class="eyebrow">{{.S "how.kicker"}}</p>
     <h1 class="display mt-3 text-[2.75rem] leading-[0.98] text-content sm:text-[3.75rem]">{{.S "how.title"}}</h1>
@@ -24,7 +24,7 @@
     {{end}}
   </ol>
 
-  <section class="set d3 mx-auto mt-16 max-w-3xl">
+  <section class="set d3 mx-auto mt-10 sm:mt-16 max-w-3xl">
     <h2 class="display border-b-2 border-content pb-2 text-2xl text-content">{{.S "how.faqTitle"}}</h2>
     <dl>
       {{range .Items "how.faqs"}}
@@ -38,7 +38,7 @@
 
   {{/* The closing notice, set as a dark panel — the one moment on the page
        where the ink reverses, so it reads as a chip at the foot of a form. */}}
-  <section class="set d4 mx-auto mt-16 max-w-3xl bg-deep px-8 py-14 text-center sm:px-14">
+  <section class="set d4 mx-auto mt-10 sm:mt-16 max-w-3xl bg-deep px-8 py-14 text-center sm:px-14">
     <h2 class="display text-[2rem] leading-tight text-on-deep sm:text-[2.5rem]">{{.S "how.ctaTitle"}}</h2>
     <p class="mx-auto mt-4 max-w-xl leading-relaxed text-on-deep/65">{{.S "how.ctaSub"}}</p>
     <a href="/auctions" class="group mt-9 inline-flex items-baseline gap-2.5 border-b-2 border-accent pb-1 display text-lg text-on-deep transition-colors hover:border-on-deep">

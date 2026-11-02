@@ -2,7 +2,7 @@
 
 {{define "content"}}
 {{$p := .}}{{$d := .Data}}{{$q := $d.Params}}
-<main class="mx-auto max-w-[76rem] px-5 pb-20">
+<main class="mx-auto max-w-[76rem] px-5 pb-12 sm:pb-20">
 
   <div class="set d1 py-12">
     <p class="eyebrow">{{.S "masthead.register"}}</p>
@@ -95,7 +95,7 @@
     </nav>
     {{end}}
   {{else}}
-    <div class="border-y-2 border-content py-20 text-center">
+    <div class="border-y-2 border-content py-12 sm:py-20 text-center">
       <p class="display text-2xl text-content">{{.S "listing.emptyTitle"}}</p>
       <p class="mx-auto mt-3 max-w-md text-sm leading-relaxed text-content-soft">{{.S "listing.emptySub"}}</p>
     </div>
