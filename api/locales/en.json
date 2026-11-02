@@ -8,8 +8,7 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeAuto": "Match device",
-    "menu": "Menu",
-    "close": "Close"
+    "menu": "Menu"
   },
   "common": {
     "statuses": {
@@ -33,40 +32,21 @@
     "lakh": "Lakh",
     "aana": "Aana",
     "countdown": {
-      "days": "days",
-      "min": "min",
-      "sec": "sec",
-      "passed": "Deadline passed",
       "leftDH": "{d}d {h}h left",
       "leftHM": "{h}h {m}m left"
     },
     "soldDot": "Sold",
-    "closedOn": "Closed {d}",
-    "photosPending": "Photographs pending"
+    "closedOn": "Closed {d}"
   },
   "home": {
-    "badge": "Official auction notices",
-    "title1": "Institution-held properties,",
-    "title2": "openly auctioned.",
-    "sub": "Browse collateral properties offered for sale by participating banks and financial institutions — complete with appraised values, minimum bids, terms, and deadlines. Transparent recovery, fair opportunity.",
-    "ctaBrowse": "Browse auctions",
-    "ctaHow": "How bidding works",
     "statOpen": "Open auctions",
     "statValue": "Combined minimum bids (NPR)",
-    "statSecurity": "Bid security",
     "featured": "Featured · Closing soonest",
     "mapCaption": "Districts with properties currently on offer — tap a marker to filter.",
-    "mapEmpty": "No properties on offer yet.",
-    "mapCount": {
-      "one": "{n} property",
-      "other": "{n} properties"
-    },
-    "kicker": "Current notices",
     "underAuction": "Properties under auction",
     "viewAll": "View all →",
     "processKicker": "The process",
     "processTitle": "Bidding, in four steps",
-    "processSub": "Bids are submitted in sealed form at the institution as per each auction notice. This portal keeps every notice, valuation, and deadline in one place.",
     "steps": [
       {
         "title": "Review the notice",
@@ -85,17 +65,19 @@
         "body": "Deliver the sealed bid form with your voucher and documents to the stated office before the deadline."
       }
     ],
-    "assuranceSub": "Auctions are conducted by each institution's recovery department under prevailing law, with valuations by licensed appraisers and bids opened publicly at the stated venue.",
     "assuranceCta": "See current notices",
     "mapKicker": "Across the country",
     "mapLegend": "All seventy-seven districts · inked where notices are open",
     "lead": "Closing soonest",
     "viewLot": "View this lot",
     "lot": "Lot",
-    "statDistricts": "Districts"
+    "statDistricts": "Districts",
+    "mapCount": {
+      "one": "{n} property",
+      "other": "{n} properties"
+    }
   },
   "listing": {
-    "kicker": "Auction notices",
     "title": "All properties",
     "sub": "Collateral properties currently offered for sale by participating institutions. Filter by type, district, institution, or auction status.",
     "searchPlaceholder": "Search title or place…",
@@ -114,9 +96,6 @@
     "emptyTitle": "No properties match those filters.",
     "emptySub": "Try clearing a filter or check back soon — new notices are published regularly.",
     "perPage": "Per page"
-  },
-  "institution": {
-    "verified": "Verified Partner"
   },
   "detail": {
     "breadcrumb": "Auctions",
@@ -145,31 +124,23 @@
     },
     "terms": "Terms of sale",
     "docs": "Documents required with your bid",
-    "appraised": "Appraised value",
     "security": "Bid security ({pct}%)",
     "noticeNo": "Notice number",
     "round": "Auction round",
     "roundN": "Round {n}",
-    "published": "Notice published",
     "deadline": "Bid submission deadline",
     "opening": "Bid opening",
-    "venue": "Opening venue",
     "closesIn": "Submission closes in",
     "howToBid": "How to bid",
     "howToBidBody": "Bids are submitted in sealed form at the institution's recovery department with your bid-security voucher — this portal does not accept online bids.",
-    "contact": "Contact the institution",
     "share": {
       "title": "Share this listing",
       "facebook": "Facebook",
       "whatsapp": "WhatsApp",
       "viber": "Viber",
-      "x": "X",
       "telegram": "Telegram",
       "linkedin": "LinkedIn",
       "email": "Email",
-      "copy": "Copy",
-      "copied": "Copied",
-      "more": "Share…",
       "message": "Auction notice — {title}"
     },
     "aboutInstitution": "The selling institution",
@@ -253,7 +224,6 @@
     "rights": "A multi-institution auction platform (demo)."
   },
   "masthead": {
-    "strap": "Official auction notices · Banks and financial institutions of Nepal",
     "register": "The register"
   }
 }

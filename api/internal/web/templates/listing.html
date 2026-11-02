@@ -154,6 +154,24 @@
       </section>
 
       {{/*
+        A walkthrough, when the officer recorded one.
+
+        Lazy, and only ever an iframe the reader asks for by scrolling to it:
+        the page's promise is that it ships no JavaScript of its own, and an
+        embed the reader chose to load does not break that the way an
+        autoplaying one would.
+      */}}
+      {{with $prop.VideoURL}}
+      <section class="card overflow-hidden p-0">
+        <h2 class="eyebrow px-5 pt-5">{{$p.S "detail.video"}}</h2>
+        <div class="mt-3 aspect-video w-full bg-surface-sunken">
+          <iframe src="{{.}}" title="{{$p.S "detail.video"}}" loading="lazy" referrerpolicy="no-referrer"
+                  allow="fullscreen; picture-in-picture" class="size-full border-0"></iframe>
+        </div>
+      </section>
+      {{end}}
+
+      {{/*
         The selling institution.
 
         A notice is only as good as the body behind it, so this carries the

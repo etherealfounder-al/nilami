@@ -3,6 +3,7 @@ package web
 import (
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -184,6 +185,10 @@ var tmplFuncs = template.FuncMap{
 	// The rows-per-page choices, so the template offers exactly the sizes the
 	// parser will accept rather than a list that can drift from it.
 	"pageSizes": func() []int { return PageSizes },
+	// Escape a value for use inside a query string. A share link carries this
+	// page's own address as a parameter, and an unescaped "&" in it would
+	// truncate the link at the first query separator.
+	"urlquery": url.QueryEscape,
 	// Scales a radius inside the map plate, so the marker and its halo are
 	// drawn from one number rather than two that can drift apart.
 	"mulf": func(a, b float64) float64 { return a * b },

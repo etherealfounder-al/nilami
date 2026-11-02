@@ -66,6 +66,7 @@ type Property struct {
 	BuiltYear    *int     `json:"built_year"`
 	Bedrooms     *int     `json:"bedrooms"`
 	Bathrooms    *int     `json:"bathrooms"`
+	VideoURL     string   `json:"video_url"`
 	Organization Org      `json:"organization"`
 	Images       []Image  `json:"images"`
 }

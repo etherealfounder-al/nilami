@@ -42,6 +42,25 @@ func (p Page) Facts() []Fact {
 	if prop.BuiltYear != nil && *prop.BuiltYear > 0 {
 		facts = append(facts, Fact{p.S("detail.facts.builtYear"), strconv.Itoa(*prop.BuiltYear)})
 	}
+	// What the building actually is.
+	//
+	// The editor has always collected these, the database has always stored
+	// them and their labels have sat in both dictionaries unused: a notice
+	// recorded as four storeys and south-facing told a bidder neither. Each
+	// is omitted when absent rather than shown as a dash, because a plot of
+	// land has no bedrooms — that is not missing data.
+	if prop.Floors != nil && *prop.Floors > 0 {
+		facts = append(facts, Fact{p.S("detail.facts.floors"), strconv.Itoa(*prop.Floors)})
+	}
+	if prop.Bedrooms != nil && *prop.Bedrooms > 0 {
+		facts = append(facts, Fact{p.S("detail.facts.bedrooms"), strconv.Itoa(*prop.Bedrooms)})
+	}
+	if prop.Bathrooms != nil && *prop.Bathrooms > 0 {
+		facts = append(facts, Fact{p.S("detail.facts.bathrooms"), strconv.Itoa(*prop.Bathrooms)})
+	}
+	if prop.Facing != "" {
+		facts = append(facts, Fact{p.S("detail.facts.facing"), prop.Facing})
+	}
 	return facts
 }
 
