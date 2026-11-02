@@ -161,19 +161,24 @@
         embed the reader chose to load does not break that the way an
         autoplaying one would.
       */}}
-      {{with $prop.VideoURL}}
+      {{with $prop.Video}}{{if .OK}}
       <section class="card overflow-hidden p-0">
         <h2 class="eyebrow px-5 pt-5">{{$p.S "detail.video"}}</h2>
         <div class="mt-3 aspect-video w-full bg-surface-sunken">
-          {{/* Not no-referrer: a video host checks the referring page against
-               the embedding permission the uploader set, and with the header
-               stripped it refuses with "Error 153" rather than playing. The
-               origin alone is enough for that check and is all this sends. */}}
-          <iframe src="{{.}}" title="{{$p.S "detail.video"}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
-                  allow="fullscreen; picture-in-picture" class="size-full border-0"></iframe>
+          {{if eq .Kind "file"}}
+            {{/* Ours to play, so no third party is involved at all. */}}
+            <video src="{{.Src}}" controls preload="none" class="size-full object-contain"></video>
+          {{else}}
+            {{/* Not no-referrer: a host checks the referring page against the
+                 uploader's embedding permission, and with the header stripped
+                 it refuses with an error panel rather than playing. */}}
+            <iframe src="{{.Src}}" title="{{$p.S "detail.video"}}" loading="lazy"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="fullscreen; picture-in-picture" class="size-full border-0"></iframe>
+          {{end}}
         </div>
       </section>
-      {{end}}
+      {{end}}{{end}}
 
       {{/*
         The selling institution.
