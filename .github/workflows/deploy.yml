@@ -92,16 +92,54 @@ jobs:
     # Built on every push, not only on main: a Dockerfile that fails is worth
     # knowing about on the branch, which is the lesson of a deploy that only
     # failed once it reached production.
+    #
+    # Published here too, because the VPS no longer builds. It has two cores
+    # and also runs Coolify, Traefik, Postgres and three other applications,
+    # and compiling there cost about a minute of both cores per deploy. A push
+    # to main moves :latest, which is what deploy/Dockerfile.image resolves;
+    # a branch publishes only its own commit, so a pull can be proven from the
+    # server before production is the thing depending on it.
     needs: [api, web]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - name: Build the image
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Which tags this push publishes
+        id: tags
+        env:
+          MAIN: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          {
+            echo 'list<<TAGS'
+            echo "ghcr.io/$GITHUB_REPOSITORY:$GITHUB_SHA"
+            if [ "$MAIN" = true ]; then
+              echo "ghcr.io/$GITHUB_REPOSITORY:latest"
+            fi
+            echo TAGS
+          } >> "$GITHUB_OUTPUT"
+      - name: Build the image, for the architecture the server runs
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: false
+          # The VPS is arm64. Each stage runs on the runner's own
+          # architecture and Go cross-compiles, so this needs no emulation.
+          platforms: linux/arm64
+          # A pull request has nothing to publish and no token to publish
+          # with: there it is the build itself that is being checked.
+          push: ${{ github.event_name == 'push' }}
+          # Provenance would make the tag a manifest index, which is not what
+          # the bare FROM in deploy/Dockerfile.image expects to resolve.
+          provenance: false
+          tags: ${{ steps.tags.outputs.list }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -111,13 +149,32 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - name: Wait while another application is deploying
+        # The other apps on this server still build on it. Queueing behind a
+        # running build keeps this deploy from competing for the two cores,
+        # and keeps the site responsive while someone else's image compiles.
+        env:
+          TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            busy=$(curl -fsS -H "Authorization: Bearer $TOKEN" "$COOLIFY_URL/api/v1/deployments" | jq 'length')
+            [ "$busy" = 0 ] && exit 0
+            echo "a deployment is in progress; waiting ($i)"
+            sleep 10
+          done
+          echo "::error::Coolify was still busy after 10 minutes"; exit 1
+
       - name: Deploy on Coolify and wait for it
         env:
           TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
           auth=(-H "Authorization: Bearer $TOKEN")
-          deployment=$(curl -fsS -X POST "${auth[@]}" "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_APP_UUID&force=false" \
+          # force=true: otherwise Coolify reuses the image it already holds
+          # for this commit, and the point of the deploy is to pull a new one.
+          # The "build" is a single FROM, so forcing it costs a pull.
+          deployment=$(curl -fsS -X POST "${auth[@]}" "$COOLIFY_URL/api/v1/deploy?uuid=$COOLIFY_APP_UUID&force=true" \
             | jq -r '.deployments[0].deployment_uuid')
           echo "Coolify deployment $deployment"
           for i in $(seq 1 120); do

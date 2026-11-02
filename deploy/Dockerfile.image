@@ -1,0 +1,16 @@
+# What Coolify builds on the VPS: nothing. It pulls the image GitHub Actions
+# has already built and tested, the way astralco and kavre-scrap-yard do.
+#
+# The server has two cores and also runs Coolify, Traefik, Postgres and the
+# other applications. Compiling here cost about a minute of both of those
+# cores per deploy — 35 seconds of it the Go build alone, which began with an
+# empty cache every time because no layer carries GOCACHE — and eight deploys
+# in one morning is what spiked it.
+#
+# Coolify's build pack insists on building something, and BuildKit asks the
+# registry for a tag on every build, so a lone FROM is how a build becomes a
+# pull. The image brings its own entrypoint, health check, port and user, and
+# FROM inherits all of them. Pass SOURCE_COMMIT to pin an exact commit rather
+# than the newest image on main.
+ARG SOURCE_COMMIT=latest
+FROM ghcr.io/etherealfounder-al/nilami:${SOURCE_COMMIT}

@@ -2,10 +2,14 @@
 #
 # This file stays in api/ because that is Coolify's base directory for this
 # application, and changing that setting detaches the domain from the service
-# — which is how the site went down on 1 November. The build context points
-# one level up instead, because the image needs the admin app's source, the
-# design system both front ends share, and the templates Tailwind scans, none
-# of which are inside api/.
+# — which is how the site went down on 1 November.
+#
+# Nothing here is compiled on the server any more. The api service's build
+# resolves to deploy/Dockerfile.image, a single FROM that pulls the image CI
+# published, so a deploy is a 25 MB pull rather than a minute of both of the
+# VPS's two cores. The context is that directory alone because that Dockerfile
+# copies nothing; the real build, which does need the admin app's source and
+# the templates Tailwind scans, runs in GitHub Actions from the root Dockerfile.
 #
 # Coolify's Traefik already owns 80 and 443 and issues the certificate, so
 # nothing here publishes a port or terminates TLS. The site is reachable only
@@ -17,8 +21,8 @@ services:
   # down this morning.
   api:
     build:
-      context: ..
-      dockerfile: Dockerfile
+      context: ../deploy
+      dockerfile: Dockerfile.image
     restart: unless-stopped
     environment:
       # Coolify assigns the domain and routes Traefik to this port.
