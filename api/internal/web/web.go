@@ -223,6 +223,10 @@ func (s *Server) Routes(mux *http.ServeMux) {
 		_, _ = w.Write(divisions)
 	})
 
+	// Which addresses exist, and which paths are not documents. See sitemap.go.
+	mux.HandleFunc("GET /robots.txt", s.Robots())
+	mux.HandleFunc("GET /sitemap.xml", s.Sitemap())
+
 	mux.HandleFunc("GET /{$}", s.handleHome)
 	mux.HandleFunc("GET /auctions", s.handleAuctions)
 	mux.HandleFunc("GET /auctions/{slug}", s.handleListing)
@@ -367,15 +371,20 @@ func (s *Server) handleListing(w http.ResponseWriter, r *http.Request) {
 	}(r.PathValue("slug"))
 }
 
-// canonical is the address this page should be known by. Built from the host
-// the request arrived on so the same binary is correct behind either hostname
-// during the move.
-func (s *Server) canonical(r *http.Request) string {
+// origin is the scheme and host this request arrived on, so the same binary
+// is correct behind either hostname during a move, and so the sitemap names
+// the site a crawler actually asked.
+func (s *Server) origin(r *http.Request) string {
 	scheme := "https"
 	if r.TLS == nil && r.Header.Get("X-Forwarded-Proto") == "" {
 		scheme = "http"
 	}
-	return scheme + "://" + r.Host + r.URL.Path
+	return scheme + "://" + r.Host
+}
+
+// canonical is the address this page should be known by.
+func (s *Server) canonical(r *http.Request) string {
+	return s.origin(r) + r.URL.Path
 }
 
 func truncate(s string, n int) string {

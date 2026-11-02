@@ -209,3 +209,31 @@ func (d *DB) AuctionsIndex(ctx context.Context, p AuctionsIndexParams) ([]byte, 
 		)`
 	return d.JSON(ctx, q, p.Status, p.Type, p.District, p.Org, p.Query, p.Limit, p.Offset)
 }
+
+// Sitemap lists every notice a crawler may index, with the time it last
+// changed.
+//
+// One row per property, not per auction: a second round is a new auctions row
+// against the same address, and a sitemap naming one address twice is a
+// sitemap with an error in it. The timestamp is the later of the two records
+// because either can change what the page says, and neither moves when the
+// page is merely read — the view counter lives in its own table for exactly
+// that reason, so lastmod means an edit rather than a visit.
+//
+// The limit is the sitemap protocol's: 50,000 addresses in one file. Passing
+// it would need an index of several files, which is a problem worth having.
+func (d *DB) Sitemap(ctx context.Context) ([]byte, error) {
+	q := `
+		select coalesce(jsonb_agg(jsonb_build_object(
+		         'slug', slug, 'lastmod', lastmod) order by lastmod desc), '[]'::jsonb)
+		  from (
+			select p.slug, max(greatest(p.updated_at, a.updated_at)) as lastmod
+			  from auctions a
+			  join properties p on p.id = a.property_id
+			 where ` + publishedAuction + `
+			 group by p.slug
+			 order by lastmod desc
+			 limit 50000
+		  ) t`
+	return d.JSON(ctx, q)
+}
