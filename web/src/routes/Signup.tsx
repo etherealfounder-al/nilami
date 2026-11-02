@@ -84,7 +84,10 @@ export function SignupPage() {
   return (
     <main class="min-h-dvh lg:grid lg:grid-cols-[0.9fr_1.1fr]">
       <div class="flex flex-col justify-center gap-7 bg-deep px-8 py-14 lg:px-14">
-        <div class="flex items-center gap-4">
+        {/* The mark goes to the public site, as it does on the masthead.
+            A plain anchor, not a router Link: this app is mounted under /admin,
+            so a Link to "/" lands on the panel's own overview. */}
+        <a href="/" class="group flex items-center gap-4">
           <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent text-on-accent">
             <Mark class="size-8" />
           </span>
@@ -96,7 +99,7 @@ export function SignupPage() {
               Nilami
             </span>
           </span>
-        </div>
+        </a>
         <p class="max-w-sm text-sm leading-relaxed text-on-deep/55">
           Staff of a participating institution can request access to the
           recovery panel. Accounts are approved by a platform administrator

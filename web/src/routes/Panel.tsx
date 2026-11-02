@@ -53,7 +53,10 @@ export function Panel({ viewer }: { viewer: Viewer }) {
       */}
       <aside class="bg-deep text-on-deep/70 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-r lg:border-on-deep/10">
         <div class="flex items-center justify-between gap-4 px-6 pt-7 pb-6 lg:block">
-          <div class="flex items-center gap-3">
+          {/* Out to the public site, which an officer wants after publishing
+              something to see how the notice actually reads. An anchor, not a
+              Link: the router is mounted at /admin and would stay inside it. */}
+          <a href="/" title="Open the public site" class="group flex items-center gap-3">
             <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-on-accent">
               <Mark class="size-6" />
             </span>
@@ -65,7 +68,7 @@ export function Panel({ viewer }: { viewer: Viewer }) {
                 {orgLabel}
               </span>
             </span>
-          </div>
+          </a>
           <button
             onClick={async () => {
               await signOut();

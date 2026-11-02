@@ -42,7 +42,14 @@ export function LoginPage() {
           rather than pinned to the corners: at laptop height the two ends
           were a screen apart with nothing between them. */}
       <div class="flex flex-col justify-center gap-7 bg-deep px-8 py-14 lg:px-14">
-        <div class="flex items-center gap-4">
+        {/* The mark goes to the public site.
+        
+            A plain anchor, not a router Link: this app is mounted under /admin, so
+            a Link to "/" lands on the panel's own overview. The only way out of
+            sign-in was sign-up and the only way out of sign-up was sign-in, so a
+            reader who followed a notice here and turned out not to be staff had
+            nowhere to go but the back button. */}
+        <a href="/" class="group flex items-center gap-4">
           <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent text-on-accent">
             <Mark class="size-8" />
           </span>
@@ -54,7 +61,7 @@ export function LoginPage() {
               Nilami
             </span>
           </span>
-        </div>
+        </a>
         <span aria-hidden="true" class="h-px w-16 bg-accent/50"></span>
         <p class="max-w-sm text-sm leading-relaxed text-on-deep/55">
           The recovery department's record of collateral offered for sale —
@@ -110,6 +117,20 @@ export function LoginPage() {
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        {/* Said plainly, not only carried by the mark.
+        
+            This screen is linked from every public page, so most people who
+            reach it are not staff and have arrived by curiosity. A clickable
+            logo is a convention; a sentence is a signpost. */}
+        <p class="mt-8 text-sm text-content-faint">
+          <a href="/" class="inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:text-accent hover:underline">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" class="size-3.5" aria-hidden="true">
+              <path d="M9.5 3.5 5 8l4.5 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to the auction notices
+          </a>
+        </p>
       </div>
     </main>
   );

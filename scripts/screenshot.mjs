@@ -47,6 +47,13 @@ await new Promise((r) => ws.addEventListener("open", r, { once: true }));
 
 await send("Network.enable");
 await send("Page.enable");
+// "-" means signed out, and must actually mean it: this browser keeps its
+// profile between runs, so a session cookie from an earlier capture would
+// quietly redirect a sign-in page to the panel and the screenshot would show
+// the opposite of what was asked for.
+if (!cookieValue || cookieValue === "-") {
+  await send("Network.clearBrowserCookies");
+}
 if (cookieValue && cookieValue !== "-") {
   const { origin } = new URL(url);
   await send("Network.setCookie", {
