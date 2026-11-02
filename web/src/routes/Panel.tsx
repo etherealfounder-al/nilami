@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Route, Routes } from "react-router";
 import { signOut, type Viewer } from "../lib/session";
+import { Mark } from "../components/ui";
 import { AuctionEditor } from "./AuctionEditor";
 import { Auctions } from "./Auctions";
 import { Bidders } from "./Bidders";
@@ -49,14 +50,19 @@ export function Panel({ viewer }: { viewer: Viewer }) {
         to name itself, leaves the top of the page for the work, and does not
         start scrolling sideways the moment a seventh section appears.
       */}
-      <aside class="bg-seal-950 text-oat/70 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-r lg:border-oat/10">
+      <aside class="bg-deep text-on-deep/70 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:border-r lg:border-on-deep/10">
         <div class="flex items-center justify-between gap-4 px-6 pt-7 pb-6 lg:block">
-          <div>
-            <span aria-hidden="true" class="font-display block text-3xl leading-none text-oat">
-              निलामी
+          <div class="flex items-center gap-3">
+            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-on-accent">
+              <Mark class="size-6" />
             </span>
-            <span class="mt-2 block text-[0.625rem] font-semibold tracking-[0.3em] text-brass-500 uppercase">
-              {orgLabel}
+            <span class="min-w-0">
+              <span aria-hidden="true" class="display block text-2xl leading-none text-on-deep">
+                निलामी
+              </span>
+              <span class="mt-1 block truncate text-[0.625rem] font-semibold tracking-[0.24em] text-accent uppercase">
+                {orgLabel}
+              </span>
             </span>
           </div>
           <button
@@ -64,7 +70,7 @@ export function Panel({ viewer }: { viewer: Viewer }) {
               await signOut();
               await queryClient.invalidateQueries({ queryKey: ["session"] });
             }}
-            class="shrink-0 border-b border-oat/25 pb-0.5 text-xs text-oat/60 transition-colors hover:border-oat hover:text-oat lg:hidden"
+            class="shrink-0 border-b border-on-deep/25 pb-0.5 text-xs text-on-deep/60 transition-colors hover:border-on-deep hover:text-on-deep lg:hidden"
           >
             Sign out
           </button>
@@ -81,8 +87,8 @@ export function Panel({ viewer }: { viewer: Viewer }) {
               className={({ isActive }: { isActive: boolean }) =>
                 `shrink-0 border-l-2 px-3 py-2.5 text-sm transition-colors lg:px-4 ${
                   isActive
-                    ? "border-brass-500 text-oat"
-                    : "border-transparent text-oat/50 hover:text-oat/90"
+                    ? "border-accent text-on-deep"
+                    : "border-transparent text-on-deep/50 hover:text-on-deep/90"
                 }`
               }
             >
@@ -97,7 +103,7 @@ export function Panel({ viewer }: { viewer: Viewer }) {
               await signOut();
               await queryClient.invalidateQueries({ queryKey: ["session"] });
             }}
-            class="border-b border-oat/25 pb-0.5 text-xs text-oat/60 transition-colors hover:border-oat hover:text-oat"
+            class="border-b border-on-deep/25 pb-0.5 text-xs text-on-deep/60 transition-colors hover:border-on-deep hover:text-on-deep"
           >
             Sign out
           </button>

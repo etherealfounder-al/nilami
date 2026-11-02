@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { loadSession } from "./lib/session";
 import { LoginPage } from "./routes/Login";
+import { SignupPage } from "./routes/Signup";
 import { PendingPage } from "./routes/Pending";
 import { Panel } from "./routes/Panel";
 
@@ -53,6 +54,7 @@ function Gate() {
           data.status === "active" ? <Navigate to="/" replace /> : <LoginPage />
         }
       />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         path="/*"
         element={
@@ -71,8 +73,8 @@ function Gate() {
 
 function Splash({ message }: { message?: string }) {
   return (
-    <main class="grid min-h-dvh place-items-center bg-seal-950 px-5">
-      <p class="text-sm text-oat/60">{message ?? "Loading…"}</p>
+    <main class="grid min-h-dvh place-items-center bg-deep px-5">
+      <p class="text-sm text-on-deep/60">{message ?? "Loading…"}</p>
     </main>
   );
 }

@@ -64,9 +64,9 @@ export function formatDateTime(iso: string | null | undefined): string {
 }
 
 /**
- * The colour of a status stamp, so one status looks alike everywhere.
+ * The colour of a status chip, so one status looks alike everywhere.
  *
- * A single colour rather than a foreground/background pair: the stamp draws
+ * A single colour rather than a foreground/background pair: the chip draws
  * its own rule in currentColor, matching the public pages, where the same
  * states are printed on the same paper.
  */
@@ -75,16 +75,17 @@ export function statusTone(status: string): string {
     case "open":
     case "verified":
     case "published":
-      return "text-seal-700";
+      return "bg-accent-wash text-accent";
     case "upcoming":
     case "pending":
-      return "text-brass-700";
+      return "bg-warn-wash text-warn";
     case "sold":
-      return "text-ink";
+      return "bg-surface-sunken text-content";
     case "cancelled":
     case "rejected":
-      return "text-vermilion";
+      return "bg-bad-wash text-bad";
     default:
-      return "text-ink-faint";
+      return "bg-surface-sunken text-content-soft";
   }
 }
+

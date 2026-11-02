@@ -54,7 +54,7 @@ export function Staff() {
         ) : (
           <table class="w-full min-w-[820px] text-sm">
             <thead>
-              <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              <tr class="border-b border-line-soft text-left text-xs font-semibold uppercase tracking-[0.12em] text-content-soft">
                 <th class="px-6 py-4">Person</th>
                 <th class="px-4 py-4">Institution</th>
                 <th class="px-4 py-4">Role</th>
@@ -62,23 +62,23 @@ export function Staff() {
                 <th class="px-6 py-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-rule-faint">
+            <tbody class="divide-y divide-line-soft">
               {data.map((s) => (
-                <tr key={s.id} class="hover:bg-linen/50">
+                <tr key={s.id} class="hover:bg-surface-sunken/50">
                   <td class="px-6 py-3.5">
-                    <span class="block font-medium text-ink">{s.full_name}</span>
-                    <span class="text-xs text-ink-soft">{s.email}</span>
+                    <span class="block font-medium text-content">{s.full_name}</span>
+                    <span class="text-xs text-content-soft">{s.email}</span>
                   </td>
-                  <td class="px-4 py-3.5 text-ink-soft">
+                  <td class="px-4 py-3.5 text-content-soft">
                     {s.organization_name ?? "Platform"}
                     {s.organization_approved === false && (
-                      <span class="block text-xs text-brass-600">
+                      <span class="block text-xs text-accent">
                         institution also pending
                       </span>
                     )}
                   </td>
                   <td class="px-4 py-3.5 capitalize">{s.role}</td>
-                  <td class="px-4 py-3.5 text-ink-soft">{formatDate(s.created_at)}</td>
+                  <td class="px-4 py-3.5 text-content-soft">{formatDate(s.created_at)}</td>
                   <td class="px-6 py-3.5 text-right">
                     {s.approved ? (
                       <Pill label="Approved" tone="open" />
@@ -87,7 +87,7 @@ export function Staff() {
                         <button
                           disabled={decide.isPending}
                           onClick={() => decide.mutate({ id: s.id, action: "approve" })}
-                          class="rounded-full bg-seal-800 px-4 py-1.5 text-xs font-semibold text-oat transition-colors hover:bg-seal-700 disabled:opacity-60"
+                          class="btn btn-primary !px-3 !py-1.5 !text-xs"
                         >
                           Approve
                         </button>
@@ -97,7 +97,7 @@ export function Staff() {
                           // The page it replaces asked for no confirmation, so
                           // neither does this; worth revisiting as a product call.
                           onClick={() => decide.mutate({ id: s.id, action: "reject" })}
-                          class="rounded-full border border-rule-strong px-4 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-vermilion hover:text-vermilion disabled:opacity-60"
+                          class="btn btn-quiet !px-3 !py-1.5 !text-xs hover:!border-bad hover:!text-bad"
                         >
                           Reject
                         </button>

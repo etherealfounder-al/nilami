@@ -9,10 +9,8 @@
    they are actually shown — an English reader never fetches the Devanagari,
    and a Nepali reader never fetches the Cyrillic that comes along for the
    ride inside the Latin packages. */
-@import "@fontsource-variable/fraunces/wght.css";
-@import "@fontsource-variable/newsreader/wght.css";
-@import "@fontsource/tiro-devanagari-hindi/devanagari.css";
-@import "@fontsource/tiro-devanagari-hindi/latin.css";
+@import "@fontsource-variable/manrope/wght.css";
+@import "@fontsource-variable/noto-sans-devanagari/wght.css";
 
 /* Tailwind emits only the classes it can see. This app is one source; the Go
    templates that render the public pages are the other, and they are outside

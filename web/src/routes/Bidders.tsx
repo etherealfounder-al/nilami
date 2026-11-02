@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { Select } from "../components/Select";
 import { depositLabel, formatDate, npr } from "../lib/format";
 import { Card, Empty, ErrorNote, Loading, PageHeader, Pill } from "../components/ui";
 
@@ -59,7 +60,7 @@ export function Bidders() {
         ) : (
           <table class="w-full min-w-[920px] text-sm">
             <thead>
-              <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+              <tr class="border-b border-line-soft text-left text-xs font-semibold uppercase tracking-[0.12em] text-content-soft">
                 <th class="px-6 py-4">Bidder</th>
                 <th class="px-4 py-4">Auction</th>
                 <th class="px-4 py-4 text-right">Deposit</th>
@@ -67,21 +68,21 @@ export function Bidders() {
                 <th class="px-6 py-4 text-right">Deposit status</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-rule-faint">
+            <tbody class="divide-y divide-line-soft">
               {data.map((b) => (
-                <tr key={b.id} class="hover:bg-linen/50">
+                <tr key={b.id} class="hover:bg-surface-sunken/50">
                   <td class="px-6 py-3.5">
-                    <span class="block font-medium text-ink">{b.full_name}</span>
-                    <span class="text-xs text-ink-soft">
+                    <span class="block font-medium text-content">{b.full_name}</span>
+                    <span class="text-xs text-content-soft">
                       {b.phone}
                       {b.email ? ` · ${b.email}` : ""}
                     </span>
                   </td>
                   <td class="px-4 py-3.5">
-                    <span class="block max-w-[20rem] truncate text-ink">
+                    <span class="block max-w-[20rem] truncate text-content">
                       {b.auction?.property?.title ?? "—"}
                     </span>
-                    <span class="text-xs text-ink-soft">
+                    <span class="text-xs text-content-soft">
                       {b.auction?.notice_number ?? ""}
                     </span>
                   </td>
@@ -92,32 +93,29 @@ export function Bidders() {
                         href={b.deposit_proof_url}
                         target="_blank"
                         rel="noreferrer"
-                        class="block text-xs text-seal-700 underline"
+                        class="block text-xs text-accent underline"
                       >
                         proof
                       </a>
                     )}
                   </td>
-                  <td class="px-4 py-3.5 text-ink-soft">{formatDate(b.created_at)}</td>
+                  <td class="px-4 py-3.5 text-content-soft">{formatDate(b.created_at)}</td>
                   <td class="px-6 py-3.5">
                     <div class="flex items-center justify-end gap-2">
                       <Pill label={depositLabel(b.deposit_status)} tone={b.deposit_status} />
-                      <select
-                        value={b.deposit_status}
-                        disabled={setStatus.isPending}
-                        onChange={(e) =>
-                          setStatus.mutate({
-                            id: b.id,
-                            status: (e.currentTarget as HTMLSelectElement).value,
-                          })
-                        }
-                        class="h-8 rounded-full border border-rule-strong bg-white px-2 text-xs disabled:opacity-60"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="verified">Verified</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="refunded">Refunded</option>
-                      </select>
+                      <Select
+                          name={`deposit_status_${b.id}`}
+                          value={b.deposit_status}
+                          disabled={setStatus.isPending}
+                          onChange={(v) => setStatus.mutate({ id: b.id, status: v })}
+                          class="w-36"
+                          options={[
+                            { value: "pending", label: "Pending" },
+                            { value: "verified", label: "Verified" },
+                            { value: "rejected", label: "Rejected" },
+                            { value: "refunded", label: "Refunded" },
+                          ]}
+                        />
                     </div>
                   </td>
                 </tr>

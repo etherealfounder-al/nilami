@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { api, ApiError } from "../lib/api";
 import { Actions, Field, FormCard, Section, inputCls, readForm } from "../components/form";
 import { ErrorNote, Loading, PageHeader } from "../components/ui";
+import { Select } from "../components/Select";
 
 type AuctionDetail = {
   id: string;
@@ -45,6 +47,10 @@ function fromLocalInput(value: string): string | null {
 }
 
 export function AuctionEditor({ mode }: { mode: "new" | "edit" }) {
+  // Controlled selects; null means "not touched", so the loaded record still
+  // shows until something is chosen.
+  const [propId, setPropId] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -113,14 +119,19 @@ export function AuctionEditor({ mode }: { mode: "new" | "edit" }) {
         <Section title="Notice">
           <div class="grid gap-4 sm:grid-cols-2">
             <Field label="Property" className="sm:col-span-2">
-              <select name="property_id" required class={`${inputCls} cursor-pointer`}>
-                <option value="">Choose a property…</option>
-                {(properties.data ?? []).map((p) => (
-                  <option key={p.id} value={p.id} selected={a?.property.id === p.id}>
-                    {p.title} — {p.district}
-                  </option>
-                ))}
-              </select>
+              <Select
+                  name="property_id"
+                  required
+                  value={propId ?? a?.property.id ?? ""}
+                  onChange={setPropId}
+                  placeholder="Choose a property…"
+                  class="mt-1.5"
+                  options={(properties.data ?? []).map((pr) => ({
+                    value: pr.id,
+                    label: pr.title,
+                    hint: pr.district,
+                  }))}
+                />
             </Field>
             <Field label="Notice number">
               <input name="notice_number" required value={a?.notice_number} class={inputCls} />
@@ -132,13 +143,13 @@ export function AuctionEditor({ mode }: { mode: "new" | "edit" }) {
               <input name="published_date" type="date" value={a?.published_date ?? ""} class={inputCls} />
             </Field>
             <Field label="Status">
-              <select name="status" class={`${inputCls} cursor-pointer`}>
-                {STATUSES.map((s) => (
-                  <option key={s} value={s} selected={(a?.status ?? "draft") === s}>
-                    {s[0].toUpperCase() + s.slice(1)}
-                  </option>
-                ))}
-              </select>
+              <Select
+                  name="status"
+                  value={status ?? a?.status ?? "draft"}
+                  onChange={setStatus}
+                  class="mt-1.5"
+                  options={STATUSES.map((st) => ({ value: st, label: st[0].toUpperCase() + st.slice(1) }))}
+                />
             </Field>
           </div>
         </Section>
@@ -183,11 +194,11 @@ export function AuctionEditor({ mode }: { mode: "new" | "edit" }) {
         <Section title="Terms">
           <Field label="Terms of sale">
             <textarea name="terms" rows={4} value={a?.terms}
-                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
+                      class="w-full border border-line bg-surface p-3.5 text-sm text-content outline-none transition-colors focus:border-accent" />
           </Field>
           <Field label="Documents required with a bid">
             <textarea name="required_documents" rows={3} value={a?.required_documents}
-                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
+                      class="w-full border border-line bg-surface p-3.5 text-sm text-content outline-none transition-colors focus:border-accent" />
           </Field>
           <Field label="Notice PDF">
             <input name="notice_pdf_url" type="url" value={a?.notice_pdf_url ?? ""} placeholder="https://" class={inputCls} />

@@ -47,7 +47,7 @@ export function Properties() {
           ) : (
             <table class="w-full min-w-[780px] text-sm">
               <thead>
-                <tr class="border-b border-rule-faint text-left text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+                <tr class="border-b border-line-soft text-left text-xs font-semibold uppercase tracking-[0.12em] text-content-soft">
                   <th class="px-6 py-4">Property</th>
                   <th class="px-4 py-4">Institution</th>
                   <th class="px-4 py-4">Type</th>
@@ -56,12 +56,12 @@ export function Properties() {
                   <th class="px-4 py-4 text-right">Views</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-rule-faint">
+              <tbody class="divide-y divide-line-soft">
                 {data.map((p) => (
-                  <tr key={p.id} class="hover:bg-linen/50">
+                  <tr key={p.id} class="hover:bg-surface-sunken/50">
                     <td class="px-6 py-3.5">
                       <div class="flex items-center gap-3">
-                        <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-linen">
+                        <div class="size-11 shrink-0 overflow-hidden rounded-lg bg-surface-sunken">
                           {p.cover_url && (
                             <img
                               src={p.cover_url}
@@ -76,27 +76,27 @@ export function Properties() {
                         <div class="min-w-0">
                           <Link
                             to={`/properties/${p.id}`}
-                            className="block truncate font-medium text-ink hover:text-seal-700"
+                            className="block truncate font-medium text-content hover:text-accent"
                           >
                             {p.title}
                           </Link>
-                          <span class="text-xs text-ink-soft">
+                          <span class="text-xs text-content-soft">
                             {p.image_count} photo{p.image_count === 1 ? "" : "s"} ·{" "}
                             {p.auction_count} auction{p.auction_count === 1 ? "" : "s"}
                           </span>
                         </div>
                       </div>
                     </td>
-                    <td class="px-4 py-3.5 text-ink-soft">{p.organization_name}</td>
+                    <td class="px-4 py-3.5 text-content-soft">{p.organization_name}</td>
                     <td class="px-4 py-3.5">{typeLabel(p.type)}</td>
-                    <td class="px-4 py-3.5 text-ink-soft">{p.district}</td>
+                    <td class="px-4 py-3.5 text-content-soft">{p.district}</td>
                     <td class="px-4 py-3.5">
                       <Pill
                         label={p.is_published ? "Published" : "Draft"}
                         tone={p.is_published ? "open" : "draft"}
                       />
                     </td>
-                    <td class="px-4 py-3.5 text-right tabular-nums text-ink-soft">
+                    <td class="px-4 py-3.5 text-right tabular-nums text-content-soft">
                       {formatCount(p.view_count)}
                     </td>
                   </tr>

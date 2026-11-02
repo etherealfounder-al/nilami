@@ -4,6 +4,12 @@ import { useNavigate, useParams } from "react-router";
 import { api, ApiError } from "../lib/api";
 import { Actions, Field, FormCard, Section, inputCls, labelCls, readForm } from "../components/form";
 import { ImageUploader } from "../components/ImageUploader";
+import { LandAreaField } from "../components/LandAreaField";
+import { Select } from "../components/Select";
+import { parseLandArea } from "../lib/nepal/land-area";
+import { LocationSelects } from "../components/LocationSelects";
+import { MapPicker } from "../components/MapPicker";
+import { RoadAccessFields } from "../components/RoadAccessFields";
 import { ErrorNote, Loading, PageHeader } from "../components/ui";
 
 type PropertyDetail = {
@@ -41,6 +47,12 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [images, setImages] = useState<string[] | null>(null);
+  // The selects are controlled now, so their values live here. null means
+  // "not touched", which is how the loaded record and a deliberate change
+  // stay distinguishable — the same pattern the logo uploader uses.
+  const [type_, setTypeState] = useState<string | null>(null);
+  const [orgId, setOrgIdState] = useState<string | null>(null);
+  const [facing, setFacingState] = useState<string | null>(null);
 
   const existing = useQuery({
     queryKey: ["property", id],
@@ -87,7 +99,10 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
       municipality: f.str("municipality"),
       ward: f.int("ward"),
       address: f.str("address"),
-      land_area_aana: f.num("land_area_aana"),
+      // The land-area field accepts "1-0-0-0" as well as "8.5", so it is
+      // parsed here rather than read as a plain number — f.num would turn the
+      // ropani form into nothing and save a null over a real area.
+      land_area_aana: parseLandArea(f.str("land_area_aana")),
       land_area_sqm: f.num("land_area_sqm"),
       building_floors: f.int("building_floors"),
       built_year: f.int("built_year"),
@@ -127,65 +142,65 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
               <input name="slug" value={p?.slug} class={inputCls} />
             </Field>
             <Field label="Type">
-              <select name="type" class={`${inputCls} cursor-pointer`}>
-                {TYPES.map((t) => (
-                  <option key={t} value={t} selected={(p?.type ?? "house") === t}>
-                    {t[0].toUpperCase() + t.slice(1)}
-                  </option>
-                ))}
-              </select>
+              <Select
+                  name="type"
+                  value={type_ ?? p?.type ?? "house"}
+                  onChange={setTypeState}
+                  class="mt-1.5"
+                  options={TYPES.map((t) => ({ value: t, label: t[0].toUpperCase() + t.slice(1) }))}
+                />
             </Field>
             <Field label="Institution">
-              <select name="organization_id" class={`${inputCls} cursor-pointer`}>
-                {(orgs.data ?? []).map((o) => (
-                  <option key={o.id} value={o.id} selected={p?.organization_id === o.id}>
-                    {o.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                  name="organization_id"
+                  value={orgId ?? p?.organization_id ?? ""}
+                  onChange={setOrgIdState}
+                  placeholder="Choose an institution"
+                  class="mt-1.5"
+                  options={(orgs.data ?? []).map((o) => ({ value: o.id, label: o.name }))}
+                />
             </Field>
             <label class="flex items-center gap-3 self-end pb-2 sm:col-span-2">
               <input type="checkbox" name="is_published" checked={p?.is_published ?? false}
-                     class="size-4 accent-seal-700" />
-              <span class="text-sm font-medium text-ink">Published on the public site</span>
+                     class="size-4 accent-gilt-deep" />
+              <span class="text-sm font-medium text-content">Published on the public site</span>
             </label>
           </div>
         </Section>
 
         <Section title="Location">
           <div class="grid gap-4 sm:grid-cols-3">
-            <Field label="Province"><input name="province" required value={p?.province} class={inputCls} /></Field>
-            <Field label="District"><input name="district" required value={p?.district} class={inputCls} /></Field>
-            <Field label="Municipality"><input name="municipality" value={p?.municipality} class={inputCls} /></Field>
-            <Field label="Ward"><input name="ward" type="number" value={p?.ward ?? ""} class={inputCls} /></Field>
+            <LocationSelects
+              province={p?.province}
+              district={p?.district}
+              municipality={p?.municipality}
+              ward={p?.ward}
+            />
             <Field label="Address / tole" className="sm:col-span-2">
               <input name="address" value={p?.address} class={inputCls} />
             </Field>
-            <Field label="Latitude" hint="Decimal degrees, e.g. 27.6878">
-              <input name="latitude" type="number" step="any" value={p?.latitude ?? ""} class={inputCls} />
-            </Field>
-            <Field label="Longitude" hint="Decimal degrees, e.g. 85.3159">
-              <input name="longitude" type="number" step="any" value={p?.longitude ?? ""} class={inputCls} />
-            </Field>
+            <MapPicker latitude={p?.latitude} longitude={p?.longitude} />
           </div>
         </Section>
 
         <Section title="Specifications">
           <div class="grid gap-4 sm:grid-cols-4">
-            <Field label="Land area (aana)"><input name="land_area_aana" type="number" step="0.01" value={p?.land_area_aana ?? ""} class={inputCls} /></Field>
+            <LandAreaField value={p?.land_area_aana} />
             <Field label="Land area (m²)"><input name="land_area_sqm" type="number" step="0.01" value={p?.land_area_sqm ?? ""} class={inputCls} /></Field>
             <Field label="Floors"><input name="building_floors" type="number" value={p?.building_floors ?? ""} class={inputCls} /></Field>
             <Field label="Built year"><input name="built_year" type="number" value={p?.built_year ?? ""} class={inputCls} /></Field>
             <Field label="Bedrooms"><input name="bedrooms" type="number" value={p?.bedrooms ?? ""} class={inputCls} /></Field>
             <Field label="Bathrooms"><input name="bathrooms" type="number" value={p?.bathrooms ?? ""} class={inputCls} /></Field>
-            <Field label="Road access"><input name="road_access" value={p?.road_access ?? ""} class={inputCls} /></Field>
+            <RoadAccessFields value={p?.road_access} />
             <Field label="Facing">
-              <select name="facing" class={`${inputCls} cursor-pointer`}>
-                <option value="" selected={!p?.facing}>Not specified</option>
-                {FACINGS.map((f) => (
-                  <option key={f} value={f} selected={p?.facing === f}>{f}</option>
-                ))}
-              </select>
+              <Select
+                  name="facing"
+                  value={facing ?? p?.facing ?? ""}
+                  onChange={setFacingState}
+                  placeholder="Not specified"
+                  class="mt-1.5"
+                  options={FACINGS.map((f) => ({ value: f, label: f }))}
+                />
             </Field>
           </div>
         </Section>
@@ -193,7 +208,7 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
         <Section title="Narrative and media">
           <Field label="Description">
             <textarea name="description" rows={5} value={p?.description}
-                      class="w-full rounded-xl border border-rule-strong bg-white p-3.5 text-sm outline-none transition-colors focus:border-seal-600" />
+                      class="w-full border border-line bg-surface p-3.5 text-sm text-content outline-none transition-colors focus:border-accent" />
           </Field>
           <Field label="Video (YouTube, Vimeo or a direct .mp4 link)">
             <input name="video_url" type="url" value={p?.video_url ?? ""} placeholder="https://" class={inputCls} />

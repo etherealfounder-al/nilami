@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import { useState } from "react";
 import { api } from "../lib/api";
 
@@ -27,6 +28,7 @@ export function ImageUploader({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<number | null>(null);
 
   async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -66,17 +68,35 @@ export function ImageUploader({
     onChange(next);
   };
 
+  function remove(url: string) {
+    onChange(urls.filter((u) => u !== url));
+  }
+
+  /*
+   * Reordering by drag, using the browser's own drag-and-drop rather than a
+   * library. The whole interaction is four events and an index swap; a
+   * dependency for it would cost more than the admin's entire select control.
+   * The arrow buttons stay for keyboard and touch, where dragging is either
+   * impossible or unpleasant.
+   */
+  function onDrop(to: number) {
+    const from = dragging;
+    setDragging(null);
+    if (from === null || from === to) return;
+    move(from, to);
+  }
+
   return (
     <div class="space-y-3">
       <div class="flex flex-wrap items-center gap-3">
-        <label class="cursor-pointer rounded-full border border-rule-strong bg-white px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-seal-600">
+        <label class="btn btn-quiet cursor-pointer">
           {busy ? "Uploading…" : "Add photographs"}
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
             disabled={busy}
-            class="hidden"
+            class="sr-only"
             onChange={(e) => {
               const input = e.currentTarget as HTMLInputElement;
               void upload(input.files);
@@ -85,35 +105,90 @@ export function ImageUploader({
             }}
           />
         </label>
-        <span class="text-xs text-ink-soft">JPEG, PNG or WebP. The first is the cover.</span>
+        <span class="text-xs text-content-faint">
+          JPEG, PNG or WebP. The first is the cover — drag to reorder.
+        </span>
       </div>
 
       {error && (
-        <p class="rounded-xl bg-vermilion-soft px-4 py-3 text-sm text-vermilion">{error}</p>
+        <p class="rounded-lg border border-bad/30 bg-bad-wash px-4 py-3 text-sm text-bad">{error}</p>
       )}
 
       {urls.length > 0 && (
-        <ul class="grid grid-cols-3 gap-3 sm:grid-cols-5">
+        <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           {urls.map((url, i) => (
-            <li key={url} class="group relative overflow-hidden rounded-xl border border-ink/10 bg-linen">
-              <img src={url} alt="" class="aspect-[4/3] w-full object-cover" />
+            <li
+              key={url}
+              draggable
+              onDragStart={() => setDragging(i)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => onDrop(i)}
+              onDragEnd={() => setDragging(null)}
+              class={`group relative overflow-hidden rounded-lg border bg-surface-sunken transition-all ${
+                dragging === i ? "border-accent opacity-50" : "border-line"
+              }`}
+            >
+              <img src={url} alt="" class="aspect-[4/3] w-full cursor-grab object-cover active:cursor-grabbing" />
+
               {i === 0 && (
-                <span class="absolute left-1.5 top-1.5 rounded-full bg-seal-800 px-2 py-0.5 text-[10px] font-semibold uppercase text-oat">
+                <span class="pointer-events-none absolute left-2 top-2 rounded bg-accent px-1.5 py-0.5 text-[0.625rem] font-semibold leading-none text-on-accent">
                   Cover
                 </span>
               )}
-              <div class="absolute inset-x-0 bottom-0 flex justify-between bg-ink/60 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button type="button" onClick={() => move(i, i - 1)} aria-label="Move earlier"
-                        class="px-1.5 text-xs text-oat disabled:opacity-40" disabled={i === 0}>←</button>
-                <button type="button" onClick={() => onChange(urls.filter((u) => u !== url))}
-                        aria-label="Remove" class="px-1.5 text-xs text-oat">✕</button>
-                <button type="button" onClick={() => move(i, i + 1)} aria-label="Move later"
-                        class="px-1.5 text-xs text-oat disabled:opacity-40" disabled={i === urls.length - 1}>→</button>
+
+              {/* Controls appear on hover, and are always present for a
+                  keyboard: a photograph that can only be reordered by drag
+                  cannot be reordered at all without a pointer. */}
+              <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-1.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                <span class="flex gap-0.5">
+                  <IconButton label="Move earlier" disabled={i === 0} onClick={() => move(i, i - 1)}>
+                    <path d="M10 12.5L5.5 8 10 3.5" />
+                  </IconButton>
+                  <IconButton label="Move later" disabled={i === urls.length - 1} onClick={() => move(i, i + 1)}>
+                    <path d="M6 3.5L10.5 8 6 12.5" />
+                  </IconButton>
+                </span>
+                <IconButton label="Remove" danger onClick={() => remove(url)}>
+                  <path d="M4 4l8 8M12 4l-8 8" />
+                </IconButton>
               </div>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+/** A small square control drawn over a photograph. */
+function IconButton({
+  label,
+  onClick,
+  disabled,
+  danger,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  children: ComponentChildren;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      class={`grid size-6 place-items-center rounded bg-black/45 text-white backdrop-blur-sm transition-colors disabled:opacity-30 ${
+        danger ? "hover:bg-bad" : "hover:bg-black/70"
+      }`}
+    >
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true">
+        {children}
+      </svg>
+    </button>
   );
 }

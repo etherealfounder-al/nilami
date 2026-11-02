@@ -4,6 +4,29 @@ import { Link } from "react-router";
 import { statusTone } from "../lib/format";
 
 /**
+ * The mark.
+ *
+ * An auction gavel — a mallet mid-strike over its block. Drawn in strokes and
+ * in currentColor so one definition serves the rail, the sign-in panel and
+ * either ground. It is the same geometry the public chrome and the favicon
+ * use; a brand that redraws itself per surface is not a brand.
+ */
+export function Mark({ class: cls = "size-6" }: { class?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" class={cls}>
+      <g stroke="currentColor" stroke-width="5" stroke-linecap="round">
+        <path d="M14 50h20" />
+        <path d="M24 50V33" />
+        <path d="M17 15l14 14" />
+        <path d="M24 11l14 14" />
+        <path d="M13 22l14 14" />
+        <path d="M34 27l16 16" />
+      </g>
+    </svg>
+  );
+}
+
+/**
  * The shapes every panel screen repeats, so they stay identical across them.
  *
  * The panel is the back office of the gazette the public pages publish, so it
@@ -21,10 +44,10 @@ export function PageHeader({
   action?: ComponentChildren;
 }) {
   return (
-    <div class="flex flex-col gap-4 border-b-2 border-ink pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex flex-col gap-4 border-b-2 border-content pb-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 class="font-display text-[2rem] leading-none text-ink">{title}</h1>
-        {subtitle && <p class="mt-2 text-sm text-ink-soft">{subtitle}</p>}
+        <h1 class="display text-[2rem] leading-none text-content">{title}</h1>
+        {subtitle && <p class="mt-2 text-sm text-content-soft">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -34,35 +57,35 @@ export function PageHeader({
 /**
  * A sheet: the surface a table or a form sits on.
  *
- * Barely raised, because paper does not float. The horizontal scroll lives
+ * Barely raised, because paper does not flpaper. The horizontal scroll lives
  * here so a wide table does not push the whole page sideways on a phone.
  */
 export function Card({ children }: { children: ComponentChildren }) {
   return (
-    <div class="overflow-x-auto border border-rule bg-vellum shadow-sheet">
+    <div class="overflow-x-auto border border-line bg-surface shadow-soft">
       {children}
     </div>
   );
 }
 
-/** A status, stamped rather than pilled — the same mark the notices carry. */
+/** A status, chiped rather than pilled — the same mark the notices carry. */
 export function Pill({ label, tone }: { label: string; tone?: string }) {
   return (
-    <span class={`stamp ${statusTone(tone ?? label.toLowerCase())}`}>{label}</span>
+    <span class={`chip ${statusTone(tone ?? label.toLowerCase())}`}>{label}</span>
   );
 }
 
 export function Empty({ children }: { children: ComponentChildren }) {
-  return <p class="px-6 py-14 text-center text-sm text-ink-faint">{children}</p>;
+  return <p class="px-6 py-14 text-center text-sm text-content-faint">{children}</p>;
 }
 
 export function Loading() {
-  return <p class="px-6 py-14 text-center text-sm text-ink-faint">Loading…</p>;
+  return <p class="px-6 py-14 text-center text-sm text-content-faint">Loading…</p>;
 }
 
 export function ErrorNote({ message }: { message: string }) {
   return (
-    <p class="border-l-2 border-vermilion bg-vermilion-soft px-4 py-3 text-sm text-vermilion">
+    <p class="border-l-2 border-bad bg-bad-wash px-4 py-3 text-sm text-bad">
       {message}
     </p>
   );
@@ -72,13 +95,13 @@ export function ErrorNote({ message }: { message: string }) {
 export function THead({ cols }: { cols: (string | { label: string; right?: boolean })[] }) {
   return (
     <thead>
-      <tr class="border-b-2 border-ink">
+      <tr class="border-b-2 border-content">
         {cols.map((c) => {
           const col = typeof c === "string" ? { label: c, right: false } : c;
           return (
             <th
               key={col.label}
-              class={`standing px-4 py-3 ${col.right ? "text-right" : "text-left"} first:pl-5 last:pr-5`}
+              class={`eyebrow px-4 py-3 ${col.right ? "text-right" : "text-left"} first:pl-5 last:pr-5`}
             >
               {col.label}
             </th>
@@ -106,7 +129,7 @@ export function PrimaryLink({
   return (
     <Link
       to={to}
-      class="shrink-0 self-start border-b-2 border-ink pb-1 font-display text-lg text-ink transition-colors hover:border-brass-500 hover:text-seal-800 sm:self-auto"
+      class="shrink-0 self-start border-b-2 border-content pb-1 display text-lg text-content transition-colors hover:border-accent hover:text-accent sm:self-auto"
     >
       {children}
     </Link>
@@ -147,7 +170,7 @@ export function PasswordInput({
         onClick={() => setShown((v) => !v)}
         aria-pressed={shown}
         aria-label={shown ? "Hide password" : "Show password"}
-        class="absolute inset-y-0 right-0 grid w-11 place-items-center text-ink-faint transition-colors hover:text-seal-700"
+        class="absolute inset-y-0 right-0 grid w-11 place-items-center text-content-faint transition-colors hover:text-accent"
       >
         {shown ? (
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="size-5" aria-hidden="true">

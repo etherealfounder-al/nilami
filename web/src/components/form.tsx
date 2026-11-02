@@ -8,7 +8,7 @@ import type { ComponentChildren } from "preact";
  * it appears on. A form on paper names where to write with a line.
  */
 export const inputCls = "field";
-export const labelCls = "standing";
+export const labelCls = "eyebrow";
 
 /**
  * One labelled control.
@@ -34,7 +34,7 @@ export function Field({
     <Tag class={`block space-y-1.5 ${className}`}>
       <span class={labelCls}>{label}</span>
       {children}
-      {hint && <span class="block text-xs text-ink-soft">{hint}</span>}
+      {hint && <span class="block text-xs text-content-soft">{hint}</span>}
     </Tag>
   );
 }
@@ -48,7 +48,7 @@ export function Section({
 }) {
   return (
     <section class="space-y-5">
-      <h2 class="font-display border-b border-ink pb-2 text-xl text-ink">{title}</h2>
+      <h2 class="display border-b border-content pb-2 text-xl text-content">{title}</h2>
       {children}
     </section>
   );
@@ -64,7 +64,7 @@ export function FormCard({
   return (
     <form
       onSubmit={onSubmit}
-      class="space-y-10 border border-rule bg-vellum p-7 shadow-sheet sm:p-9"
+      class="space-y-10 border border-line bg-surface p-7 shadow-soft sm:p-9"
     >
       {children}
     </form>
@@ -85,15 +85,15 @@ export function Actions({
   children?: ComponentChildren;
 }) {
   return (
-    <div class="flex flex-wrap items-center gap-6 border-t-2 border-ink pt-6">
+    <div class="flex flex-wrap items-center gap-6 border-t-2 border-content pt-6">
       <button
         type="submit"
         disabled={busy}
-        class="border-2 border-ink bg-ink px-8 py-2.5 font-display text-base text-oat transition-colors hover:border-seal-800 hover:bg-seal-800 disabled:opacity-50"
+        class="btn btn-primary"
       >
         {busy ? pendingLabel : label}
       </button>
-      <a href={cancelTo} class="text-sm text-ink-soft transition-colors hover:text-ink">
+      <a href={cancelTo} class="text-sm text-content-soft transition-colors hover:text-content">
         Cancel
       </a>
       {children}
