@@ -3,6 +3,35 @@ import { Link } from "react-router";
 import { api } from "../lib/api";
 import { formatDateTime, npr, statusLabel } from "../lib/format";
 import { Card, Empty, ErrorNote, Loading, PageHeader, Pill, PrimaryLink } from "../components/ui";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+/**
+ * Where a notice can go from where it is.
+ *
+ * A notice moves through fixed states and an officer should not have to open
+ * the editor and pick the right word from a list to advance one. Offering only
+ * the legal next steps also means the wrong jump — reopening something sold —
+ * is not on screen to be clicked by accident.
+ *
+ * The stored status drives this, not the display status: the API shows a
+ * notice past its deadline as closed, but it has not been closed, and what can
+ * be done to it depends on the record rather than on the clock.
+ */
+const NEXT_STEPS: Record<string, { to: string; label: string }[]> = {
+  draft: [
+    { to: "upcoming", label: "Publish as upcoming" },
+    { to: "open", label: "Open bidding" },
+  ],
+  upcoming: [
+    { to: "open", label: "Open bidding" },
+    { to: "cancelled", label: "Cancel" },
+  ],
+  open: [
+    { to: "closed", label: "Close bidding" },
+    { to: "cancelled", label: "Cancel" },
+  ],
+  closed: [{ to: "sold", label: "Mark sold" }],
+};
 
 type AuctionRow = {
   id: string;
@@ -24,6 +53,13 @@ type AuctionRow = {
 };
 
 export function Auctions() {
+  const queryClient = useQueryClient();
+  const setStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      api(`/v1/admin/auctions/${encodeURIComponent(id)}/status`, { method: "PATCH", body: { status } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["auctions"] }),
+  });
+
   const { data, isPending, error } = useQuery({
     queryKey: ["auctions"],
     queryFn: () => api<AuctionRow[]>("/v1/admin/auctions"),
@@ -77,7 +113,20 @@ export function Auctions() {
                     <td class="px-4 py-3.5">
                       {/* display_status, not status: the API corrects a notice
                           whose deadline has passed but whose row still says open. */}
-                      <Pill label={statusLabel(a.display_status)} tone={a.display_status} />
+                      <div class="flex flex-wrap items-center gap-2">
+                        <Pill label={statusLabel(a.display_status)} tone={a.display_status} />
+                        {(NEXT_STEPS[a.status] ?? []).map((step) => (
+                          <button
+                            key={step.to}
+                            type="button"
+                            disabled={setStatus.isPending}
+                            onClick={() => setStatus.mutate({ id: a.id, status: step.to })}
+                            class="rounded-full border border-line px-2.5 py-1 text-xs text-content-soft transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+                          >
+                            {step.label}
+                          </button>
+                        ))}
+                      </div>
                     </td>
                     <td class="px-4 py-3.5 text-content-soft">
                       {formatDateTime(a.submission_deadline)}

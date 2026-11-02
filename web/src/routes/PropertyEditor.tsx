@@ -68,6 +68,20 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
     queryFn: () => api<{ id: string; name: string }[]>("/v1/admin/institutions"),
   });
 
+  /* Removing a property an officer should not have created — a duplicate, or
+     one entered against the wrong institution. Offered only on an existing
+     record, and it asks first. The server refuses while an auction still
+     references the property, so the usual answer to "it would not delete" is
+     that a notice is still attached to it. */
+  const remove = useMutation({
+    mutationFn: () =>
+      api(`/v1/admin/properties/${encodeURIComponent(id!)}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      navigate("/properties");
+    },
+  });
+
   const save = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       mode === "edit"
@@ -122,7 +136,8 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
   return (
     <div class="space-y-8">
       <PageHeader title={mode === "edit" ? "Edit property" : "New property"} />
-      {save.error && (
+      {remove.error && <ErrorNote message={remove.error.message} />}
+        {save.error && (
         <ErrorNote
           message={
             save.error instanceof ApiError
@@ -220,7 +235,21 @@ export function PropertyEditor({ mode }: { mode: "new" | "edit" }) {
         </Section>
 
         <Actions busy={save.isPending} label={mode === "edit" ? "Save changes" : "Create property"}
-                 pendingLabel={mode === "edit" ? "Saving…" : "Creating…"} cancelTo="/admin/properties" />
+                 pendingLabel={mode === "edit" ? "Saving…" : "Creating…"} cancelTo="/admin/properties">
+          {mode === "edit" && (
+            <button
+              type="button"
+              disabled={remove.isPending}
+              onClick={() => {
+                if (confirm("Delete this property? This cannot be undone."))
+                  remove.mutate();
+              }}
+              class="ml-auto text-sm text-content-faint underline-offset-4 transition-colors hover:text-bad hover:underline disabled:opacity-40"
+            >
+              {remove.isPending ? "Deleting…" : "Delete property"}
+            </button>
+          )}
+        </Actions>
       </FormCard>
     </div>
   );
