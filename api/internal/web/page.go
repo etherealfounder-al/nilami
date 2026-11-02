@@ -154,11 +154,33 @@ func SetLanguage(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, safePath(r.URL.Query().Get("to")), http.StatusSeeOther)
 }
 
-// safePath keeps a redirect inside this site. A value starting with two
-// slashes is a protocol-relative URL to somewhere else, which is the way this
-// is usually abused.
+// safePath keeps a redirect inside this site.
+//
+// Checking the first two bytes is not enough, which is how this got through:
+// a browser treats a backslash in the authority position as a slash, so
+// "/\\evil.example" is fetched as "//evil.example" and the reader leaves the
+// site. Parsing says what a browser will actually do with the value — anything
+// carrying a scheme or a host is off-site, whichever way it was spelled.
+//
+// Control characters are refused as well. They have no business in a path, and
+// a newline in a value that reaches a Location header is how a response gets
+// split.
 func safePath(p string) string {
-	if p == "" || p[0] != '/' || (len(p) > 1 && p[1] == '/') {
+	if p == "" || p[0] != '/' {
+		return "/"
+	}
+	// Both slashes, before parsing: url.Parse reads "//host/path" as a host
+	// but leaves "/\\host" alone, and a browser treats them alike.
+	if len(p) > 1 && (p[1] == '/' || p[1] == '\\') {
+		return "/"
+	}
+	for _, r := range p {
+		if r < 0x20 || r == 0x7f {
+			return "/"
+		}
+	}
+	u, err := url.Parse(p)
+	if err != nil || u.Scheme != "" || u.Host != "" {
 		return "/"
 	}
 	return p

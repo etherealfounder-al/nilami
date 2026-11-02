@@ -18,6 +18,17 @@ func TestSafePathRefusesAnythingOffSite(t *testing.T) {
 		{"//evil.example", "/"},
 		{"//evil.example/path", "/"},
 
+		// A backslash in the authority position: a browser reads this as
+		// //evil.example and leaves the site. Checking only for two slashes
+		// let it through.
+		{`/\evil.example`, "/"},
+		{`/\/evil.example`, "/"},
+		{`/\\evil.example`, "/"},
+
+		// Control characters, which a Location header must never carry.
+		{"/auctions\r\nSet-Cookie: a=b", "/"},
+		{"/auctions\n", "/"},
+
 		{"https://evil.example", "/"},
 		{"http://evil.example", "/"},
 		{"evil.example", "/"},

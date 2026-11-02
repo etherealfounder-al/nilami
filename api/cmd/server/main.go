@@ -172,6 +172,11 @@ func run() error {
 		Handler: httpx.Chain(mux,
 			httpx.Recover,
 			httpx.Log,
+			// What a browser may do with what we send back. The same flag
+			// that decides whether a cookie is Secure decides whether this
+			// claims HTTPS, so a local server never pins a developer's
+			// browser to a scheme it is not serving.
+			httpx.SecureHeaders(!cfg.CookieInsecure),
 			httpx.Timeout(cfg.RequestTimeout),
 			// Now that a cookie can authenticate a request, a page on another
 			// site could make a browser send it. This refuses unsafe
