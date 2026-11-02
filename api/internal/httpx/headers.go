@@ -28,7 +28,13 @@ func SecureHeaders(secure bool) func(http.Handler) http.Handler {
 		"default-src 'none'",
 		"img-src 'self' https: data:",
 		"style-src 'self'",
-		"font-src 'self'",
+		// data: as well as self. The bundler inlines a small font subset as a
+		// data URI — the Cyrillic cut of the body face, which this site never
+		// renders — and font-src 'self' refuses it, which was a blocked
+		// request and a console error on every page load. A font is passive
+		// data; the reason to refuse a data: URI is script, and script is
+		// refused here outright.
+		"font-src 'self' data:",
 		"frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.openstreetmap.org",
 		"script-src 'none'",
 		commonFrame,
@@ -42,7 +48,7 @@ func SecureHeaders(secure bool) func(http.Handler) http.Handler {
 		"default-src 'self'",
 		"img-src 'self' https: data: blob:",
 		"style-src 'self' 'unsafe-inline'",
-		"font-src 'self'",
+		"font-src 'self' data:",
 		"connect-src 'self'",
 		"frame-src 'none'",
 		commonFrame,
