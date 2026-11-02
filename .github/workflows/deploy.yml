@@ -150,9 +150,10 @@ jobs:
     environment: production
     steps:
       - name: Wait while another application is deploying
-        # The other apps on this server still build on it. Queueing behind a
+        # astralco and kavre-scrap-yard pull as this now does, but school-saas
+        # still builds on this server, six services of it. Queueing behind a
         # running build keeps this deploy from competing for the two cores,
-        # and keeps the site responsive while someone else's image compiles.
+        # and keeps the site responsive while that one compiles.
         env:
           TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
