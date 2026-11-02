@@ -165,7 +165,11 @@
       <section class="card overflow-hidden p-0">
         <h2 class="eyebrow px-5 pt-5">{{$p.S "detail.video"}}</h2>
         <div class="mt-3 aspect-video w-full bg-surface-sunken">
-          <iframe src="{{.}}" title="{{$p.S "detail.video"}}" loading="lazy" referrerpolicy="no-referrer"
+          {{/* Not no-referrer: a video host checks the referring page against
+               the embedding permission the uploader set, and with the header
+               stripped it refuses with "Error 153" rather than playing. The
+               origin alone is enough for that check and is all this sends. */}}
+          <iframe src="{{.}}" title="{{$p.S "detail.video"}}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"
                   allow="fullscreen; picture-in-picture" class="size-full border-0"></iframe>
         </div>
       </section>
@@ -219,9 +223,25 @@
       <section id="location" class="border-t border-line pt-4">
         <h2 class="eyebrow">{{.S "detail.location"}}</h2>
         <p class="mt-2 text-sm text-content">{{$prop.Where}}</p>
-        {{/* A link rather than an embedded map: the map was the only thing on
-             this page that required a JavaScript runtime, and a reader who
-             wants it gets a better one than we would draw. */}}
+        {{/*
+          The plot, drawn.
+
+          This was a link for a while, on the grounds that a map was the only
+          thing here needing a JavaScript runtime. An embed needs none of
+          ours: the frame is OpenStreetMap's own, it loads lazily, and the
+          link below it stays for anyone who wants a real map application.
+
+          A bidder deciding whether to visit a property wants to see where it
+          is, and "Sanepa Height, Ward 2" is not an answer to that if you do
+          not already know Lalitpur.
+        */}}
+        <div class="mt-3 overflow-hidden rounded-lg border border-line">
+          <iframe
+            title="{{.S "detail.location"}}"
+            loading="lazy" referrerpolicy="no-referrer"
+            class="block h-64 w-full border-0"
+            src="https://www.openstreetmap.org/export/embed.html?bbox={{sub (deref $prop.Longitude) 0.006}}%2C{{sub (deref $prop.Latitude) 0.004}}%2C{{add_f (deref $prop.Longitude) 0.006}}%2C{{add_f (deref $prop.Latitude) 0.004}}&amp;layer=mapnik&amp;marker={{deref $prop.Latitude}}%2C{{deref $prop.Longitude}}"></iframe>
+        </div>
         <a href="https://www.openstreetmap.org/?mlat={{deref $prop.Latitude}}&mlon={{deref $prop.Longitude}}#map=16/{{deref $prop.Latitude}}/{{deref $prop.Longitude}}"
            target="_blank" rel="noreferrer"
            class="mt-2.5 inline-block border-b border-line pb-0.5 text-sm text-content transition-colors hover:border-accent hover:text-accent">{{.S "detail.openInOsm"}}</a>

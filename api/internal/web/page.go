@@ -189,6 +189,14 @@ var tmplFuncs = template.FuncMap{
 	// page's own address as a parameter, and an unescaped "&" in it would
 	// truncate the link at the first query separator.
 	"urlquery": url.QueryEscape,
+	// A bounding box around a point, for the map embed. Degrees rather than
+	// metres: at Nepal's latitude these are roughly 1.2 km across, which
+	// frames a plot with its surrounding streets.
+	// Six decimals is about a tenth of a metre, well past what a plot
+	// boundary is known to, and it keeps binary-float noise such as
+	// 27.689500000000002 out of the address.
+	"sub":   func(a, b float64) string { return strconv.FormatFloat(a-b, 'f', 6, 64) },
+	"add_f": func(a, b float64) string { return strconv.FormatFloat(a+b, 'f', 6, 64) },
 	// Scales a radius inside the map plate, so the marker and its halo are
 	// drawn from one number rather than two that can drift apart.
 	"mulf": func(a, b float64) float64 { return a * b },
