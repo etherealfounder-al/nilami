@@ -1,0 +1,7 @@
+# Nothing here is deployed to Vercel.
+#
+# The site is one Go binary on a VPS, built by .github/workflows/deploy.yml and
+# released through Coolify. vercel.json beside this file turns deployments off
+# for every branch; this exists so that a project configured to ignore it still
+# has nothing to build.
+*
