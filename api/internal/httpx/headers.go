@@ -58,8 +58,16 @@ func SecureHeaders(secure bool) func(http.Handler) http.Handler {
 			// Only over TLS, and only in the deployment that has it: sending
 			// this from a local http server would pin a developer's browser
 			// to https for localhost.
+			//
+			// One day to begin with, not the customary year. This is the
+			// first deploy that sends the header at all, and a certificate
+			// here is renewed by a challenge that has failed before and is
+			// not retried on its own. Under a year-long policy a lapsed
+			// certificate is a site nobody can reach and no warning anyone
+			// can click through; under this one it is a bad afternoon.
+			// Raise it once a couple of renewals have been watched.
 			if secure {
-				h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+				h.Set("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 			}
 
 			// The API answers programs, not pages, and a JSON body renders
