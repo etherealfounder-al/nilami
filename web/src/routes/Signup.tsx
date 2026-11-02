@@ -42,13 +42,13 @@ export function SignupPage() {
     try {
       await api("/v1/pages/signup", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           email: String(f.get("email") ?? "").trim(),
           password: String(f.get("password") ?? ""),
           full_name: String(f.get("full_name") ?? "").trim(),
           organization_id: org,
           role: String(f.get("role") ?? "staff"),
-        }),
+        },
       });
       setDone(true);
     } catch (err) {
@@ -215,13 +215,13 @@ function AddInstitution({
     try {
       const res = await api<{ id: string }>("/v1/organizations/requests", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           name,
           name_np: String(f.get("name_np") ?? "").trim(),
           contact_email: String(f.get("contact_email") ?? "").trim(),
           contact_phone: String(f.get("contact_phone") ?? "").trim(),
           address: String(f.get("address") ?? "").trim(),
-        }),
+        },
       });
       onCreated({ id: res.id, name });
     } catch (err) {
