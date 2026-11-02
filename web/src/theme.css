@@ -247,8 +247,41 @@ body {
 
 :lang(ne) {
   font-family: var(--font-deva);
-  line-height: 1.8;
   letter-spacing: 0;
+}
+
+/* Devanagari stacks matras above the line and conjuncts below it, so running
+   text genuinely needs more room than Latin does.
+   
+   Applying that to everything is what made the Nepali edition look broken: a
+   blanket 1.8 inherits into a 48px display heading as an 86px line box, so
+   every title on every page sat in three lines of air, and it beat the
+   utility class on the element because it is written here rather than in the
+   utility layer. Running text gets the leading; headings and figures are
+   sized on their own terms, a little looser than the Latin setting because
+   the matras still need somewhere to go. */
+:lang(ne) p,
+:lang(ne) li,
+:lang(ne) dd,
+:lang(ne) td,
+:lang(ne) figcaption,
+:lang(ne) blockquote {
+  line-height: 1.75;
+}
+
+:lang(ne) .display,
+:lang(ne) h1,
+:lang(ne) h2,
+:lang(ne) h3 {
+  line-height: 1.28;
+}
+
+:lang(ne) .title {
+  line-height: 1.35;
+}
+
+:lang(ne) .figure {
+  line-height: 1.2;
 }
 
 /* Devanagari has no uppercase and its conjuncts break under tracking, so the

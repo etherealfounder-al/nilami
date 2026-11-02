@@ -20,7 +20,7 @@
   {{/* The lot on the block. The photograph fills the frame and the type sits
        on it; without a photograph the frame keeps its drama and the lot
        number takes the space instead. */}}
-  <section class="relative isolate flex min-h-[34rem] items-end overflow-hidden bg-deep text-on-deep lg:min-h-[40rem]">
+  <section class="relative isolate flex min-h-[24rem] items-end overflow-hidden bg-deep text-on-deep sm:min-h-[34rem] lg:min-h-[40rem]">
     {{if $prop.Cover}}
       <img src="{{$prop.Cover}}" alt="" width="2400" height="1600"
            class="absolute inset-0 -z-20 size-full scale-105 object-cover opacity-55">
@@ -32,32 +32,32 @@
          it happens to contain. */}}
     <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-t from-deep via-deep/85 to-deep/35"></div>
 
-    <div class="mx-auto w-full max-w-[82rem] px-6 pb-10 sm:pb-16 pt-12 sm:pt-20 lg:pb-24 lg:pt-24">
+    <div class="mx-auto w-full max-w-[82rem] px-5 pb-8 pt-10 sm:px-6 sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-24">
       <div class="set d1 flex flex-wrap items-center gap-x-5 gap-y-3">
         <span class="text-[0.6875rem] font-medium uppercase tracking-[0.4em] text-accent">{{.S "home.lead"}}</span>
         <span class="h-px w-16 bg-accent/60"></span>
         <span class="chip {{$p.StatusTone $lead.DisplayStatus}}">{{$p.StatusLabel $lead.DisplayStatus}}</span>
       </div>
 
-      <h1 class="set d2 display mt-7 max-w-4xl text-[3rem] leading-[0.95] text-on-deep sm:text-[4.5rem] lg:text-[5.5rem]">
+      <h1 class="set d2 display mt-5 max-w-4xl text-[2.125rem] leading-[1.04] text-on-deep sm:mt-7 sm:text-[4.5rem] sm:leading-[0.95] lg:text-[5.5rem]">
         <a href="/auctions/{{$prop.Slug}}" class="transition-colors hover:text-accent">{{$prop.Title}}</a>
       </h1>
 
-      <p class="set d3 mt-6 text-lg text-on-deep/60">
+      <p class="set d3 mt-3 text-sm text-on-deep/60 sm:mt-6 sm:text-lg">
         {{$prop.Where}}<span aria-hidden="true" class="mx-2.5 text-on-deep/30">·</span>{{$prop.Organization.Display $p.Lang}}
       </p>
 
-      <div class="set d4 mt-8 sm:mt-12 flex flex-wrap items-end gap-x-16 gap-y-8 border-t border-on-deep/15 pt-8">
+      <div class="set d4 mt-6 flex flex-wrap items-end gap-x-8 gap-y-5 border-t border-on-deep/15 pt-5 sm:mt-12 sm:gap-x-16 sm:gap-y-8 sm:pt-8">
         <div>
           <p class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{$p.S "common.minimumBid"}}</p>
-          <p class="figure mt-2.5 text-[3rem] leading-none text-on-deep sm:text-[4rem]">
+          <p class="figure mt-1.5 text-[1.875rem] leading-none text-on-deep sm:mt-2.5 sm:text-[4rem]">
             {{$p.NPRCompact $lead.MinimumBid}}<span class="ml-3 align-top text-sm font-normal tracking-[0.2em] text-accent">{{$p.S "common.npr"}}</span>
           </p>
         </div>
         {{if $lead.Open}}{{with $p.Countdown $lead.SubmissionDeadline}}
         <div>
           <p class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{$p.S "detail.closesIn"}}</p>
-          <p class="figure mt-2.5 text-[2rem] leading-none text-bad sm:text-[2.5rem]">{{.}}</p>
+          <p class="figure mt-1.5 text-[1.375rem] leading-none text-bad sm:mt-2.5 sm:text-[2.5rem]">{{.}}</p>
         </div>
         {{end}}{{end}}
         <a href="/auctions/{{$prop.Slug}}"
@@ -72,18 +72,26 @@
 
   {{/* The eyebrow figures, run as a band across the dark. */}}
   <section class="border-b border-line">
-    <dl class="mx-auto grid max-w-[82rem] gap-px sm:grid-cols-3">
-      <div class="px-6 py-10 sm:border-r sm:border-line">
-        <dt class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{.S "home.statOpen"}}</dt>
-        <dd class="figure mt-3 text-5xl leading-none text-content">{{group $d.OpenCount}}</dd>
+    {{/*
+      Three figures, read across rather than down.
+
+      Stacked, each of these was a tall block holding one short number and a
+      great deal of nothing — about a screenful on a phone to say three
+      things. They are short enough to sit in a row at any width, which is
+      also how they are meant to be read: against each other.
+    */}}
+    <dl class="mx-auto grid max-w-[82rem] grid-cols-3 divide-x divide-line">
+      <div class="px-3 py-6 text-center sm:px-6 sm:py-10 sm:text-left">
+        <dt class="text-[0.5rem] font-medium uppercase tracking-[0.18em] text-content-faint sm:text-[0.625rem] sm:tracking-[0.3em]">{{.S "home.statOpen"}}</dt>
+        <dd class="figure mt-1.5 text-lg leading-tight text-content sm:mt-3 sm:text-4xl sm:leading-none lg:text-5xl">{{group $d.OpenCount}}</dd>
       </div>
-      <div class="px-6 py-10 sm:border-r sm:border-line">
-        <dt class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{.S "home.statValue"}}</dt>
-        <dd class="figure mt-3 text-5xl leading-none text-accent">{{.NPRCompact $d.OpenValue}}</dd>
+      <div class="px-3 py-6 text-center sm:px-6 sm:py-10 sm:text-left">
+        <dt class="text-[0.5rem] font-medium uppercase tracking-[0.18em] text-content-faint sm:text-[0.625rem] sm:tracking-[0.3em]">{{.S "home.statValue"}}</dt>
+        <dd class="figure mt-1.5 text-lg leading-tight text-accent sm:mt-3 sm:text-4xl sm:leading-none lg:text-5xl">{{.NPRCompact $d.OpenValue}}</dd>
       </div>
-      <div class="px-6 py-10">
-        <dt class="text-[0.625rem] font-medium uppercase tracking-[0.3em] text-content-faint">{{.S "home.statDistricts"}}</dt>
-        <dd class="figure mt-3 text-5xl leading-none text-content">{{len $d.Districts}}</dd>
+      <div class="px-3 py-6 text-center sm:px-6 sm:py-10 sm:text-left">
+        <dt class="text-[0.5rem] font-medium uppercase tracking-[0.18em] text-content-faint sm:text-[0.625rem] sm:tracking-[0.3em]">{{.S "home.statDistricts"}}</dt>
+        <dd class="figure mt-1.5 text-lg leading-tight text-content sm:mt-3 sm:text-4xl sm:leading-none lg:text-5xl">{{len $d.Districts}}</dd>
       </div>
     </dl>
   </section>
@@ -213,14 +221,19 @@
       <h2 class="display mt-4 max-w-3xl text-[2.25rem] leading-tight text-content sm:text-[3rem]">{{.S "home.processTitle"}}</h2>
       <ol class="mt-9 sm:mt-14 grid gap-x-10 gap-y-8 sm:gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
         {{range $i, $s := .Items "home.steps"}}
-        <li>
-          <p class="figure text-accent/70 text-5xl leading-none">{{pad2 (add $i 1)}}</p>
-          <h3 class="display mt-5 text-xl leading-snug text-content">{{index $s "title"}}</h3>
-          <p class="mt-3 text-sm leading-relaxed text-content-soft">{{index $s "body"}}</p>
+        {{/* On a phone the numeral sits beside the step rather than above
+             it: stacked, four of these ran to a thousand pixels, most of it
+             the gap under a large figure that is only a counter. In the
+             four-column layout it goes back on top, where it reads as the
+             head of a column. */}}
+        <li class="grid grid-cols-[2.25rem_1fr] gap-x-3 sm:block">
+          <p class="figure text-2xl leading-none text-accent/70 sm:text-5xl">{{pad2 (add $i 1)}}</p>
+          <h3 class="display text-lg leading-snug text-content sm:mt-5 sm:text-xl">{{index $s "title"}}</h3>
+          <p class="col-start-2 mt-1.5 text-sm leading-relaxed text-content-soft sm:col-start-auto sm:mt-3">{{index $s "body"}}</p>
         </li>
         {{end}}
       </ol>
-      <a href="/how-it-works" class="group mt-9 sm:mt-14 inline-flex items-center gap-3 border border-line px-8 py-4 text-sm uppercase tracking-[0.2em] text-content transition-all hover:border-accent hover:bg-accent hover:text-on-accent">
+      <a href="/how-it-works" class="group mt-8 sm:mt-14 inline-flex w-full items-center justify-center gap-3 border border-line px-6 py-3.5 sm:w-auto sm:justify-start sm:px-8 sm:py-4 text-sm uppercase tracking-[0.2em] text-content transition-all hover:border-accent hover:bg-accent hover:text-on-accent">
         {{.S "home.assuranceCta"}}
         <span aria-hidden="true" class="transition-transform duration-300 group-hover:translate-x-1">→</span>
       </a>

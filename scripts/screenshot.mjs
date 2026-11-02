@@ -13,7 +13,7 @@
 //   node scripts/screenshot.mjs http://localhost:5173/admin/properties "$TOKEN" out.png
 import { writeFileSync } from "node:fs";
 
-const [, , url, cookieValue, out, widthArg, themeArg] = process.argv;
+const [, , url, cookieValue, out, widthArg, themeArg, maxHeightArg] = process.argv;
 if (!url || !out) {
   console.error("usage: shot.mjs <url> <session-cookie-value|-> <out.png> [width] [light|dark]");
   process.exit(1);
@@ -110,9 +110,26 @@ await new Promise((r) => setTimeout(r, 600));
 // A fixed 900px viewport meant anything below the fold — which is most of a
 // long page — could not be reviewed without scrolling by hand, and a section
 // that renders only further down looked absent.
+// Back to the top before measuring and shooting.
+//
+// Waiting on the images runs script in the page and the browser keeps its
+// scroll position across a navigation, so a full-page clip taken from where
+// the viewport happened to be starts partway down and silently omits
+// everything above it — a header and a hero can simply be missing from a
+// screenshot that otherwise looks like the whole page.
+await send("Runtime.evaluate", { expression: "window.scrollTo(0, 0)" });
 const { cssContentSize } = await send("Page.getLayoutMetrics");
 const full = cssContentSize
-  ? { x: 0, y: 0, width: cssContentSize.width, height: Math.min(cssContentSize.height, 20000), scale: 1 }
+  ? {
+      x: 0,
+      y: 0,
+      width: cssContentSize.width,
+      // A cap, for looking at the top of a long page: cropping the PNG
+      // afterwards is what sips does from the centre, which has twice now
+      // shown the middle of a page while being asked for its head.
+      height: Math.min(cssContentSize.height, Number(maxHeightArg) || 20000),
+      scale: 1,
+    }
   : undefined;
 const { data } = await send("Page.captureScreenshot", {
   format: "png",

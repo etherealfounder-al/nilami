@@ -49,19 +49,19 @@
 */}}
 <header class="bg-deep text-on-deep">
   <div class="mx-auto max-w-[82rem] px-6">
-    <div class="flex items-center justify-between gap-6 py-5">
+    <div class="flex items-center justify-between gap-3 py-3.5 sm:gap-6 sm:py-5">
       <a href="/" class="group flex items-center gap-3">
         <span class="sr-only">Nilami</span>
-        <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-on-accent transition-transform duration-300 group-hover:-rotate-6">
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-accent text-on-accent transition-transform duration-300 group-hover:-rotate-6 sm:size-10">
           {{template "mark" "size-6"}}
         </span>
         <span>
-          <span aria-hidden="true" class="block display text-[1.75rem] leading-none text-on-deep sm:text-[2rem]">निलामी</span>
+          <span aria-hidden="true" class="block display text-2xl leading-none text-on-deep sm:text-[2rem]">निलामी</span>
           <span aria-hidden="true" class="mt-0.5 block text-[0.5625rem] font-semibold uppercase tracking-[0.42em] text-accent">Nilami</span>
         </span>
       </a>
 
-      <div class="flex items-center gap-7">
+      <div class="flex items-center gap-3 sm:gap-7">
         <nav class="hidden items-center gap-7 text-xs uppercase tracking-[0.2em] sm:flex">
           <a href="/auctions" class="text-on-deep/60 transition-colors hover:text-on-deep">{{.S "nav.auctions"}}</a>
           <a href="/how-it-works" class="text-on-deep/60 transition-colors hover:text-on-deep">{{.S "nav.howItWorks"}}</a>
@@ -86,7 +86,27 @@
           <div class="absolute right-0 top-10 z-50 w-48 rounded-lg border border-on-deep/15 bg-deep p-1.5 shadow-lift">
             <a href="/auctions" class="block rounded-md px-3 py-2 text-sm text-on-deep/75 transition-colors hover:bg-on-deep/10 hover:text-on-deep">{{.S "nav.auctions"}}</a>
             <a href="/how-it-works" class="block rounded-md px-3 py-2 text-sm text-on-deep/75 transition-colors hover:bg-on-deep/10 hover:text-on-deep">{{.S "nav.howItWorks"}}</a>
-            <a href="/admin" class="mt-1 block rounded-md border-t border-on-deep/10 px-3 pb-2 pt-3 text-sm text-on-deep/75 transition-colors hover:text-on-deep">{{if .SignedIn}}{{.S "nav.dashboard"}}{{else}}{{.S "nav.staffSignIn"}}{{end}}</a>
+            <a href="/admin" class="block rounded-md px-3 py-2 text-sm text-on-deep/75 transition-colors hover:bg-on-deep/10 hover:text-on-deep">{{if .SignedIn}}{{.S "nav.dashboard"}}{{else}}{{.S "nav.staffSignIn"}}{{end}}</a>
+
+            {{/* The ground, which is three small circles too many beside a
+                 wordmark on a narrow screen. It is a preference, not
+                 navigation, so on a phone it lives in here. */}}
+            <div class="mt-1 flex items-center gap-1 border-t border-on-deep/10 px-3 pt-3" role="group" aria-label="{{.S "nav.theme"}}">
+              <a href="/theme/light?to={{.Path}}" aria-label="{{.S "nav.themeLight"}}"
+                 class="grid size-7 place-items-center rounded-full transition-colors {{if eq .Theme "light"}}bg-on-deep/15 text-accent{{else}}text-on-deep/40{{end}}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-[15px]" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" stroke-linecap="round"/></svg>
+              </a>
+              <a href="/theme/dark?to={{.Path}}" aria-label="{{.S "nav.themeDark"}}"
+                 class="grid size-7 place-items-center rounded-full transition-colors {{if eq .Theme "dark"}}bg-on-deep/15 text-accent{{else}}text-on-deep/40{{end}}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-[15px]" aria-hidden="true"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.6 6.6 0 0 0 9.5 9.5Z" stroke-linejoin="round"/></svg>
+              </a>
+              {{if .Theme}}
+              <a href="/theme/auto?to={{.Path}}" aria-label="{{.S "nav.themeAuto"}}"
+                 class="grid size-7 place-items-center rounded-full text-on-deep/40 transition-colors">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="size-[15px]" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/></svg>
+              </a>
+              {{end}}
+            </div>
           </div>
         </details>
 
@@ -105,7 +125,7 @@
              and there is no flash of the wrong one. "Auto" clears the cookie
              and hands the decision back to the device, which is the state a
              reader arrives in. */}}
-        <div class="flex items-center gap-1" role="group" aria-label="{{.S "nav.theme"}}">
+        <div class="hidden items-center gap-1 sm:flex" role="group" aria-label="{{.S "nav.theme"}}">
           <a href="/theme/light?to={{.Path}}" aria-label="{{.S "nav.themeLight"}}" title="{{.S "nav.themeLight"}}"
              {{if eq .Theme "light"}}aria-current="true"{{end}}
              class="grid size-7 place-items-center rounded-full transition-colors {{if eq .Theme "light"}}bg-on-deep/15 text-accent{{else}}text-on-deep/40 hover:text-on-deep{{end}}">
@@ -145,9 +165,9 @@
   Dark, so the page closes on a firm note, and set as three ruled columns the
   way the back page of a record carries its particulars.
 */}}
-<footer class="mt-9 sm:mt-14 sm:mt-24 bg-deep text-on-deep/65">
+<footer class="mt-12 bg-deep text-on-deep/65 sm:mt-20 lg:mt-24">
   <div class="mx-auto max-w-[76rem] px-5 py-10 sm:py-16">
-    <div class="grid gap-12 md:grid-cols-[1.2fr_2fr]">
+    <div class="grid gap-8 sm:gap-12 md:grid-cols-[1.2fr_2fr]">
       <div>
         <a href="/" class="group flex items-center gap-3.5">
           <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-accent text-on-accent transition-transform duration-300 group-hover:-rotate-6">
@@ -158,10 +178,10 @@
             <span aria-hidden="true" class="mt-0.5 block text-[0.6875rem] font-semibold uppercase tracking-[0.42em] text-accent">Nilami</span>
           </span>
         </a>
-        <p class="mt-5 max-w-xs text-sm leading-relaxed">{{.S "footer.tagline"}}</p>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed sm:mt-5">{{.S "footer.tagline"}}</p>
       </div>
 
-      <div class="grid gap-10 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-10">
         <div>
           <p class="eyebrow !text-on-deep/50">{{.S "footer.browse"}}</p>
           <ul class="mt-4 space-y-2.5 text-sm">
@@ -174,7 +194,7 @@
           <p class="eyebrow !text-on-deep/50">{{.S "footer.platform"}}</p>
           <ul class="mt-4 space-y-2.5 text-sm">{{range .List "footer.platformLines"}}<li>{{.}}</li>{{end}}</ul>
         </div>
-        <div>
+        <div class="col-span-2 sm:col-span-1">
           <p class="eyebrow !text-on-deep/50">{{.S "footer.noticeTitle"}}</p>
           <p class="mt-4 text-sm leading-relaxed">{{.S "footer.noticeBody"}}</p>
         </div>

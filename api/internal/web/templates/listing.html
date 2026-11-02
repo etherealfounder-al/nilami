@@ -19,14 +19,14 @@
     different product: the photograph fills the frame, the figures sit on it,
     and the particulars follow on the page's own ground underneath.
 */}}
-<section class="relative isolate flex min-h-[32rem] items-end overflow-hidden bg-deep text-on-deep lg:min-h-[38rem]">
+<section class="relative isolate flex min-h-[22rem] items-end overflow-hidden bg-deep text-on-deep sm:min-h-[32rem] lg:min-h-[38rem]">
   {{if $prop.Cover}}
     <img src="{{$prop.Cover}}" alt="" width="2400" height="1600"
          class="absolute inset-0 -z-20 size-full object-cover opacity-50">
   {{end}}
   <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-t from-deep via-deep/85 to-deep/40"></div>
 
-  <div class="mx-auto w-full max-w-[82rem] px-6 pb-14 pt-10">
+  <div class="mx-auto w-full max-w-[82rem] px-5 pb-9 pt-8 sm:px-6 sm:pb-14 sm:pt-10">
     <nav class="flex items-center gap-2.5 text-xs uppercase tracking-[0.2em] text-on-deep/50">
       <a href="/auctions" class="transition-colors hover:text-on-deep">{{.S "detail.breadcrumb"}}</a>
       <span aria-hidden="true">/</span>
@@ -37,34 +37,34 @@
       {{end}}
     </nav>
 
-    <div class="set d1 mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+    <div class="set d1 mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 sm:mt-10 sm:gap-x-5 sm:gap-y-3">
       <span class="text-[0.6875rem] uppercase tracking-[0.3em] text-accent">{{$prop.Organization.Display .Lang}}</span>
       <span class="h-px w-12 bg-accent/60"></span>
       <span class="chip {{.StatusTone $l.Status}}">{{.StatusLabel $l.Status}}</span>
     </div>
 
-    <h1 class="set d2 display mt-5 max-w-4xl text-[2.5rem] leading-[0.98] text-on-deep sm:text-[3.5rem] lg:text-[4.25rem]">{{$prop.Title}}</h1>
-    <p class="set d3 mt-4 text-on-deep/60">
+    <h1 class="set d2 display mt-4 max-w-4xl text-[1.875rem] leading-[1.06] text-on-deep sm:mt-5 sm:text-[3.5rem] sm:leading-[0.98] lg:text-[4.25rem]">{{$prop.Title}}</h1>
+    <p class="set d3 mt-3 text-sm text-on-deep/60 sm:mt-4 sm:text-base">
       {{$prop.Where}}{{with $prop.Address}}<span aria-hidden="true" class="mx-2 text-on-deep/30">·</span>{{.}}{{end}}
     </p>
     <p class="set d3 mt-2 text-xs uppercase tracking-[0.22em] text-on-deep/40">
       {{.S "detail.noticeNo"}} {{$l.NoticeNumber}}<span aria-hidden="true" class="mx-2">·</span>{{.T "detail.roundN" "n" $l.Round}}<span aria-hidden="true" class="mx-2">·</span>{{.TypeLabel $prop.Type}}
     </p>
 
-    <dl class="set d4 mt-7 sm:mt-11 grid gap-x-12 gap-y-7 border-t border-on-deep/20 pt-7 sm:grid-cols-3">
+    <dl class="set d4 mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-on-deep/20 pt-5 sm:mt-11 sm:grid-cols-3 sm:gap-x-12 sm:gap-y-7 sm:pt-7">
       <div>
         <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.S "common.minimumBid"}}</dt>
-        <dd class="figure mt-2.5 text-[2.25rem] leading-none text-on-deep sm:text-[2.75rem]">{{.NPRCompact $l.MinimumBid}}</dd>
+        <dd class="figure mt-1.5 text-[1.5rem] leading-none text-on-deep sm:mt-2.5 sm:text-[2.75rem]">{{.NPRCompact $l.MinimumBid}}</dd>
         <dd class="mt-2 text-xs text-on-deep/40">{{.NPR $l.MinimumBid}}</dd>
       </div>
       <div>
         <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.T "detail.security" "pct" $l.SecurityPercent}}</dt>
-        <dd class="figure mt-2.5 text-[2.25rem] leading-none text-accent sm:text-[2.75rem]">{{.NPRCompact $l.BidSecurityAmount}}</dd>
+        <dd class="figure mt-1.5 text-[1.5rem] leading-none text-accent sm:mt-2.5 sm:text-[2.75rem]">{{.NPRCompact $l.BidSecurityAmount}}</dd>
         <dd class="mt-2 text-xs text-on-deep/40">{{.NPR $l.BidSecurityAmount}}</dd>
       </div>
-      <div>
+      <div class="col-span-2 sm:col-span-1">
         <dt class="text-[0.625rem] uppercase tracking-[0.3em] text-on-deep/45">{{.S "detail.deadline"}}</dt>
-        <dd class="figure mt-2.5 text-[1.5rem] leading-tight text-on-deep">{{.DateTime $l.SubmissionDeadline}}</dd>
+        <dd class="figure mt-1.5 text-base leading-tight text-on-deep sm:mt-2.5 sm:text-[1.5rem]">{{.DateTime $l.SubmissionDeadline}}</dd>
         {{if $l.Open}}{{with .Countdown $l.SubmissionDeadline}}
           <dd class="mt-2 text-sm uppercase tracking-[0.16em] text-bad">{{$p.S "detail.closesIn"}} · {{.}}</dd>
         {{end}}{{end}}
@@ -73,7 +73,7 @@
   </div>
 </section>
 
-<main class="mx-auto max-w-[82rem] px-6 pb-12 sm:pb-20">
+<main class="mx-auto max-w-[82rem] px-5 pb-10 sm:px-6 sm:pb-20">
   <div class="mt-8 sm:mt-12 grid gap-x-14 gap-y-8 sm:gap-y-12 lg:grid-cols-[1.55fr_1fr] lg:items-start">
     <div class="set d2 space-y-8 sm:space-y-12">
 
